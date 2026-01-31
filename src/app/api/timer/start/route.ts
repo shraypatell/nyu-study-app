@@ -1,0 +1,77 @@
+import { createClient } from "@/lib/supabase/server";
+import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
+
+// Simple rate limiting (in production, use Redis)
+const rateLimits = new Map<string, number>();
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const lastRequest = rateLimits.get(userId);
+  
+  if (lastRequest && now - lastRequest < 1000) {
+    return false;
+  }
+  
+  rateLimits.set(userId, now);
+  return true;
+}
+
+export async function POST(request: Request) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // Rate limiting
+    if (!checkRateLimit(user.id)) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Please wait 1 second." },
+        { status: 429 }
+      );
+    }
+
+    // Check if user already has an active session
+    const existingSession = await prisma.studySession.findFirst({
+      where: {
+        userId: user.id,
+        isActive: true,
+      },
+    });
+
+    if (existingSession) {
+      return NextResponse.json(
+        { error: "Timer is already running", sessionId: existingSession.id },
+        { status: 400 }
+      );
+    }
+
+    // Create new study session
+    const session = await prisma.studySession.create({
+      data: {
+        userId: user.id,
+        startedAt: new Date(),
+        isActive: true,
+        createdDate: new Date(),
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      sessionId: session.id,
+      startedAt: session.startedAt,
+    });
+  } catch (error) {
+    console.error("Start timer error:", error);
+    return NextResponse.json(
+      { error: "An unexpected error occurred" },
+      { status: 500 }
+    );
+  }
+}
