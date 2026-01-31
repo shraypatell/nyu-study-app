@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -64,11 +64,11 @@ export default function SearchPage() {
     []
   );
 
-  useState(() => {
+  useEffect(() => {
     if (debouncedQuery) {
       searchUsers(debouncedQuery);
     }
-  });
+  }, [debouncedQuery, searchUsers]);
 
   const handleLoadMore = () => {
     if (nextCursor) {
