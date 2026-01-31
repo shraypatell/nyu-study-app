@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import LocationSelector from "@/components/location/LocationSelector";
