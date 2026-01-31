@@ -15,6 +15,11 @@ interface LeaderboardEntry {
   displayName: string | null;
   avatarUrl: string | null;
   totalSeconds: number;
+  location?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
   isCurrentUser: boolean;
   isActiveNow?: boolean;
 }
@@ -199,7 +204,13 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500">@{entry.username}</p>
+                    <div className="text-sm text-gray-500">@{entry.username}</div>
+                    {entry.location?.name && (
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <MapPin className="h-3 w-3" />
+                        <span>{entry.location.name}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="text-right">
@@ -242,9 +253,15 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
                         You
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500">
                       @{data.currentUserEntry.username}
-                    </p>
+                    </div>
+                    {data.currentUserEntry.location?.name && (
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <MapPin className="h-3 w-3" />
+                        <span>{data.currentUserEntry.location.name}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="text-right">

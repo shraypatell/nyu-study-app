@@ -107,7 +107,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      location: userLocation.isPublic ? userLocation.location : null,
+      location: userLocation.location,
     });
   } catch (error) {
     console.error("Get user location error:", error);

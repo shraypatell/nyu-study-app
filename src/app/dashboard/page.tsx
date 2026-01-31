@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import LocationSelector from "@/components/location/LocationSelector";
 import TimerContainer from "@/components/timer/TimerContainer";
 
 export default async function DashboardPage() {
@@ -18,7 +20,10 @@ export default async function DashboardPage() {
           <p className="text-gray-600 mt-2">Track your study sessions and compete on leaderboards</p>
         </div>
 
-        <TimerContainer userId={user.id} />
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:items-start">
+          <TimerContainer userId={user.id} />
+          <LocationSelector />
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
           <div className="bg-white p-6 rounded-lg shadow-sm text-center">

@@ -35,6 +35,19 @@ export async function GET(request: Request) {
             username: true,
             displayName: true,
             avatarUrl: true,
+            isLocationPublic: true,
+            userLocations: {
+              take: 1,
+              select: {
+                location: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -56,6 +69,14 @@ export async function GET(request: Request) {
         username: string;
         displayName: string | null;
         avatarUrl: string | null;
+        isLocationPublic: boolean;
+        userLocations: Array<{
+          location: {
+            id: string;
+            name: string;
+            slug: string;
+          };
+        }>;
       };
     }, index: number) => ({
       rank: cursor ? parseInt(atob(cursor).split(":")[1] || "0") + index + 1 : index + 1,
@@ -64,6 +85,7 @@ export async function GET(request: Request) {
       displayName: entry.user.displayName,
       avatarUrl: entry.user.avatarUrl,
       totalSeconds: entry.totalSeconds,
+      location: entry.user.isLocationPublic ? entry.user.userLocations[0]?.location || null : null,
       isCurrentUser: entry.user.id === user.id,
     }));
 
@@ -85,6 +107,19 @@ export async function GET(request: Request) {
               username: true,
               displayName: true,
               avatarUrl: true,
+              isLocationPublic: true,
+              userLocations: {
+                take: 1,
+                select: {
+                  location: {
+                    select: {
+                      id: true,
+                      name: true,
+                      slug: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -106,6 +141,9 @@ export async function GET(request: Request) {
           displayName: currentUserStat.user.displayName,
           avatarUrl: currentUserStat.user.avatarUrl,
           totalSeconds: currentUserStat.totalSeconds,
+          location: currentUserStat.user.isLocationPublic
+            ? currentUserStat.user.userLocations[0]?.location || null
+            : null,
           isCurrentUser: true,
         };
       }
