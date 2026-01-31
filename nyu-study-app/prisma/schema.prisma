@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  username      String   @unique
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Profile
+  displayName String? @map("display_name")
+  bio         String?
+  avatarUrl   String? @map("avatar_url")
+
+  // Privacy settings (all default to true/public)
+  isTimerPublic    Boolean @default(true) @map("is_timer_public")
+  isClassesPublic  Boolean @default(true) @map("is_classes_public")
+  isLocationPublic Boolean @default(true) @map("is_location_public")
+
+  // Relations
+  studySessions StudySession[]
+  dailyStats    DailyStat[]
+  userClasses   UserClass[]
+  userLocations UserLocation[]
+  sentMessages  Message[] @relation("SentMessages")
+  chatRoomUsers ChatRoomUser[]
+
+  // Friends system
+  sentFriendRequests     Friendship[] @relation("SentFriendRequests")
+  receivedFriendRequests Friendship[] @relation("ReceivedFriendRequests")
+
+  @@map("users")
+}
+
+model StudySession {
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  startedAt       DateTime  @map("started_at")
+  endedAt         DateTime? @map("ended_at")
+  durationSeconds Int       @default(0) @map("duration_seconds")
+  isActive        Boolean   @default(true) @map("is_active")
+  createdDate     DateTime  @default(now()) @map("created_date")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdDate])
+  @@index([isActive])
+  @@map("study_sessions")
+}
+
+model DailyStat {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  date         DateTime @db.Date
+  totalSeconds Int      @default(0) @map("total_seconds")
+  isPublic     Boolean  @default(true) @map("is_public")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([date, totalSeconds(sort: Desc)])
+  @@map("daily_stats")
+}
+
+model Location {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  userLocations UserLocation[]
+
+  @@map("locations")
+}
+
+model UserLocation {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  locationId String   @map("location_id")
+  isPublic   Boolean  @default(true) @map("is_public")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+  @@index([locationId, updatedAt])
+  @@map("user_locations")
+}
+
+model Class {
+  id        String   @id @default(uuid())
+  name      String
+  code      String
+  section   String?
+  semester  String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userClasses UserClass[]
+  chatRoom    ChatRoom?
+
+  @@unique([code, section, semester])
+  @@map("classes")
+}
+
+model UserClass {
+  id       String   @id @default(uuid())
+  userId   String   @map("user_id")
+  classId  String   @map("class_id")
+  isPublic Boolean  @default(true) @map("is_public")
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, classId])
+  @@index([classId])
+  @@map("user_classes")
+}
+
+model ChatRoom {
+  id        String       @id @default(uuid())
+  type      ChatRoomType
+  classId   String?      @unique @map("class_id")
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  class    Class?      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  messages Message[]
+  users    ChatRoomUser[]
+
+  @@map("chat_rooms")
+}
+
+model ChatRoomUser {
+  id         String    @id @default(uuid())
+  roomId     String    @map("room_id")
+  userId     String    @map("user_id")
+  joinedAt   DateTime  @default(now()) @map("joined_at")
+  lastReadAt DateTime? @map("last_read_at")
+
+  room ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@index([userId])
+  @@map("chat_room_users")
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  roomId    String   @map("room_id")
+  senderId  String   @map("sender_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt(sort: Desc)])
+  @@index([senderId])
+  @@map("messages")
+}
+
+model Friendship {
+  id          String            @id @default(uuid())
+  requesterId String            @map("requester_id")
+  addresseeId String            @map("addressee_id")
+  status      FriendshipStatus  @default(PENDING)
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  requester User @relation("SentFriendRequests", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee User @relation("ReceivedFriendRequests", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId, status])
+  @@index([requesterId, status])
+  @@map("friendships")
+}
+
+enum ChatRoomType {
+  CLASS
+  DM
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  BLOCKED
+}
