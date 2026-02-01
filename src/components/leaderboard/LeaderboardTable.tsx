@@ -173,11 +173,20 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
 
   };
 
-  const getDisplaySeconds = (entry: LeaderboardEntry) => {
-    if (!entry.isTimerPublic || !entry.session?.isActive) return entry.totalSeconds;
+  const getTotalLiveSeconds = (entry: LeaderboardEntry) => {
+    let total = entry.totalSeconds;
+    if (entry.isTimerPublic && entry.session?.isActive) {
+      const startedAt = new Date(entry.session.startedAt).getTime();
+      const sessionDuration = Math.max(0, Math.floor((now - startedAt) / 1000));
+      total += sessionDuration;
+    }
+    return total;
+  };
+
+  const getSessionDuration = (entry: LeaderboardEntry) => {
+    if (!entry.isTimerPublic || !entry.session?.isActive) return 0;
     const startedAt = new Date(entry.session.startedAt).getTime();
-    const durationSeconds = Math.max(0, Math.floor((now - startedAt) / 1000));
-    return durationSeconds;
+    return Math.max(0, Math.floor((now - startedAt) / 1000));
   };
 
   const getRankStyle = (rank: number) => {
@@ -282,7 +291,7 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
 
                   <div className="text-right">
                     <p className="font-mono font-semibold">
-                      {formatTime(getDisplaySeconds(entry))}
+                      {formatTime(getTotalLiveSeconds(entry))}
                     </p>
                   </div>
                 </div>
@@ -332,7 +341,7 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
 
                   <div className="text-right">
                     <p className="font-mono font-semibold">
-                      {formatTime(getDisplaySeconds(data.currentUserEntry))}
+                      {formatTime(getTotalLiveSeconds(data.currentUserEntry))}
                     </p>
                   </div>
                 </div>
