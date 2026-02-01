@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import LocationSelector from "@/components/location/LocationSelector";
 import TimerContainer from "@/components/timer/TimerContainer";
-import { Trophy, MapPin, Users } from "lucide-react";
+import DashboardLeaderboardWidget from "@/components/dashboard/DashboardLeaderboardWidget";
+import { Users } from "lucide-react";
 
 async function getDashboardData(userId: string) {
   const today = new Date();
@@ -22,13 +23,29 @@ async function getDashboardData(userId: string) {
   });
 
   let locationLeaderboard: Array<{
+    rank: number;
     userId: string;
     username: string;
     displayName: string | null;
     avatarUrl: string | null;
     totalSeconds: number;
     isActive: boolean;
+    session: {
+      startedAt: string;
+      endedAt: string | null;
+    } | null;
+    location: {
+      id: string;
+      name: string;
+      slug: string;
+      parent: {
+        id: string;
+        name: string;
+        slug: string;
+      } | null;
+    } | null;
   }> = [];
+
   if (userLocation) {
     const locationUsers = await prisma.userLocation.findMany({
       where: {
@@ -49,6 +66,18 @@ async function getDashboardData(userId: string) {
               select: {
                 isActive: true,
                 startedAt: true,
+                endedAt: true,
+              },
+            },
+          },
+        },
+        location: {
+          include: {
+            parent: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
               },
             },
           },
@@ -56,8 +85,8 @@ async function getDashboardData(userId: string) {
       },
     });
 
-    locationLeaderboard = await Promise.all(
-      locationUsers.map(async (ul: { userId: string; user: { id: string; username: string; displayName: string | null; avatarUrl: string | null; studySessions: Array<{ isActive: boolean; startedAt: Date }> } }) => {
+    const unsortedLeaderboard = await Promise.all(
+      locationUsers.map(async (ul) => {
         const dailyStat = await prisma.dailyStat.findUnique({
           where: {
             userId_date: {
@@ -68,21 +97,42 @@ async function getDashboardData(userId: string) {
           select: { totalSeconds: true },
         });
 
+        const session = ul.user.studySessions[0];
+
         return {
+          rank: 0,
           userId: ul.user.id,
           username: ul.user.username,
           displayName: ul.user.displayName,
           avatarUrl: ul.user.avatarUrl,
           totalSeconds: dailyStat?.totalSeconds || 0,
-          isActive: ul.user.studySessions[0]?.isActive || false,
+          isActive: session?.isActive || false,
+          session: session
+            ? {
+                startedAt: session.startedAt.toISOString(),
+                endedAt: session.endedAt?.toISOString() || null,
+              }
+            : null,
+          location: ul.location
+            ? {
+                id: ul.location.id,
+                name: ul.location.name,
+                slug: ul.location.slug,
+                parent: ul.location.parent,
+              }
+            : null,
         };
       })
     );
 
-    locationLeaderboard.sort((a: { totalSeconds: number }, b: { totalSeconds: number }) => b.totalSeconds - a.totalSeconds);
+    unsortedLeaderboard.sort((a, b) => b.totalSeconds - a.totalSeconds);
+    locationLeaderboard = unsortedLeaderboard.map((entry, index) => ({
+      ...entry,
+      rank: index + 1,
+    }));
   }
 
-  const schoolLeaderboard = await prisma.dailyStat.findMany({
+  const schoolDailyStats = await prisma.dailyStat.findMany({
     where: {
       date: today,
       isPublic: true,
@@ -103,11 +153,60 @@ async function getDashboardData(userId: string) {
             select: {
               isActive: true,
               startedAt: true,
+              endedAt: true,
+            },
+          },
+          userLocations: {
+            take: 1,
+            select: {
+              location: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  parent: {
+                    select: {
+                      id: true,
+                      name: true,
+                      slug: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },
       },
     },
+  });
+
+  const schoolLeaderboard = schoolDailyStats.map((entry, index) => {
+    const session = entry.user.studySessions[0];
+    const userLocation = entry.user.userLocations[0]?.location;
+
+    return {
+      rank: index + 1,
+      userId: entry.user.id,
+      username: entry.user.username,
+      displayName: entry.user.displayName,
+      avatarUrl: entry.user.avatarUrl,
+      totalSeconds: entry.totalSeconds,
+      isActive: session?.isActive || false,
+      session: session
+        ? {
+            startedAt: session.startedAt.toISOString(),
+            endedAt: session.endedAt?.toISOString() || null,
+          }
+        : null,
+      location: userLocation
+        ? {
+            id: userLocation.id,
+            name: userLocation.name,
+            slug: userLocation.slug,
+            parent: userLocation.parent,
+          }
+        : null,
+    };
   });
 
   const friendships = await prisma.friendship.findMany({
@@ -159,7 +258,7 @@ async function getDashboardData(userId: string) {
     },
   });
 
-  const friends = friendships.map((f: { requesterId: string; requester: { id: string; username: string; displayName: string | null; avatarUrl: string | null; isTimerPublic: boolean; studySessions: Array<{ isActive: boolean; startedAt: Date; endedAt: Date | null }> }; addressee: { id: string; username: string; displayName: string | null; avatarUrl: string | null; isTimerPublic: boolean; studySessions: Array<{ isActive: boolean; startedAt: Date; endedAt: Date | null }> } }) => {
+  const friends = friendships.map((f) => {
     const friend = f.requesterId === userId ? f.addressee : f.requester;
     return {
       id: friend.id,
@@ -172,22 +271,14 @@ async function getDashboardData(userId: string) {
   });
 
   return {
-    locationName: userLocation?.location ? 
-      (userLocation.location.parent ? 
-        `${userLocation.location.name} in ${userLocation.location.parent.name}` : 
-        userLocation.location.name) : 
-      null,
+    locationName: userLocation?.location
+      ? userLocation.location.parent
+        ? `${userLocation.location.name} in ${userLocation.location.parent.name}`
+        : userLocation.location.name
+      : null,
     locationId: userLocation?.locationId || null,
     locationLeaderboard,
-    schoolLeaderboard: schoolLeaderboard.map((entry: { user: { id: string; username: string; displayName: string | null; avatarUrl: string | null; studySessions: Array<{ isActive: boolean; startedAt: Date }> }; totalSeconds: number }, index: number) => ({
-      rank: index + 1,
-      userId: entry.user.id,
-      username: entry.user.username,
-      displayName: entry.user.displayName,
-      avatarUrl: entry.user.avatarUrl,
-      totalSeconds: entry.totalSeconds,
-      isActive: entry.user.studySessions[0]?.isActive || false,
-    })),
+    schoolLeaderboard,
     friends,
   };
 }
@@ -202,18 +293,14 @@ export default async function DashboardPage() {
 
   const data = await getDashboardData(user.id);
 
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    return `${hours}h ${minutes}m`;
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900">Study Timer</h1>
-          <p className="text-gray-600 mt-2">Track your study sessions and compete on leaderboards</p>
+          <p className="text-gray-600 mt-2">
+            Track your study sessions and compete on leaderboards
+          </p>
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:items-start">
@@ -222,62 +309,21 @@ export default async function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-          <div className="bg-white p-4 rounded-lg shadow-sm">
-            <div className="flex items-center gap-2 mb-3">
-              <MapPin className="h-5 w-5 text-purple-600" />
-              <h3 className="font-semibold text-gray-700">
-                {data.locationName || "Location Leaderboard"}
-              </h3>
-            </div>
-            {data.locationLeaderboard.length > 0 ? (
-              <div className="max-h-[200px] overflow-y-auto space-y-2 pr-1">
-                {data.locationLeaderboard.map((entry: { userId: string; username: string; displayName: string | null; avatarUrl: string | null; totalSeconds: number; isActive: boolean }, index: number) => (
-                  <div key={entry.userId} className="flex items-center gap-2 text-sm">
-                    <span className="w-5 text-center font-medium text-gray-500">{index + 1}</span>
-                    <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-xs text-purple-700">
-                      {entry.displayName?.charAt(0) || entry.username.charAt(0)}
-                    </div>
-                    <span className="flex-1 truncate">{entry.displayName || entry.username}</span>
-                    {entry.isActive && <span className="w-2 h-2 bg-green-500 rounded-full" />}
-                    <span className="text-gray-500">{formatTime(entry.totalSeconds)}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500 text-center py-4">No one studying here yet</p>
-            )}
-          </div>
+          <DashboardLeaderboardWidget
+            title={data.locationName || "Location Leaderboard"}
+            icon="location"
+            entries={data.locationLeaderboard}
+            href={data.locationId ? `/leaderboard/${data.locationId}` : "/leaderboard"}
+            isClickable={false}
+          />
 
-          <Link href="/leaderboard">
-            <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex items-center gap-2 mb-3">
-                <Trophy className="h-5 w-5 text-yellow-500" />
-                <h3 className="font-semibold text-gray-700">School Leaderboard</h3>
-              </div>
-              {data.schoolLeaderboard.length > 0 ? (
-                <div className="max-h-[200px] overflow-y-auto space-y-2 pr-1">
-                  {data.schoolLeaderboard.map((entry: { rank: number; userId: string; username: string; displayName: string | null; avatarUrl: string | null; totalSeconds: number; isActive: boolean }) => (
-                    <div key={entry.userId} className="flex items-center gap-2 text-sm">
-                      <span className={`w-5 text-center font-medium ${
-                        entry.rank === 1 ? "text-yellow-600" :
-                        entry.rank === 2 ? "text-gray-500" :
-                        entry.rank === 3 ? "text-orange-600" :
-                        "text-gray-400"
-                      }`}>{entry.rank}</span>
-                      <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs text-gray-700">
-                        {entry.displayName?.charAt(0) || entry.username.charAt(0)}
-                      </div>
-                      <span className="flex-1 truncate">{entry.displayName || entry.username}</span>
-                      {entry.isActive && <span className="w-2 h-2 bg-green-500 rounded-full" />}
-                      <span className="text-gray-500">{formatTime(entry.totalSeconds)}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 text-center py-4">No study data yet today</p>
-              )}
-            </div>
-          </Link>
+          <DashboardLeaderboardWidget
+            title="School Leaderboard"
+            icon="school"
+            entries={data.schoolLeaderboard}
+            href="/leaderboard"
+            isClickable={true}
+          />
 
           <Link href="/friends">
             <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
@@ -287,20 +333,31 @@ export default async function DashboardPage() {
               </div>
               {data.friends.length > 0 ? (
                 <div className="max-h-[200px] overflow-y-auto space-y-2 pr-1">
-                  {data.friends.map((friend: { id: string; username: string; displayName: string | null; avatarUrl: string | null; isActive: boolean; isTimerPublic: boolean }) => (
-                    <div key={friend.id} className="flex items-center gap-2 text-sm">
+                  {data.friends.map((friend) => (
+                    <div
+                      key={friend.id}
+                      className="flex items-center gap-2 text-sm"
+                    >
                       <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs text-blue-700">
-                        {friend.displayName?.charAt(0) || friend.username.charAt(0)}
+                        {friend.displayName?.charAt(0) ||
+                          friend.username.charAt(0)}
                       </div>
-                      <span className="flex-1 truncate">{friend.displayName || friend.username}</span>
+                      <span className="flex-1 truncate">
+                        {friend.displayName || friend.username}
+                      </span>
                       {friend.isTimerPublic && friend.isActive && (
-                        <span className="w-2 h-2 bg-green-500 rounded-full" title="Studying now" />
+                        <span
+                          className="w-2 h-2 bg-green-500 rounded-full"
+                          title="Studying now"
+                        />
                       )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500 text-center py-4">No friends yet</p>
+                <p className="text-sm text-gray-500 text-center py-4">
+                  No friends yet
+                </p>
               )}
             </div>
           </Link>
