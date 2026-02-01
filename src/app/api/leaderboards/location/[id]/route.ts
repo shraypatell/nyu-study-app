@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 const LEADERBOARD_LIMIT = 100;
-const ACTIVE_THRESHOLD_MINUTES = 60;
 
 export async function GET(
   request: Request,
@@ -26,7 +25,15 @@ export async function GET(
 
     const location = await prisma.location.findUnique({
       where: { id, isActive: true },
-      select: { id: true, name: true, slug: true },
+      include: {
+        parent: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
     });
 
     if (!location) {
@@ -38,9 +45,6 @@ export async function GET(
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    const activeThreshold = new Date();
-    activeThreshold.setMinutes(activeThreshold.getMinutes() - ACTIVE_THRESHOLD_MINUTES);
 
     const userLocations = await prisma.userLocation.findMany({
       where: {
@@ -55,13 +59,27 @@ export async function GET(
             displayName: true,
             avatarUrl: true,
             isTimerPublic: true,
+            isLocationPublic: true,
+            studySessions: {
+              take: 1,
+              orderBy: { startedAt: "desc" },
+              select: {
+                startedAt: true,
+                endedAt: true,
+                isActive: true,
+              },
+            },
           },
         },
         location: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
+          include: {
+            parent: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
           },
         },
       },
@@ -86,6 +104,22 @@ export async function GET(
           displayName: string | null;
           avatarUrl: string | null;
           isTimerPublic: boolean;
+          isLocationPublic: boolean;
+          studySessions: Array<{
+            startedAt: Date;
+            endedAt: Date | null;
+            isActive: boolean;
+          }>;
+        };
+        location: {
+          id: string;
+          name: string;
+          slug: string;
+          parent: {
+            id: string;
+            name: string;
+            slug: string;
+          } | null;
         };
       }, index: number) => {
         const dailyStat = await prisma.dailyStat.findUnique({
@@ -98,15 +132,24 @@ export async function GET(
           select: { totalSeconds: true, isPublic: true },
         });
 
-        const isActiveNow = userLocation.updatedAt > activeThreshold;
+        const isActiveNow = userLocation.user.studySessions[0]?.isActive ?? false;
 
         return {
-          rank: cursor ? parseInt(atob(cursor).split(":")[1] || "0") + index + 1 : index + 1,
+          rank: cursor ? parseInt(atob(cursor).split(":".charAt(0))[1] || "0") + index + 1 : index + 1,
           userId: userLocation.user.id,
           username: userLocation.user.username,
           displayName: userLocation.user.displayName,
           avatarUrl: userLocation.user.avatarUrl,
           totalSeconds: dailyStat?.isPublic ? dailyStat.totalSeconds : 0,
+          isTimerPublic: userLocation.user.isTimerPublic,
+          session: userLocation.user.studySessions[0]
+            ? {
+                startedAt: userLocation.user.studySessions[0].startedAt,
+                endedAt: userLocation.user.studySessions[0].endedAt,
+                isActive: userLocation.user.studySessions[0].isActive,
+              }
+            : null,
+          location: userLocation.user.isLocationPublic ? userLocation.location : null,
           isActiveNow,
           isCurrentUser: userLocation.user.id === user.id,
         };
@@ -116,7 +159,7 @@ export async function GET(
     const sortedLeaderboard = leaderboardWithStats.sort((a: { totalSeconds: number }, b: { totalSeconds: number }) => b.totalSeconds - a.totalSeconds);
 
     sortedLeaderboard.forEach((entry: { rank: number }, index: number) => {
-      entry.rank = cursor ? parseInt(atob(cursor).split(":")[1] || "0") + index + 1 : index + 1;
+      entry.rank = cursor ? parseInt(atob(cursor).split(":".charAt(0))[1] || "0") + index + 1 : index + 1;
     });
 
     const nextCursor = hasMore ? results[results.length - 1]?.id : null;
@@ -126,9 +169,10 @@ export async function GET(
         id: location.id,
         name: location.name,
         slug: location.slug,
+        parent: location.parent,
       },
       leaderboard: sortedLeaderboard,
-      date: today.toISOString().split("T")[0],
+      date: today.toISOString().split("T".charAt(0))[0],
       hasMore,
       nextCursor,
     });

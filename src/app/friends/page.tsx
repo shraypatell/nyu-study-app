@@ -22,6 +22,11 @@ interface Friend {
       id: string;
       name: string;
       slug: string;
+      parent?: {
+        id: string;
+        name: string;
+        slug: string;
+      } | null;
     } | null;
     session?: {
       isActive: boolean;
@@ -173,7 +178,11 @@ export default function FriendsPage() {
 
     if (friend.user.session.isActive) {
       const durationSeconds = Math.max(0, Math.floor((now - startedAt) / 1000));
-      const locationText = friend.user.location?.name ? ` at ${friend.user.location.name}` : "";
+      const locationText = friend.user.location?.name
+        ? friend.user.location.parent
+          ? ` at ${friend.user.location.name} in ${friend.user.location.parent.name}`
+          : ` at ${friend.user.location.name}`
+        : "";
       return `Studying ${formatTime(durationSeconds)}${locationText}`;
     }
 
@@ -192,7 +201,11 @@ export default function FriendsPage() {
       elapsedText = `Active ${minutes}m ago`;
     }
 
-    const locationText = friend.user.location?.name ? ` at ${friend.user.location.name}` : "";
+    const locationText = friend.user.location?.name
+      ? friend.user.location.parent
+        ? ` at ${friend.user.location.name} in ${friend.user.location.parent.name}`
+        : ` at ${friend.user.location.name}`
+      : "";
     return `${elapsedText}${locationText}`;
   };
 

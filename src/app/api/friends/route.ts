@@ -164,6 +164,35 @@ export async function GET(request: Request) {
             displayName: true,
             avatarUrl: true,
             isTimerPublic: true,
+            isLocationPublic: true,
+            userLocations: {
+              take: 1,
+              select: {
+                location: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                    parent: {
+                      select: {
+                        id: true,
+                        name: true,
+                        slug: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            studySessions: {
+              take: 1,
+              orderBy: { startedAt: "desc" },
+              select: {
+                startedAt: true,
+                endedAt: true,
+                isActive: true,
+              },
+            },
           },
         },
         addressee: {
@@ -173,6 +202,35 @@ export async function GET(request: Request) {
             displayName: true,
             avatarUrl: true,
             isTimerPublic: true,
+            isLocationPublic: true,
+            userLocations: {
+              take: 1,
+              select: {
+                location: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                    parent: {
+                      select: {
+                        id: true,
+                        name: true,
+                        slug: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            studySessions: {
+              take: 1,
+              orderBy: { startedAt: "desc" },
+              select: {
+                startedAt: true,
+                endedAt: true,
+                isActive: true,
+              },
+            },
           },
         },
       },
@@ -188,6 +246,24 @@ export async function GET(request: Request) {
         displayName: string | null;
         avatarUrl: string | null;
         isTimerPublic: boolean;
+        isLocationPublic: boolean;
+        userLocations: Array<{
+          location: {
+            id: string;
+            name: string;
+            slug: string;
+            parent: {
+              id: string;
+              name: string;
+              slug: string;
+            } | null;
+          };
+        }>;
+        studySessions: Array<{
+          startedAt: Date;
+          endedAt: Date | null;
+          isActive: boolean;
+        }>;
       };
       requester: {
         id: string;
@@ -195,6 +271,24 @@ export async function GET(request: Request) {
         displayName: string | null;
         avatarUrl: string | null;
         isTimerPublic: boolean;
+        isLocationPublic: boolean;
+        userLocations: Array<{
+          location: {
+            id: string;
+            name: string;
+            slug: string;
+            parent: {
+              id: string;
+              name: string;
+              slug: string;
+            } | null;
+          };
+        }>;
+        studySessions: Array<{
+          startedAt: Date;
+          endedAt: Date | null;
+          isActive: boolean;
+        }>;
       };
       updatedAt: Date;
     }) => {
@@ -203,7 +297,17 @@ export async function GET(request: Request) {
         : friendship.requester;
       return {
         friendshipId: friendship.id,
-        user: friend,
+        user: {
+          ...friend,
+          location: friend.isLocationPublic ? friend.userLocations[0]?.location || null : null,
+          session: friend.studySessions[0]
+            ? {
+                startedAt: friend.studySessions[0].startedAt,
+                endedAt: friend.studySessions[0].endedAt,
+                isActive: friend.studySessions[0].isActive,
+              }
+            : null,
+        },
         since: friendship.updatedAt,
       };
     });

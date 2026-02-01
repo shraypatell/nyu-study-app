@@ -35,6 +35,7 @@ export async function GET(request: Request) {
             username: true,
             displayName: true,
             avatarUrl: true,
+            isTimerPublic: true,
             isLocationPublic: true,
             userLocations: {
               take: 1,
@@ -44,8 +45,24 @@ export async function GET(request: Request) {
                     id: true,
                     name: true,
                     slug: true,
+                    parent: {
+                      select: {
+                        id: true,
+                        name: true,
+                        slug: true,
+                      },
+                    },
                   },
                 },
+              },
+            },
+            studySessions: {
+              take: 1,
+              orderBy: { startedAt: "desc" },
+              select: {
+                startedAt: true,
+                endedAt: true,
+                isActive: true,
               },
             },
           },
@@ -69,13 +86,24 @@ export async function GET(request: Request) {
         username: string;
         displayName: string | null;
         avatarUrl: string | null;
+        isTimerPublic: boolean;
         isLocationPublic: boolean;
         userLocations: Array<{
           location: {
             id: string;
             name: string;
             slug: string;
+            parent: {
+              id: string;
+              name: string;
+              slug: string;
+            } | null;
           };
+        }>;
+        studySessions: Array<{
+          startedAt: Date;
+          endedAt: Date | null;
+          isActive: boolean;
         }>;
       };
     }, index: number) => ({
@@ -85,6 +113,14 @@ export async function GET(request: Request) {
       displayName: entry.user.displayName,
       avatarUrl: entry.user.avatarUrl,
       totalSeconds: entry.totalSeconds,
+      isTimerPublic: entry.user.isTimerPublic,
+      session: entry.user.studySessions[0]
+        ? {
+            startedAt: entry.user.studySessions[0].startedAt,
+            endedAt: entry.user.studySessions[0].endedAt,
+            isActive: entry.user.studySessions[0].isActive,
+          }
+        : null,
       location: entry.user.isLocationPublic ? entry.user.userLocations[0]?.location || null : null,
       isCurrentUser: entry.user.id === user.id,
     }));
@@ -107,6 +143,7 @@ export async function GET(request: Request) {
               username: true,
               displayName: true,
               avatarUrl: true,
+              isTimerPublic: true,
               isLocationPublic: true,
               userLocations: {
                 take: 1,
@@ -116,8 +153,24 @@ export async function GET(request: Request) {
                       id: true,
                       name: true,
                       slug: true,
+                      parent: {
+                        select: {
+                          id: true,
+                          name: true,
+                          slug: true,
+                        },
+                      },
                     },
                   },
+                },
+              },
+              studySessions: {
+                take: 1,
+                orderBy: { startedAt: "desc" },
+                select: {
+                  startedAt: true,
+                  endedAt: true,
+                  isActive: true,
                 },
               },
             },
@@ -141,6 +194,14 @@ export async function GET(request: Request) {
           displayName: currentUserStat.user.displayName,
           avatarUrl: currentUserStat.user.avatarUrl,
           totalSeconds: currentUserStat.totalSeconds,
+          isTimerPublic: currentUserStat.user.isTimerPublic,
+          session: currentUserStat.user.studySessions[0]
+            ? {
+                startedAt: currentUserStat.user.studySessions[0].startedAt,
+                endedAt: currentUserStat.user.studySessions[0].endedAt,
+                isActive: currentUserStat.user.studySessions[0].isActive,
+              }
+            : null,
           location: currentUserStat.user.isLocationPublic
             ? currentUserStat.user.userLocations[0]?.location || null
             : null,
@@ -152,7 +213,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       leaderboard: rankedLeaderboard,
       currentUserEntry,
-      date: today.toISOString().split("T")[0],
+      date: today.toISOString().split("T".charAt(0))[0],
       hasMore,
       nextCursor,
     });

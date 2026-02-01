@@ -25,6 +25,11 @@ interface LeaderboardEntry {
     id: string;
     name: string;
     slug: string;
+    parent?: {
+      id: string;
+      name: string;
+      slug: string;
+    } | null;
   } | null;
   isCurrentUser: boolean;
   isActiveNow?: boolean;
@@ -136,7 +141,11 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
 
     if (entry.session.isActive) {
       const durationSeconds = Math.max(0, Math.floor((now - startedAt) / 1000));
-      const locationText = entry.location?.name ? ` at ${entry.location.name}` : "";
+      const locationText = entry.location?.name
+        ? entry.location.parent
+          ? ` at ${entry.location.name} in ${entry.location.parent.name}`
+          : ` at ${entry.location.name}`
+        : "";
       return `Studying ${formatTime(durationSeconds)}${locationText}`;
     }
 
@@ -155,7 +164,11 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
       elapsedText = `Active ${minutes}m ago`;
     }
 
-    const locationText = entry.location?.name ? ` at ${entry.location.name}` : "";
+    const locationText = entry.location?.name
+      ? entry.location.parent
+        ? ` at ${entry.location.name} in ${entry.location.parent.name}`
+        : ` at ${entry.location.name}`
+      : "";
     return `${elapsedText}${locationText}`;
 
   };

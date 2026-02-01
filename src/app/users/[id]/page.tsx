@@ -33,6 +33,11 @@ interface PublicProfile {
     id: string;
     name: string;
     slug: string;
+    parent?: {
+      id: string;
+      name: string;
+      slug: string;
+    } | null;
   } | null;
   session?: {
     isActive: boolean;
@@ -116,7 +121,11 @@ export default function PublicProfilePage() {
 
     if (profileData.session.isActive) {
       const durationSeconds = Math.max(0, Math.floor((now - startedAt) / 1000));
-      const locationText = profileData.location?.name ? ` at ${profileData.location.name}` : "";
+      const locationText = profileData.location?.name
+        ? profileData.location.parent
+          ? ` at ${profileData.location.name} in ${profileData.location.parent.name}`
+          : ` at ${profileData.location.name}`
+        : "";
       return `Studying ${formatTime(durationSeconds)}${locationText}`;
     }
 
@@ -135,7 +144,11 @@ export default function PublicProfilePage() {
       elapsedText = `Active ${minutes}m ago`;
     }
 
-    const locationText = profileData.location?.name ? ` at ${profileData.location.name}` : "";
+    const locationText = profileData.location?.name
+      ? profileData.location.parent
+        ? ` at ${profileData.location.name} in ${profileData.location.parent.name}`
+        : ` at ${profileData.location.name}`
+      : "";
     return `${elapsedText}${locationText}`;
   };
 
@@ -308,6 +321,9 @@ export default function PublicProfilePage() {
                 <div className="text-center py-8">
                   <MapPin className="h-12 w-12 mx-auto mb-4 text-purple-600" />
                   <p className="text-xl font-medium">{profile.location.name}</p>
+                  {profile.location.parent && (
+                    <p className="text-gray-500 mt-1">in {profile.location.parent.name}</p>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">

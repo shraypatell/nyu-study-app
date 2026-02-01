@@ -78,6 +78,11 @@ model Location {
   sortOrder   Int      @default(0) @map("sort_order")
   createdAt   DateTime @default(now()) @map("created_at")
 
+  // Self-relation for hierarchical locations (parent → children)
+  parentId String? @map("parent_id")
+  parent   Location? @relation("LocationChildren", fields: [parentId], references: [id])
+  children Location[] @relation("LocationChildren")
+
   userLocations UserLocation[]
 
   @@map("locations")

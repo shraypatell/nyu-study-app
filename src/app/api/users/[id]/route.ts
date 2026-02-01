@@ -31,18 +31,19 @@ export async function GET(
         userLocations: {
           include: {
             location: {
-              select: {
-                id: true,
-                name: true,
-                slug: true,
+              include: {
+                parent: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                  },
+                },
               },
             },
           },
         },
         studySessions: {
-          where: {
-            isActive: true,
-          },
           orderBy: {
             startedAt: "desc",
           },
@@ -83,6 +84,16 @@ export async function GET(
         id: string;
         name: string;
         slug: string;
+        parent: {
+          id: string;
+          name: string;
+          slug: string;
+        } | null;
+      } | null;
+      session?: {
+        isActive: boolean;
+        startedAt: Date;
+        endedAt: Date | null;
       } | null;
     } = {
       id: user.id,
@@ -94,19 +105,27 @@ export async function GET(
     };
 
     if (isOwnProfile || user.isTimerPublic) {
-      const activeSession = user.studySessions[0];
-      if (activeSession) {
+      const latestSession = user.studySessions[0];
+      if (latestSession && latestSession.isActive) {
         const now = new Date();
         const currentDuration = Math.floor(
-          (now.getTime() - activeSession.startedAt.getTime()) / 1000
+          (now.getTime() - latestSession.startedAt.getTime()) / 1000
         );
         response.timer = {
           isActive: true,
-          startedAt: activeSession.startedAt,
+          startedAt: latestSession.startedAt,
           currentDuration,
         };
       } else {
         response.timer = null;
+      }
+
+      if (latestSession) {
+        response.session = {
+          isActive: latestSession.isActive,
+          startedAt: latestSession.startedAt,
+          endedAt: latestSession.endedAt,
+        };
       }
     }
 
@@ -135,6 +154,7 @@ export async function GET(
           id: userLocation.location.id,
           name: userLocation.location.name,
           slug: userLocation.location.slug,
+          parent: userLocation.location.parent,
         };
       }
     }
