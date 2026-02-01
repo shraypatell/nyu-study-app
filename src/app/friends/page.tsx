@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, MessageCircle, UserX, Search, UserCheck, Clock } from "lucide-react";
+import { Loader2, MessageCircle, UserX, Search, UserCheck } from "lucide-react";
 import Link from "next/link";
 
 interface Friend {
@@ -18,6 +18,16 @@ interface Friend {
     displayName: string | null;
     avatarUrl: string | null;
     isTimerPublic: boolean;
+    location?: {
+      id: string;
+      name: string;
+      slug: string;
+    } | null;
+    session?: {
+      isActive: boolean;
+      startedAt: string;
+      endedAt: string | null;
+    } | null;
   };
   since: string;
 }
@@ -46,9 +56,17 @@ export default function FriendsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [processingRequest, setProcessingRequest] = useState<string | null>(null);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchData = async () => {
@@ -137,6 +155,47 @@ export default function FriendsPage() {
         friend.user.displayName.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const getStatusText = (friend: Friend) => {
+    if (!friend.user.isTimerPublic || !friend.user.session) return null;
+    const startedAt = new Date(friend.user.session.startedAt).getTime();
+    const endedAt = friend.user.session.endedAt
+      ? new Date(friend.user.session.endedAt).getTime()
+      : null;
+
+    if (friend.user.session.isActive) {
+      const durationSeconds = Math.max(0, Math.floor((now - startedAt) / 1000));
+      const locationText = friend.user.location?.name ? ` at ${friend.user.location.name}` : "";
+      return `Studying ${formatTime(durationSeconds)}${locationText}`;
+    }
+
+    const endTime = endedAt ?? startedAt;
+    const elapsedMinutes = Math.max(0, Math.floor((now - endTime) / 60000));
+    const days = Math.floor(elapsedMinutes / 1440);
+    const hours = Math.floor((elapsedMinutes % 1440) / 60);
+    const minutes = elapsedMinutes % 60;
+    let elapsedText = "";
+
+    if (days > 0) {
+      elapsedText = `Active ${days}d ${hours}h ago`;
+    } else if (hours > 0) {
+      elapsedText = `Active ${hours}h ${minutes}m ago`;
+    } else {
+      elapsedText = `Active ${minutes}m ago`;
+    }
+
+    const locationText = friend.user.location?.name ? ` at ${friend.user.location.name}` : "";
+    return `${elapsedText}${locationText}`;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -213,19 +272,15 @@ export default function FriendsPage() {
                         <h3 className="font-semibold truncate">
                           {friend.user.displayName || friend.user.username}
                         </h3>
-                        {friend.user.isTimerPublic && (
-                          <Badge
-                            variant="secondary"
-                            className="text-xs bg-green-100 text-green-700"
-                          >
-                            <Clock className="h-3 w-3 mr-1" />
-                            Studying
-                          </Badge>
-                        )}
                       </div>
                       <p className="text-sm text-gray-500">
                         @{friend.user.username}
                       </p>
+                      {getStatusText(friend) && (
+                        <p className="text-xs text-gray-600">
+                          {getStatusText(friend)}
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex gap-2">
