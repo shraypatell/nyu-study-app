@@ -120,6 +120,7 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
       if (response.ok) {
         const data = await response.json();
         setIsActive(false);
+        setElapsedTime(0);
         setTotalTimeToday((prev) => prev + data.totalDuration);
       }
     } catch (error) {
