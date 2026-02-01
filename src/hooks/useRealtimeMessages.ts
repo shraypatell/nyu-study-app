@@ -46,13 +46,15 @@ export function useRealtimeMessages(
   }, [roomId]);
 
   useEffect(() => {
+    setMessages(initialMessages);
+  }, [initialMessages]);
+
+  useEffect(() => {
     if (!roomId) {
       setMessages([]);
       setIsConnected(false);
       return;
     }
-
-    setMessages(initialMessages);
 
     const channel = supabase
       .channel(`room:${roomId}`)
@@ -123,7 +125,7 @@ export function useRealtimeMessages(
       channel.unsubscribe();
       clearInterval(pollingInterval);
     };
-  }, [roomId, supabase, isConnected, fetchMessages, initialMessages]);
+  }, [roomId, supabase, isConnected, fetchMessages]);
 
   return { messages, isConnected, error };
 }

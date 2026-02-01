@@ -85,19 +85,25 @@ export default function ChatRoomPage() {
     e.preventDefault();
     if (!newMessage.trim() || sending) return;
 
+    const content = newMessage.trim();
+    setNewMessage("");
     setSending(true);
+
     try {
       const response = await fetch("/api/chat/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           roomId,
-          content: newMessage.trim(),
+          content,
         }),
       });
 
       if (response.ok) {
-        setNewMessage("");
+        const data = await response.json();
+        if (data.message) {
+          setInitialMessages((prev) => [...prev, data.message]);
+        }
         setShouldScrollToBottom(true);
       }
     } catch (error) {

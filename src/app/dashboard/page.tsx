@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import LocationSelector from "@/components/location/LocationSelector";
 import TimerContainer from "@/components/timer/TimerContainer";
 import DashboardLeaderboardWidget from "@/components/dashboard/DashboardLeaderboardWidget";
-import { Users } from "lucide-react";
+import DashboardFriendsWidget from "@/components/dashboard/DashboardFriendsWidget";
 
 async function getDashboardData(userId: string) {
   const today = new Date();
@@ -226,6 +225,7 @@ async function getDashboardData(userId: string) {
           displayName: true,
           avatarUrl: true,
           isTimerPublic: true,
+          isLocationPublic: true,
           studySessions: {
             take: 1,
             orderBy: { startedAt: "desc" },
@@ -233,6 +233,25 @@ async function getDashboardData(userId: string) {
               isActive: true,
               startedAt: true,
               endedAt: true,
+            },
+          },
+          userLocations: {
+            take: 1,
+            select: {
+              location: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  parent: {
+                    select: {
+                      id: true,
+                      name: true,
+                      slug: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -244,6 +263,7 @@ async function getDashboardData(userId: string) {
           displayName: true,
           avatarUrl: true,
           isTimerPublic: true,
+          isLocationPublic: true,
           studySessions: {
             take: 1,
             orderBy: { startedAt: "desc" },
@@ -253,22 +273,81 @@ async function getDashboardData(userId: string) {
               endedAt: true,
             },
           },
+          userLocations: {
+            take: 1,
+            select: {
+              location: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  parent: {
+                    select: {
+                      id: true,
+                      name: true,
+                      slug: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },
   });
 
-  const friends = friendships.map((f) => {
-    const friend = f.requesterId === userId ? f.addressee : f.requester;
-    return {
-      id: friend.id,
-      username: friend.username,
-      displayName: friend.displayName,
-      avatarUrl: friend.avatarUrl,
-      isActive: friend.studySessions[0]?.isActive || false,
-      isTimerPublic: friend.isTimerPublic,
-    };
-  });
+  const friendsWithStats = await Promise.all(
+    friendships.map(async (f) => {
+      const friend = f.requesterId === userId ? f.addressee : f.requester;
+
+      const dailyStat = await prisma.dailyStat.findUnique({
+        where: {
+          userId_date: {
+            userId: friend.id,
+            date: today,
+          },
+        },
+        select: { totalSeconds: true, isPublic: true },
+      });
+
+      const session = friend.studySessions[0];
+      const location = friend.isLocationPublic
+        ? friend.userLocations[0]?.location || null
+        : null;
+
+      return {
+        rank: 0,
+        id: friend.id,
+        username: friend.username,
+        displayName: friend.displayName,
+        avatarUrl: friend.avatarUrl,
+        isTimerPublic: friend.isTimerPublic,
+        totalSeconds: dailyStat?.isPublic ? dailyStat.totalSeconds : 0,
+        isActive: session?.isActive || false,
+        session: session
+          ? {
+              startedAt: session.startedAt.toISOString(),
+              endedAt: session.endedAt?.toISOString() || null,
+            }
+          : null,
+        location: location
+          ? {
+              id: location.id,
+              name: location.name,
+              slug: location.slug,
+              parent: location.parent,
+            }
+          : null,
+      };
+    })
+  );
+
+  friendsWithStats.sort((a, b) => b.totalSeconds - a.totalSeconds);
+  const rankedFriends = friendsWithStats.map((friend, index) => ({
+    ...friend,
+    rank: index + 1,
+  }));
 
   return {
     locationName: userLocation?.location
@@ -279,7 +358,7 @@ async function getDashboardData(userId: string) {
     locationId: userLocation?.locationId || null,
     locationLeaderboard,
     schoolLeaderboard,
-    friends,
+    friends: rankedFriends,
   };
 }
 
@@ -325,42 +404,7 @@ export default async function DashboardPage() {
             isClickable={true}
           />
 
-          <Link href="/friends">
-            <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex items-center gap-2 mb-3">
-                <Users className="h-5 w-5 text-blue-600" />
-                <h3 className="font-semibold text-gray-700">Friends</h3>
-              </div>
-              {data.friends.length > 0 ? (
-                <div className="max-h-[200px] overflow-y-auto space-y-2 pr-1">
-                  {data.friends.map((friend) => (
-                    <div
-                      key={friend.id}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs text-blue-700">
-                        {friend.displayName?.charAt(0) ||
-                          friend.username.charAt(0)}
-                      </div>
-                      <span className="flex-1 truncate">
-                        {friend.displayName || friend.username}
-                      </span>
-                      {friend.isTimerPublic && friend.isActive && (
-                        <span
-                          className="w-2 h-2 bg-green-500 rounded-full"
-                          title="Studying now"
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 text-center py-4">
-                  No friends yet
-                </p>
-              )}
-            </div>
-          </Link>
+          <DashboardFriendsWidget friends={data.friends} />
         </div>
       </div>
     </div>

@@ -18,6 +18,7 @@ interface Friend {
     displayName: string | null;
     avatarUrl: string | null;
     isTimerPublic: boolean;
+    totalSeconds: number;
     location?: {
       id: string;
       name: string;
@@ -169,6 +170,16 @@ export default function FriendsPage() {
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const getTotalLiveSeconds = (friend: Friend) => {
+    let total = friend.user.totalSeconds;
+    if (friend.user.isTimerPublic && friend.user.session?.isActive) {
+      const startedAt = new Date(friend.user.session.startedAt).getTime();
+      const sessionDuration = Math.max(0, Math.floor((now - startedAt) / 1000));
+      total += sessionDuration;
+    }
+    return total;
+  };
+
   const getStatusText = (friend: Friend) => {
     if (!friend.user.isTimerPublic || !friend.user.session) return null;
     const startedAt = new Date(friend.user.session.startedAt).getTime();
@@ -207,6 +218,13 @@ export default function FriendsPage() {
         : ` at ${friend.user.location.name}`
       : "";
     return `${elapsedText}${locationText}`;
+  };
+
+  const getRankStyle = (rank: number) => {
+    if (rank === 1) return "text-yellow-600 font-bold";
+    if (rank === 2) return "text-gray-500 font-bold";
+    if (rank === 3) return "text-orange-600 font-bold";
+    return "text-gray-400";
   };
 
   if (loading) {
@@ -270,9 +288,13 @@ export default function FriendsPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredFriends.map((friend) => (
+              {filteredFriends.map((friend, index) => (
                 <Card key={friend.friendshipId}>
                   <CardContent className="p-4 flex items-center gap-4">
+                    <div className={`w-8 text-center text-sm font-medium ${getRankStyle(index + 1)}`}>
+                      {index + 1}
+                    </div>
+
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={friend.user.avatarUrl || undefined} />
                       <AvatarFallback className="bg-purple-100 text-purple-700">
@@ -285,6 +307,9 @@ export default function FriendsPage() {
                         <h3 className="font-semibold truncate">
                           {friend.user.displayName || friend.user.username}
                         </h3>
+                        {friend.user.session?.isActive && friend.user.isTimerPublic && (
+                          <span className="w-2 h-2 bg-green-500 rounded-full" />
+                        )}
                       </div>
                       <p className="text-sm text-gray-500">
                         @{friend.user.username}
@@ -294,6 +319,10 @@ export default function FriendsPage() {
                           {getStatusText(friend)}
                         </p>
                       )}
+                    </div>
+
+                    <div className="font-mono text-gray-700 text-right">
+                      {formatTime(getTotalLiveSeconds(friend))}
                     </div>
 
                     <div className="flex gap-2">
@@ -320,7 +349,7 @@ export default function FriendsPage() {
         <TabsContent value="received" className="mt-6">
           {receivedRequests.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
-              <p className="text-lg">No pending requests</p>
+              <p>No pending friend requests</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -333,21 +362,19 @@ export default function FriendsPage() {
                         {request.requester?.username.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold truncate">
+                    <div className="flex-1">
+                      <h3 className="font-semibold">
                         {request.requester?.displayName || request.requester?.username}
                       </h3>
                       <p className="text-sm text-gray-500">
                         @{request.requester?.username}
                       </p>
                     </div>
-
                     <div className="flex gap-2">
                       <Button
-                        size="sm"
                         onClick={() => respondToRequest(request.id, "ACCEPTED")}
                         disabled={processingRequest === request.id}
+                        size="sm"
                       >
                         {processingRequest === request.id ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -357,9 +384,9 @@ export default function FriendsPage() {
                       </Button>
                       <Button
                         variant="outline"
-                        size="sm"
                         onClick={() => respondToRequest(request.id, "REJECTED")}
                         disabled={processingRequest === request.id}
+                        size="sm"
                       >
                         Decline
                       </Button>
@@ -374,7 +401,7 @@ export default function FriendsPage() {
         <TabsContent value="sent" className="mt-6">
           {sentRequests.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
-              <p className="text-lg">No sent requests</p>
+              <p>No sent friend requests</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -387,18 +414,15 @@ export default function FriendsPage() {
                         {request.addressee?.username.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold truncate">
+                    <div className="flex-1">
+                      <h3 className="font-semibold">
                         {request.addressee?.displayName || request.addressee?.username}
                       </h3>
                       <p className="text-sm text-gray-500">
                         @{request.addressee?.username}
                       </p>
+                      <p className="text-xs text-gray-400">Pending</p>
                     </div>
-
-                    <Badge variant="secondary">Pending</Badge>
-
                     <Button
                       variant="ghost"
                       size="sm"
