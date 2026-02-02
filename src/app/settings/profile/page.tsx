@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,7 @@ interface UserProfile {
   isTimerPublic: boolean;
   isClassesPublic: boolean;
   isLocationPublic: boolean;
+  usernameChanges: number;
   createdAt: string;
 }
 
@@ -28,8 +29,11 @@ export default function ProfileSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
 
   const [formData, setFormData] = useState({
+    username: "",
     displayName: "",
     bio: "",
     avatarUrl: "",
@@ -49,6 +53,7 @@ export default function ProfileSettingsPage() {
         const data = await response.json();
         setProfile(data.user);
         setFormData({
+          username: data.user.username || "",
           displayName: data.user.displayName || "",
           bio: data.user.bio || "",
           avatarUrl: data.user.avatarUrl || "",
@@ -73,17 +78,23 @@ export default function ProfileSettingsPage() {
     setSuccess(false);
 
     try {
+      const updateData: Record<string, unknown> = {
+        displayName: formData.displayName || null,
+        bio: formData.bio || null,
+        avatarUrl: formData.avatarUrl || null,
+        isTimerPublic: formData.isTimerPublic,
+        isClassesPublic: formData.isClassesPublic,
+        isLocationPublic: formData.isLocationPublic,
+      };
+
+      if (formData.username !== profile?.username) {
+        updateData.username = formData.username;
+      }
+
       const response = await fetch("/api/users/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          displayName: formData.displayName || null,
-          bio: formData.bio || null,
-          avatarUrl: formData.avatarUrl || null,
-          isTimerPublic: formData.isTimerPublic,
-          isClassesPublic: formData.isClassesPublic,
-          isLocationPublic: formData.isLocationPublic,
-        }),
+        body: JSON.stringify(updateData),
       });
 
       if (response.ok) {
@@ -100,6 +111,59 @@ export default function ProfileSettingsPage() {
       setSaving(false);
     }
   };
+
+  const checkUsernameTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const checkUsernameAvailability = useCallback(async (username: string) => {
+    if (!username || username === profile?.username) {
+      setUsernameError(null);
+      return;
+    }
+
+    if (username.length < 3) {
+      setUsernameError("Username must be at least 3 characters");
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+      setUsernameError("Username can only contain letters, numbers, underscores, and hyphens");
+      return;
+    }
+
+    setIsCheckingUsername(true);
+    setUsernameError(null);
+
+    try {
+      const response = await fetch(`/api/users/search?q=${encodeURIComponent(username)}`);
+      if (response.ok) {
+        const data = await response.json();
+        const exists = data.users.some((u: { username: string }) => u.username.toLowerCase() === username.toLowerCase());
+        if (exists) {
+          setUsernameError("Username is already taken");
+        }
+      }
+    } catch (err) {
+      console.error("Failed to check username availability", err);
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  }, [profile?.username]);
+
+  const handleUsernameChange = (value: string) => {
+    setFormData({ ...formData, username: value });
+    setUsernameError(null);
+
+    if (checkUsernameTimeoutRef.current) {
+      clearTimeout(checkUsernameTimeoutRef.current);
+    }
+
+    checkUsernameTimeoutRef.current = setTimeout(() => {
+      checkUsernameAvailability(value);
+    }, 500);
+  };
+
+  const remainingChanges = profile ? 2 - profile.usernameChanges : 0;
+  const canChangeUsername = remainingChanges > 0;
 
   if (loading) {
     return (
@@ -140,14 +204,32 @@ export default function ProfileSettingsPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                value={profile?.username || ""}
-                disabled
-                className="bg-gray-100"
-              />
+              <div className="relative">
+                <Input
+                  id="username"
+                  value={formData.username}
+                  onChange={(e) => handleUsernameChange(e.target.value)}
+                  disabled={!canChangeUsername}
+                  className={canChangeUsername ? "" : "bg-gray-100"}
+                  maxLength={30}
+                />
+                {isCheckingUsername && (
+                  <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-gray-400" />
+                )}
+              </div>
+              {usernameError && (
+                <p className="text-sm text-red-500">{usernameError}</p>
+              )}
               <p className="text-sm text-gray-500">
-                Username cannot be changed
+                {canChangeUsername ? (
+                  <>
+                    {remainingChanges} username change{remainingChanges !== 1 ? "s" : ""} remaining. Must be 3-30 characters, letters, numbers, underscores, hyphens only.
+                  </>
+                ) : (
+                  <>
+                    You have used all 2 username changes. Username cannot be changed anymore.
+                  </>
+                )}
               </p>
             </div>
 
@@ -261,7 +343,7 @@ export default function ProfileSettingsPage() {
         </Card>
 
         <div className="flex justify-end">
-          <Button type="submit" disabled={saving} size="lg">
+          <Button type="submit" disabled={saving || !!usernameError} size="lg">
             {saving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

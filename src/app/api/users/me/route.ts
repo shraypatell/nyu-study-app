@@ -10,6 +10,7 @@ const updateProfileSchema = z.object({
   isTimerPublic: z.boolean().optional(),
   isClassesPublic: z.boolean().optional(),
   isLocationPublic: z.boolean().optional(),
+  username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_-]+$/).optional(),
 });
 
 const rateLimits = new Map<string, number>();
@@ -47,13 +48,6 @@ export async function PUT(request: Request) {
 
     const body = await request.json();
 
-    if (body.username !== undefined) {
-      return NextResponse.json(
-        { error: "Username cannot be changed" },
-        { status: 400 }
-      );
-    }
-
     const validationResult = updateProfileSchema.safeParse(body);
 
     if (!validationResult.success) {
@@ -63,9 +57,49 @@ export async function PUT(request: Request) {
       );
     }
 
+    const data = validationResult.data;
+
+    if (data.username !== undefined) {
+      const currentUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { username: true, usernameChanges: true },
+      });
+
+      if (!currentUser) {
+        return NextResponse.json(
+          { error: "User not found" },
+          { status: 404 }
+        );
+      }
+
+      if (data.username === currentUser.username) {
+        delete data.username;
+      } else {
+        if (currentUser.usernameChanges >= 2) {
+          return NextResponse.json(
+            { error: "You have used all 2 username changes. Username cannot be changed anymore." },
+            { status: 400 }
+          );
+        }
+
+        const existingUser = await prisma.user.findUnique({
+          where: { username: data.username },
+        });
+
+        if (existingUser) {
+          return NextResponse.json(
+            { error: "Username is already taken. Please choose a different one." },
+            { status: 400 }
+          );
+        }
+
+        data.usernameChanges = currentUser.usernameChanges + 1;
+      }
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
-      data: validationResult.data,
+      data,
       select: {
         id: true,
         username: true,
@@ -75,6 +109,7 @@ export async function PUT(request: Request) {
         isTimerPublic: true,
         isClassesPublic: true,
         isLocationPublic: true,
+        usernameChanges: true,
         createdAt: true,
       },
     });
@@ -115,6 +150,7 @@ export async function GET(request: Request) {
         isTimerPublic: true,
         isClassesPublic: true,
         isLocationPublic: true,
+        usernameChanges: true,
         createdAt: true,
       },
     });
