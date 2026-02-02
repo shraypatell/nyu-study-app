@@ -27,11 +27,17 @@ export async function GET(request: Request) {
         date: today,
         isPublic: true,
         totalSeconds: { gt: 0 },
+        user: {
+          email: {
+            endsWith: "@nyu.edu",
+          },
+        },
       },
       include: {
         user: {
           select: {
             id: true,
+            email: true,
             username: true,
             displayName: true,
             avatarUrl: true,
@@ -140,6 +146,7 @@ export async function GET(request: Request) {
           user: {
             select: {
               id: true,
+              email: true,
               username: true,
               displayName: true,
               avatarUrl: true,
@@ -178,12 +185,17 @@ export async function GET(request: Request) {
         },
       });
 
-      if (currentUserStat && currentUserStat.isPublic) {
+      if (currentUserStat && currentUserStat.isPublic && currentUserStat.user.email?.endsWith("@nyu.edu")) {
         const userRank = await prisma.dailyStat.count({
           where: {
             date: today,
             isPublic: true,
             totalSeconds: { gt: currentUserStat.totalSeconds },
+            user: {
+              email: {
+                endsWith: "@nyu.edu",
+              },
+            },
           },
         });
 
