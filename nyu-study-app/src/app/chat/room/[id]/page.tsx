@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, Send, ArrowLeft } from "lucide-react";
 import { useRealtimeMessages } from "@/hooks/useRealtimeMessages";
 import Link from "next/link";
@@ -85,19 +84,25 @@ export default function ChatRoomPage() {
     e.preventDefault();
     if (!newMessage.trim() || sending) return;
 
+    const content = newMessage.trim();
+    setNewMessage("");
     setSending(true);
+
     try {
       const response = await fetch("/api/chat/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           roomId,
-          content: newMessage.trim(),
+          content,
         }),
       });
 
       if (response.ok) {
-        setNewMessage("");
+        const data = await response.json();
+        if (data.message) {
+          setInitialMessages((prev) => [...prev, data.message]);
+        }
         setShouldScrollToBottom(true);
       }
     } catch (error) {
@@ -146,19 +151,18 @@ export default function ChatRoomPage() {
         </CardHeader>
 
         <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-          <ScrollArea
-            className="flex-1 p-4"
+          <div
+            className="flex-1 overflow-y-auto p-4 space-y-4"
             ref={scrollRef}
             onScroll={handleScroll}
           >
-            <div className="space-y-4">
-              {messages.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <p>No messages yet</p>
-                  <p className="text-sm">Start the conversation!</p>
-                </div>
-              ) : (
-                messages.map((message, index) => {
+            {messages.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <p>No messages yet</p>
+                <p className="text-sm">Start the conversation!</p>
+              </div>
+            ) : (
+              messages.map((message, index) => {
                   const isCurrentUser = message.sender.id === "current-user";
                   const showAvatar =
                     index === 0 ||
@@ -211,8 +215,7 @@ export default function ChatRoomPage() {
                   );
                 })
               )}
-            </div>
-          </ScrollArea>
+          </div>
 
           <form
             onSubmit={sendMessage}

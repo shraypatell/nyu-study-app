@@ -149,6 +149,9 @@ export async function GET(request: Request) {
       );
     }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const friendships = await prisma.friendship.findMany({
       where: {
         OR: [
@@ -164,6 +167,35 @@ export async function GET(request: Request) {
             displayName: true,
             avatarUrl: true,
             isTimerPublic: true,
+            isLocationPublic: true,
+            userLocations: {
+              take: 1,
+              select: {
+                location: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                    parent: {
+                      select: {
+                        id: true,
+                        name: true,
+                        slug: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            studySessions: {
+              take: 1,
+              orderBy: { startedAt: "desc" },
+              select: {
+                startedAt: true,
+                endedAt: true,
+                isActive: true,
+              },
+            },
           },
         },
         addressee: {
@@ -173,42 +205,83 @@ export async function GET(request: Request) {
             displayName: true,
             avatarUrl: true,
             isTimerPublic: true,
+            isLocationPublic: true,
+            userLocations: {
+              take: 1,
+              select: {
+                location: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                    parent: {
+                      select: {
+                        id: true,
+                        name: true,
+                        slug: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            studySessions: {
+              take: 1,
+              orderBy: { startedAt: "desc" },
+              select: {
+                startedAt: true,
+                endedAt: true,
+                isActive: true,
+              },
+            },
           },
         },
       },
       orderBy: { updatedAt: "desc" },
     });
 
-    const friends = friendships.map((friendship: {
-      id: string;
-      requesterId: string;
-      addressee: {
-        id: string;
-        username: string;
-        displayName: string | null;
-        avatarUrl: string | null;
-        isTimerPublic: boolean;
-      };
-      requester: {
-        id: string;
-        username: string;
-        displayName: string | null;
-        avatarUrl: string | null;
-        isTimerPublic: boolean;
-      };
-      updatedAt: Date;
-    }) => {
-      const friend = friendship.requesterId === user.id
-        ? friendship.addressee
-        : friendship.requester;
-      return {
-        friendshipId: friendship.id,
-        user: friend,
-        since: friendship.updatedAt,
-      };
-    });
+    const friendsWithStats = await Promise.all(
+      friendships.map(async (friendship) => {
+        const friend = friendship.requesterId === user.id
+          ? friendship.addressee
+          : friendship.requester;
 
-    return NextResponse.json({ friends });
+        const dailyStat = await prisma.dailyStat.findUnique({
+          where: {
+            userId_date: {
+              userId: friend.id,
+              date: today,
+            },
+          },
+          select: { totalSeconds: true, isPublic: true },
+        });
+
+        return {
+          friendshipId: friendship.id,
+          user: {
+            id: friend.id,
+            username: friend.username,
+            displayName: friend.displayName,
+            avatarUrl: friend.avatarUrl,
+            isTimerPublic: friend.isTimerPublic,
+            totalSeconds: dailyStat?.isPublic ? dailyStat.totalSeconds : 0,
+            location: friend.isLocationPublic ? friend.userLocations[0]?.location || null : null,
+            session: friend.studySessions[0]
+              ? {
+                  startedAt: friend.studySessions[0].startedAt.toISOString(),
+                  endedAt: friend.studySessions[0].endedAt?.toISOString() || null,
+                  isActive: friend.studySessions[0].isActive,
+                }
+              : null,
+          },
+          since: friendship.updatedAt,
+        };
+      })
+    );
+
+    friendsWithStats.sort((a, b) => b.user.totalSeconds - a.user.totalSeconds);
+
+    return NextResponse.json({ friends: friendsWithStats });
   } catch (error) {
     console.error("Get friends error:", error);
     return NextResponse.json(

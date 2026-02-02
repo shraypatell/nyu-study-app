@@ -55,10 +55,14 @@ export async function POST(request: Request) {
       },
       include: {
         location: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
+          include: {
+            parent: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
           },
         },
       },
@@ -66,7 +70,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      location: userLocation.location,
+      location: {
+        id: userLocation.location.id,
+        name: userLocation.location.name,
+        slug: userLocation.location.slug,
+        parent: userLocation.location.parent,
+      },
     });
   } catch (error) {
     console.error("Update location error:", error);
@@ -93,10 +102,14 @@ export async function GET() {
       where: { userId: user.id },
       include: {
         location: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
+          include: {
+            parent: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
           },
         },
       },
@@ -107,7 +120,12 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      location: userLocation.isPublic ? userLocation.location : null,
+      location: {
+        id: userLocation.location.id,
+        name: userLocation.location.name,
+        slug: userLocation.location.slug,
+        parent: userLocation.location.parent,
+      },
     });
   } catch (error) {
     console.error("Get user location error:", error);

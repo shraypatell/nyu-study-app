@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, MessageCircle, UserX, Search, UserCheck, Clock } from "lucide-react";
+import { Loader2, MessageCircle, UserX, Search, UserCheck } from "lucide-react";
 import Link from "next/link";
 
 interface Friend {
@@ -18,6 +18,22 @@ interface Friend {
     displayName: string | null;
     avatarUrl: string | null;
     isTimerPublic: boolean;
+    totalSeconds: number;
+    location?: {
+      id: string;
+      name: string;
+      slug: string;
+      parent?: {
+        id: string;
+        name: string;
+        slug: string;
+      } | null;
+    } | null;
+    session?: {
+      isActive: boolean;
+      startedAt: string;
+      endedAt: string | null;
+    } | null;
   };
   since: string;
 }
@@ -46,9 +62,17 @@ export default function FriendsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [processingRequest, setProcessingRequest] = useState<string | null>(null);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchData = async () => {
@@ -137,6 +161,72 @@ export default function FriendsPage() {
         friend.user.displayName.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const getTotalLiveSeconds = (friend: Friend) => {
+    let total = friend.user.totalSeconds;
+    if (friend.user.isTimerPublic && friend.user.session?.isActive) {
+      const startedAt = new Date(friend.user.session.startedAt).getTime();
+      const sessionDuration = Math.max(0, Math.floor((now - startedAt) / 1000));
+      total += sessionDuration;
+    }
+    return total;
+  };
+
+  const getStatusText = (friend: Friend) => {
+    if (!friend.user.isTimerPublic || !friend.user.session) return null;
+    const startedAt = new Date(friend.user.session.startedAt).getTime();
+    const endedAt = friend.user.session.endedAt
+      ? new Date(friend.user.session.endedAt).getTime()
+      : null;
+
+    if (friend.user.session.isActive) {
+      const durationSeconds = Math.max(0, Math.floor((now - startedAt) / 1000));
+      const locationText = friend.user.location?.name
+        ? friend.user.location.parent
+          ? ` at ${friend.user.location.name} in ${friend.user.location.parent.name}`
+          : ` at ${friend.user.location.name}`
+        : "";
+      return `Studying ${formatTime(durationSeconds)}${locationText}`;
+    }
+
+    const endTime = endedAt ?? startedAt;
+    const elapsedMinutes = Math.max(0, Math.floor((now - endTime) / 60000));
+    const days = Math.floor(elapsedMinutes / 1440);
+    const hours = Math.floor((elapsedMinutes % 1440) / 60);
+    const minutes = elapsedMinutes % 60;
+    let elapsedText = "";
+
+    if (days > 0) {
+      elapsedText = `Active ${days}d ${hours}h ago`;
+    } else if (hours > 0) {
+      elapsedText = `Active ${hours}h ${minutes}m ago`;
+    } else {
+      elapsedText = `Active ${minutes}m ago`;
+    }
+
+    const locationText = friend.user.location?.name
+      ? friend.user.location.parent
+        ? ` at ${friend.user.location.name} in ${friend.user.location.parent.name}`
+        : ` at ${friend.user.location.name}`
+      : "";
+    return `${elapsedText}${locationText}`;
+  };
+
+  const getRankStyle = (rank: number) => {
+    if (rank === 1) return "text-yellow-600 font-bold";
+    if (rank === 2) return "text-gray-500 font-bold";
+    if (rank === 3) return "text-orange-600 font-bold";
+    return "text-gray-400";
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -198,9 +288,13 @@ export default function FriendsPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredFriends.map((friend) => (
+              {filteredFriends.map((friend, index) => (
                 <Card key={friend.friendshipId}>
                   <CardContent className="p-4 flex items-center gap-4">
+                    <div className={`w-8 text-center text-sm font-medium ${getRankStyle(index + 1)}`}>
+                      {index + 1}
+                    </div>
+
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={friend.user.avatarUrl || undefined} />
                       <AvatarFallback className="bg-purple-100 text-purple-700">
@@ -213,19 +307,22 @@ export default function FriendsPage() {
                         <h3 className="font-semibold truncate">
                           {friend.user.displayName || friend.user.username}
                         </h3>
-                        {friend.user.isTimerPublic && (
-                          <Badge
-                            variant="secondary"
-                            className="text-xs bg-green-100 text-green-700"
-                          >
-                            <Clock className="h-3 w-3 mr-1" />
-                            Studying
-                          </Badge>
+                        {friend.user.session?.isActive && friend.user.isTimerPublic && (
+                          <span className="w-2 h-2 bg-green-500 rounded-full" />
                         )}
                       </div>
                       <p className="text-sm text-gray-500">
                         @{friend.user.username}
                       </p>
+                      {getStatusText(friend) && (
+                        <p className="text-xs text-gray-600">
+                          {getStatusText(friend)}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="font-mono text-gray-700 text-right">
+                      {formatTime(getTotalLiveSeconds(friend))}
                     </div>
 
                     <div className="flex gap-2">
@@ -252,7 +349,7 @@ export default function FriendsPage() {
         <TabsContent value="received" className="mt-6">
           {receivedRequests.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
-              <p className="text-lg">No pending requests</p>
+              <p>No pending friend requests</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -265,21 +362,19 @@ export default function FriendsPage() {
                         {request.requester?.username.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold truncate">
+                    <div className="flex-1">
+                      <h3 className="font-semibold">
                         {request.requester?.displayName || request.requester?.username}
                       </h3>
                       <p className="text-sm text-gray-500">
                         @{request.requester?.username}
                       </p>
                     </div>
-
                     <div className="flex gap-2">
                       <Button
-                        size="sm"
                         onClick={() => respondToRequest(request.id, "ACCEPTED")}
                         disabled={processingRequest === request.id}
+                        size="sm"
                       >
                         {processingRequest === request.id ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -289,9 +384,9 @@ export default function FriendsPage() {
                       </Button>
                       <Button
                         variant="outline"
-                        size="sm"
                         onClick={() => respondToRequest(request.id, "REJECTED")}
                         disabled={processingRequest === request.id}
+                        size="sm"
                       >
                         Decline
                       </Button>
@@ -306,7 +401,7 @@ export default function FriendsPage() {
         <TabsContent value="sent" className="mt-6">
           {sentRequests.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
-              <p className="text-lg">No sent requests</p>
+              <p>No sent friend requests</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -319,18 +414,15 @@ export default function FriendsPage() {
                         {request.addressee?.username.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold truncate">
+                    <div className="flex-1">
+                      <h3 className="font-semibold">
                         {request.addressee?.displayName || request.addressee?.username}
                       </h3>
                       <p className="text-sm text-gray-500">
                         @{request.addressee?.username}
                       </p>
+                      <p className="text-xs text-gray-400">Pending</p>
                     </div>
-
-                    <Badge variant="secondary">Pending</Badge>
-
                     <Button
                       variant="ghost"
                       size="sm"

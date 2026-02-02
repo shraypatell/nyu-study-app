@@ -33,6 +33,16 @@ interface PublicProfile {
     id: string;
     name: string;
     slug: string;
+    parent?: {
+      id: string;
+      name: string;
+      slug: string;
+    } | null;
+  } | null;
+  session?: {
+    isActive: boolean;
+    startedAt: string;
+    endedAt: string | null;
   } | null;
 }
 
@@ -45,10 +55,18 @@ export default function PublicProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [friendshipStatus, setFriendshipStatus] = useState<"none" | "pending" | "accepted">("none");
   const [sendingRequest, setSendingRequest] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     fetchProfile();
   }, [userId]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchProfile = async () => {
     try {
@@ -92,6 +110,46 @@ export default function PublicProfilePage() {
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const getStatusText = (profileData: PublicProfile) => {
+    if (!profileData.session) return null;
+    const startedAt = new Date(profileData.session.startedAt).getTime();
+    const endedAt = profileData.session.endedAt
+      ? new Date(profileData.session.endedAt).getTime()
+      : null;
+
+    if (profileData.session.isActive) {
+      const durationSeconds = Math.max(0, Math.floor((now - startedAt) / 1000));
+      const locationText = profileData.location?.name
+        ? profileData.location.parent
+          ? ` at ${profileData.location.name} in ${profileData.location.parent.name}`
+          : ` at ${profileData.location.name}`
+        : "";
+      return `Studying ${formatTime(durationSeconds)}${locationText}`;
+    }
+
+    const endTime = endedAt ?? startedAt;
+    const elapsedMinutes = Math.max(0, Math.floor((now - endTime) / 60000));
+    const days = Math.floor(elapsedMinutes / 1440);
+    const hours = Math.floor((elapsedMinutes % 1440) / 60);
+    const minutes = elapsedMinutes % 60;
+    let elapsedText = "";
+
+    if (days > 0) {
+      elapsedText = `Active ${days}d ${hours}h ago`;
+    } else if (hours > 0) {
+      elapsedText = `Active ${hours}h ${minutes}m ago`;
+    } else {
+      elapsedText = `Active ${minutes}m ago`;
+    }
+
+    const locationText = profileData.location?.name
+      ? profileData.location.parent
+        ? ` at ${profileData.location.name} in ${profileData.location.parent.name}`
+        : ` at ${profileData.location.name}`
+      : "";
+    return `${elapsedText}${locationText}`;
   };
 
   if (loading) {
@@ -204,6 +262,11 @@ export default function PublicProfilePage() {
                   <p>Not studying right now</p>
                 </div>
               )}
+              {getStatusText(profile) && (
+                <div className="mt-4 text-center text-sm text-gray-600">
+                  {getStatusText(profile)}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -258,6 +321,9 @@ export default function PublicProfilePage() {
                 <div className="text-center py-8">
                   <MapPin className="h-12 w-12 mx-auto mb-4 text-purple-600" />
                   <p className="text-xl font-medium">{profile.location.name}</p>
+                  {profile.location.parent && (
+                    <p className="text-gray-500 mt-1">in {profile.location.parent.name}</p>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">

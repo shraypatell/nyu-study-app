@@ -17,15 +17,54 @@ export async function GET() {
     const locations = await prisma.location.findMany({
       where: { isActive: true },
       orderBy: { sortOrder: "asc" },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        description: true,
+      include: {
+        parent: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+        children: {
+          where: { isActive: true },
+          orderBy: { sortOrder: "asc" },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true,
+          },
+        },
       },
     });
 
-    return NextResponse.json({ locations });
+    const formattedLocations = locations.map((location: {
+      id: string;
+      name: string;
+      slug: string;
+      description: string | null;
+      parent: {
+        id: string;
+        name: string;
+        slug: string;
+      } | null;
+      children: Array<{
+        id: string;
+        name: string;
+        slug: string;
+        description: string | null;
+      }>;
+    }) => ({
+      id: location.id,
+      name: location.name,
+      slug: location.slug,
+      description: location.description,
+      parent: location.parent,
+      children: location.children,
+      isParent: location.children.length > 0,
+    }));
+
+    return NextResponse.json({ locations: formattedLocations });
   } catch (error) {
     console.error("Get locations error:", error);
     return NextResponse.json(

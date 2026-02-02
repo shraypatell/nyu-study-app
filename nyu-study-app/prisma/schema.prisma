@@ -18,6 +18,9 @@ model User {
   bio         String?
   avatarUrl   String? @map("avatar_url")
 
+  // Username change tracking (max 2 changes)
+  usernameChanges Int @default(0) @map("username_changes")
+
   // Privacy settings (all default to true/public)
   isTimerPublic    Boolean @default(true) @map("is_timer_public")
   isClassesPublic  Boolean @default(true) @map("is_classes_public")
@@ -77,6 +80,11 @@ model Location {
   isActive    Boolean  @default(true) @map("is_active")
   sortOrder   Int      @default(0) @map("sort_order")
   createdAt   DateTime @default(now()) @map("created_at")
+
+  // Self-relation for hierarchical locations (parent → children)
+  parentId String? @map("parent_id")
+  parent   Location? @relation("LocationChildren", fields: [parentId], references: [id])
+  children Location[] @relation("LocationChildren")
 
   userLocations UserLocation[]
 

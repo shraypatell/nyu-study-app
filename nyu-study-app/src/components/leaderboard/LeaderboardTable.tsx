@@ -15,6 +15,22 @@ interface LeaderboardEntry {
   displayName: string | null;
   avatarUrl: string | null;
   totalSeconds: number;
+  isTimerPublic?: boolean;
+  session?: {
+    isActive: boolean;
+    startedAt: string;
+    endedAt: string | null;
+  } | null;
+  location?: {
+    id: string;
+    name: string;
+    slug: string;
+    parent?: {
+      id: string;
+      name: string;
+      slug: string;
+    } | null;
+  } | null;
   isCurrentUser: boolean;
   isActiveNow?: boolean;
 }
@@ -40,6 +56,7 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
   const [data, setData] = useState<LeaderboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     fetchLeaderboard();
@@ -51,6 +68,13 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
     }, 30000);
     return () => clearInterval(interval);
   }, [locationId]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchLeaderboard = async (silent = false) => {
     if (!silent) setLoading(true);
@@ -104,7 +128,65 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    return `${hours}h ${minutes}m`;
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const getStatusText = (entry: LeaderboardEntry) => {
+    if (!entry.isTimerPublic || !entry.session) return null;
+    const startedAt = new Date(entry.session.startedAt).getTime();
+    const endedAt = entry.session.endedAt ? new Date(entry.session.endedAt).getTime() : null;
+
+    if (entry.session.isActive) {
+      const durationSeconds = Math.max(0, Math.floor((now - startedAt) / 1000));
+      const locationText = entry.location?.name
+        ? entry.location.parent
+          ? ` at ${entry.location.name} in ${entry.location.parent.name}`
+          : ` at ${entry.location.name}`
+        : "";
+      return `Studying ${formatTime(durationSeconds)}${locationText}`;
+    }
+
+    const endTime = endedAt ?? startedAt;
+    const elapsedMinutes = Math.max(0, Math.floor((now - endTime) / 60000));
+    const days = Math.floor(elapsedMinutes / 1440);
+    const hours = Math.floor((elapsedMinutes % 1440) / 60);
+    const minutes = elapsedMinutes % 60;
+    let elapsedText = "";
+
+    if (days > 0) {
+      elapsedText = `Active ${days}d ${hours}h ago`;
+    } else if (hours > 0) {
+      elapsedText = `Active ${hours}h ${minutes}m ago`;
+    } else {
+      elapsedText = `Active ${minutes}m ago`;
+    }
+
+    const locationText = entry.location?.name
+      ? entry.location.parent
+        ? ` at ${entry.location.name} in ${entry.location.parent.name}`
+        : ` at ${entry.location.name}`
+      : "";
+    return `${elapsedText}${locationText}`;
+
+  };
+
+  const getTotalLiveSeconds = (entry: LeaderboardEntry) => {
+    let total = entry.totalSeconds;
+    if (entry.isTimerPublic && entry.session?.isActive) {
+      const startedAt = new Date(entry.session.startedAt).getTime();
+      const sessionDuration = Math.max(0, Math.floor((now - startedAt) / 1000));
+      total += sessionDuration;
+    }
+    return total;
+  };
+
+  const getSessionDuration = (entry: LeaderboardEntry) => {
+    if (!entry.isTimerPublic || !entry.session?.isActive) return 0;
+    const startedAt = new Date(entry.session.startedAt).getTime();
+    return Math.max(0, Math.floor((now - startedAt) / 1000));
   };
 
   const getRankStyle = (rank: number) => {
@@ -189,22 +271,27 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
                           You
                         </Badge>
                       )}
-                      {entry.isActiveNow && (
+                      {entry.session?.isActive && entry.isTimerPublic && (
                         <Badge
                           variant="secondary"
                           className="text-xs bg-green-100 text-green-700"
                         >
                           <Clock className="h-3 w-3 mr-1" />
-                          Active
+                          Studying
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500">@{entry.username}</p>
+                    <div className="text-sm text-gray-500">@{entry.username}</div>
+                    {getStatusText(entry) && (
+                      <div className="text-xs text-gray-600">
+                        {getStatusText(entry)}
+                      </div>
+                    )}
                   </div>
 
                   <div className="text-right">
                     <p className="font-mono font-semibold">
-                      {formatTime(entry.totalSeconds)}
+                      {formatTime(getTotalLiveSeconds(entry))}
                     </p>
                   </div>
                 </div>
@@ -242,14 +329,19 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
                         You
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500">
                       @{data.currentUserEntry.username}
-                    </p>
+                    </div>
+                    {getStatusText(data.currentUserEntry) && (
+                      <div className="text-xs text-gray-600">
+                        {getStatusText(data.currentUserEntry)}
+                      </div>
+                    )}
                   </div>
 
                   <div className="text-right">
                     <p className="font-mono font-semibold">
-                      {formatTime(data.currentUserEntry.totalSeconds)}
+                      {formatTime(getTotalLiveSeconds(data.currentUserEntry))}
                     </p>
                   </div>
                 </div>
