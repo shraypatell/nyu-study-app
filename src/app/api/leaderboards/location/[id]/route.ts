@@ -20,9 +20,6 @@ export async function GET(
       );
     }
 
-    const { searchParams } = new URL(request.url);
-    const cursor = searchParams.get("cursor");
-
     const location = await prisma.location.findUnique({
       where: { id, isActive: true },
       include: {
@@ -83,19 +80,10 @@ export async function GET(
           },
         },
       },
-      orderBy: { updatedAt: "desc" },
-      take: LEADERBOARD_LIMIT + 1,
-      ...(cursor && {
-        skip: 1,
-        cursor: { id: cursor },
-      }),
     });
 
-    const hasMore = userLocations.length > LEADERBOARD_LIMIT;
-    const results = hasMore ? userLocations.slice(0, LEADERBOARD_LIMIT) : userLocations;
-
     const leaderboardWithStats = await Promise.all(
-      results.map(async (userLocation: {
+      userLocations.map(async (userLocation: {
         userId: string;
         updatedAt: Date;
         user: {
@@ -141,7 +129,7 @@ export async function GET(
         const totalLiveSeconds = baseSeconds + liveSessionSeconds;
 
         return {
-          rank: cursor ? parseInt(atob(cursor).split(":")[1] || "0") + index + 1 : index + 1,
+          rank: index + 1,
           userId: userLocation.user.id,
           username: userLocation.user.username,
           displayName: userLocation.user.displayName,
@@ -165,11 +153,12 @@ export async function GET(
 
     const sortedLeaderboard = leaderboardWithStats.sort((a: { totalLiveSeconds: number }, b: { totalLiveSeconds: number }) => b.totalLiveSeconds - a.totalLiveSeconds);
 
-    sortedLeaderboard.forEach((entry: { rank: number }, index: number) => {
-      entry.rank = cursor ? parseInt(atob(cursor).split(":".charAt(0))[1] || "0") + index + 1 : index + 1;
-    });
+    const hasMore = sortedLeaderboard.length > LEADERBOARD_LIMIT;
+    const results = hasMore ? sortedLeaderboard.slice(0, LEADERBOARD_LIMIT) : sortedLeaderboard;
 
-    const nextCursor = hasMore ? results[results.length - 1]?.id : null;
+    results.forEach((entry: { rank: number }, index: number) => {
+      entry.rank = index + 1;
+    });
 
     return NextResponse.json({
       location: {
@@ -178,10 +167,10 @@ export async function GET(
         slug: location.slug,
         parent: location.parent,
       },
-      leaderboard: sortedLeaderboard,
-      date: today.toISOString().split("T".charAt(0))[0],
+      leaderboard: results,
+      date: today.toISOString().split("T")[0],
       hasMore,
-      nextCursor,
+      nextCursor: null,
     });
   } catch (error) {
     console.error("Location leaderboard error:", error);

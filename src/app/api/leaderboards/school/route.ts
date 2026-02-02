@@ -16,9 +16,6 @@ export async function GET(request: Request) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
-    const cursor = searchParams.get("cursor");
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -69,18 +66,9 @@ export async function GET(request: Request) {
           },
         },
       },
-      orderBy: { totalSeconds: "desc" },
-      take: LEADERBOARD_LIMIT + 1,
-      ...(cursor && {
-        skip: 1,
-        cursor: { id: cursor },
-      }),
     });
 
-    const hasMore = leaderboard.length > LEADERBOARD_LIMIT;
-    const results = hasMore ? leaderboard.slice(0, LEADERBOARD_LIMIT) : leaderboard;
-
-    const leaderboardWithLiveTime = results.map((entry: {
+    const leaderboardWithLiveTime = leaderboard.map((entry: {
       totalSeconds: number;
       user: {
         id: string;
@@ -137,16 +125,16 @@ export async function GET(request: Request) {
 
     const sortedLeaderboard = leaderboardWithLiveTime.sort((a, b) => b.totalLiveSeconds - a.totalLiveSeconds);
 
-    const rankedLeaderboard = sortedLeaderboard.map((entry, index) => ({
-      rank: cursor ? parseInt(atob(cursor).split(":")[1] || "0") + index + 1 : index + 1,
+    const hasMore = sortedLeaderboard.length > LEADERBOARD_LIMIT;
+    const results = hasMore ? sortedLeaderboard.slice(0, LEADERBOARD_LIMIT) : sortedLeaderboard;
+
+    const rankedLeaderboard = results.map((entry, index) => ({
+      rank: index + 1,
       ...entry,
     }));
 
-    const nextCursor = hasMore ? results[results.length - 1]?.id : null;
-
     let currentUserEntry = null;
-    if (!cursor) {
-      const currentUserStat = await prisma.dailyStat.findUnique({
+    const currentUserStat = await prisma.dailyStat.findUnique({
         where: {
           userId_date: {
             userId: user.id,
@@ -234,14 +222,13 @@ export async function GET(request: Request) {
           isCurrentUser: true,
         };
       }
-    }
 
     return NextResponse.json({
       leaderboard: rankedLeaderboard,
       currentUserEntry,
-      date: today.toISOString().split("T".charAt(0))[0],
+      date: today.toISOString().split("T")[0],
       hasMore,
-      nextCursor,
+      nextCursor: null,
     });
   } catch (error) {
     console.error("School leaderboard error:", error);
