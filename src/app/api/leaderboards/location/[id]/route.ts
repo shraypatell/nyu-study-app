@@ -133,14 +133,21 @@ export async function GET(
         });
 
         const isActiveNow = userLocation.user.studySessions[0]?.isActive ?? false;
+        const sessionStart = userLocation.user.studySessions[0]?.startedAt;
+        const liveSessionSeconds = isActiveNow && sessionStart
+          ? Math.floor((Date.now() - new Date(sessionStart).getTime()) / 1000)
+          : 0;
+        const baseSeconds = dailyStat?.isPublic ? dailyStat.totalSeconds : 0;
+        const totalLiveSeconds = baseSeconds + liveSessionSeconds;
 
         return {
-          rank: cursor ? parseInt(atob(cursor).split(":".charAt(0))[1] || "0") + index + 1 : index + 1,
+          rank: cursor ? parseInt(atob(cursor).split(":")[1] || "0") + index + 1 : index + 1,
           userId: userLocation.user.id,
           username: userLocation.user.username,
           displayName: userLocation.user.displayName,
           avatarUrl: userLocation.user.avatarUrl,
-          totalSeconds: dailyStat?.isPublic ? dailyStat.totalSeconds : 0,
+          totalSeconds: baseSeconds,
+          totalLiveSeconds,
           isTimerPublic: userLocation.user.isTimerPublic,
           session: userLocation.user.studySessions[0]
             ? {
@@ -156,7 +163,7 @@ export async function GET(
       })
     );
 
-    const sortedLeaderboard = leaderboardWithStats.sort((a: { totalSeconds: number }, b: { totalSeconds: number }) => b.totalSeconds - a.totalSeconds);
+    const sortedLeaderboard = leaderboardWithStats.sort((a: { totalLiveSeconds: number }, b: { totalLiveSeconds: number }) => b.totalLiveSeconds - a.totalLiveSeconds);
 
     sortedLeaderboard.forEach((entry: { rank: number }, index: number) => {
       entry.rank = cursor ? parseInt(atob(cursor).split(":".charAt(0))[1] || "0") + index + 1 : index + 1;

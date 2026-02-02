@@ -27,11 +27,6 @@ export async function GET(request: Request) {
         date: today,
         isPublic: true,
         totalSeconds: { gt: 0 },
-        user: {
-          email: {
-            endsWith: "@nyu.edu",
-          },
-        },
       },
       include: {
         user: {
@@ -85,7 +80,7 @@ export async function GET(request: Request) {
     const hasMore = leaderboard.length > LEADERBOARD_LIMIT;
     const results = hasMore ? leaderboard.slice(0, LEADERBOARD_LIMIT) : leaderboard;
 
-    const rankedLeaderboard = results.map((entry: {
+    const leaderboardWithLiveTime = results.map((entry: {
       totalSeconds: number;
       user: {
         id: string;
@@ -112,23 +107,39 @@ export async function GET(request: Request) {
           isActive: boolean;
         }>;
       };
-    }, index: number) => ({
+    }) => {
+      const isActive = entry.user.studySessions[0]?.isActive ?? false;
+      const sessionStart = entry.user.studySessions[0]?.startedAt;
+      const liveSessionSeconds = isActive && sessionStart
+        ? Math.floor((Date.now() - new Date(sessionStart).getTime()) / 1000)
+        : 0;
+      const totalLiveSeconds = entry.totalSeconds + liveSessionSeconds;
+
+      return {
+        userId: entry.user.id,
+        username: entry.user.username,
+        displayName: entry.user.displayName,
+        avatarUrl: entry.user.avatarUrl,
+        totalSeconds: entry.totalSeconds,
+        totalLiveSeconds,
+        isTimerPublic: entry.user.isTimerPublic,
+        session: entry.user.studySessions[0]
+          ? {
+              startedAt: entry.user.studySessions[0].startedAt,
+              endedAt: entry.user.studySessions[0].endedAt,
+              isActive: entry.user.studySessions[0].isActive,
+            }
+          : null,
+        location: entry.user.isLocationPublic ? entry.user.userLocations[0]?.location || null : null,
+        isCurrentUser: entry.user.id === user.id,
+      };
+    });
+
+    const sortedLeaderboard = leaderboardWithLiveTime.sort((a, b) => b.totalLiveSeconds - a.totalLiveSeconds);
+
+    const rankedLeaderboard = sortedLeaderboard.map((entry, index) => ({
       rank: cursor ? parseInt(atob(cursor).split(":")[1] || "0") + index + 1 : index + 1,
-      userId: entry.user.id,
-      username: entry.user.username,
-      displayName: entry.user.displayName,
-      avatarUrl: entry.user.avatarUrl,
-      totalSeconds: entry.totalSeconds,
-      isTimerPublic: entry.user.isTimerPublic,
-      session: entry.user.studySessions[0]
-        ? {
-            startedAt: entry.user.studySessions[0].startedAt,
-            endedAt: entry.user.studySessions[0].endedAt,
-            isActive: entry.user.studySessions[0].isActive,
-          }
-        : null,
-      location: entry.user.isLocationPublic ? entry.user.userLocations[0]?.location || null : null,
-      isCurrentUser: entry.user.id === user.id,
+      ...entry,
     }));
 
     const nextCursor = hasMore ? results[results.length - 1]?.id : null;
@@ -185,17 +196,19 @@ export async function GET(request: Request) {
         },
       });
 
-      if (currentUserStat && currentUserStat.isPublic && currentUserStat.user.email?.endsWith("@nyu.edu")) {
+      if (currentUserStat && currentUserStat.isPublic) {
+        const isActive = currentUserStat.user.studySessions[0]?.isActive ?? false;
+        const sessionStart = currentUserStat.user.studySessions[0]?.startedAt;
+        const liveSessionSeconds = isActive && sessionStart
+          ? Math.floor((Date.now() - new Date(sessionStart).getTime()) / 1000)
+          : 0;
+        const totalLiveSeconds = currentUserStat.totalSeconds + liveSessionSeconds;
+
         const userRank = await prisma.dailyStat.count({
           where: {
             date: today,
             isPublic: true,
-            totalSeconds: { gt: currentUserStat.totalSeconds },
-            user: {
-              email: {
-                endsWith: "@nyu.edu",
-              },
-            },
+            totalSeconds: { gt: 0 },
           },
         });
 
@@ -206,6 +219,7 @@ export async function GET(request: Request) {
           displayName: currentUserStat.user.displayName,
           avatarUrl: currentUserStat.user.avatarUrl,
           totalSeconds: currentUserStat.totalSeconds,
+          totalLiveSeconds,
           isTimerPublic: currentUserStat.user.isTimerPublic,
           session: currentUserStat.user.studySessions[0]
             ? {
