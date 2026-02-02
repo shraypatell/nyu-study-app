@@ -58,6 +58,7 @@ export async function PUT(request: Request) {
     }
 
     const data = validationResult.data;
+    const updateData: Record<string, unknown> = { ...data };
 
     if (data.username !== undefined) {
       const currentUser = await prisma.user.findUnique({
@@ -73,7 +74,7 @@ export async function PUT(request: Request) {
       }
 
       if (data.username === currentUser.username) {
-        delete data.username;
+        delete updateData.username;
       } else {
         if (currentUser.usernameChanges >= 2) {
           return NextResponse.json(
@@ -93,13 +94,13 @@ export async function PUT(request: Request) {
           );
         }
 
-        data.usernameChanges = currentUser.usernameChanges + 1;
+        updateData.usernameChanges = currentUser.usernameChanges + 1;
       }
     }
 
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
-      data,
+      data: updateData,
       select: {
         id: true,
         username: true,
