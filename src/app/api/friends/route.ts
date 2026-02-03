@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getNyDateStart } from "@/lib/date";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -149,8 +150,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = getNyDateStart();
 
     const friendships = await prisma.friendship.findMany({
       where: {

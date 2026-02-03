@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getNyDateStart } from "@/lib/date";
 import { NextResponse } from "next/server";
 
 const CRON_SECRET = process.env.CRON_SECRET;
@@ -14,9 +15,7 @@ export async function GET(request: Request) {
     }
 
     const now = new Date();
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
+    const yesterday = getNyDateStart(now, -1);
 
     const activeSessions = await prisma.studySession.findMany({
       where: {

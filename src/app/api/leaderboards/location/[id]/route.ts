@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { getNyDateStart } from "@/lib/date";
 
 const LEADERBOARD_LIMIT = 100;
 
@@ -40,8 +41,7 @@ export async function GET(
       );
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = getNyDateStart();
 
     const userLocations = await prisma.userLocation.findMany({
       where: {
