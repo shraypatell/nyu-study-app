@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Trophy, MapPin } from "lucide-react";
 
@@ -118,6 +118,19 @@ export default function DashboardLeaderboardWidget({
     return "text-gray-400";
   };
 
+  const sortedEntries = useMemo(() => {
+    return [...entries]
+      .map((entry) => ({
+        ...entry,
+        computedLiveSeconds: getTotalLiveSeconds(entry),
+      }))
+      .sort((a, b) => b.computedLiveSeconds - a.computedLiveSeconds)
+      .map((entry, index) => ({
+        ...entry,
+        rank: index + 1,
+      }));
+  }, [entries, now]);
+
   const content = (
     <div
       className={`bg-white p-4 rounded-lg shadow-sm ${
@@ -132,21 +145,16 @@ export default function DashboardLeaderboardWidget({
         )}
         <h3 className="font-semibold text-gray-700">{title}</h3>
       </div>
-      {entries.length > 0 ? (
+      {sortedEntries.length > 0 ? (
         <div className="max-h-[200px] overflow-y-auto space-y-2 pr-1">
-          {entries.map((entry) => (
+          {sortedEntries.map((entry) => (
             <div
               key={entry.userId}
               className="flex items-start gap-2 text-sm py-1"
             >
-              {entry.rank && (
-                <span className={`w-5 text-center ${getRankStyle(entry.rank)}`}>
-                  {entry.rank}
-                </span>
-              )}
-              {!entry.rank && (
-                <span className="w-5 text-center text-gray-500">-</span>
-              )}
+              <span className={`w-5 text-center ${getRankStyle(entry.rank || 0)}`}>
+                {entry.rank}
+              </span>
               <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs text-gray-700 shrink-0">
                 {entry.displayName?.charAt(0) || entry.username.charAt(0)}
               </div>
