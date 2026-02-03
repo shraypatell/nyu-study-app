@@ -17,6 +17,7 @@ interface Class {
   semester: string;
   memberCount: number;
   isJoined: boolean;
+  chatRoomId: string | null;
 }
 
 export default function ClassesPage() {
@@ -202,8 +203,8 @@ export default function ClassesPage() {
                     <div className="flex gap-2">
                       {cls.isJoined ? (
                         <>
-                          <Link href={`/chat/class/${cls.id}`}>
-                            <Button variant="outline" size="sm">
+                          <Link href={cls.chatRoomId ? `/chat/room/${cls.chatRoomId}` : "#"}>
+                            <Button variant="outline" size="sm" disabled={!cls.chatRoomId}>
                               <MessageCircle className="h-4 w-4 mr-1" />
                               Chat
                             </Button>
@@ -315,8 +316,8 @@ export default function ClassesPage() {
                         {cls.memberCount} members
                       </div>
                       <div className="flex gap-2">
-                        <Link href={`/chat/class/${cls.id}`}>
-                          <Button variant="outline" size="sm">
+                        <Link href={cls.chatRoomId ? `/chat/room/${cls.chatRoomId}` : "#"}>
+                          <Button variant="outline" size="sm" disabled={!cls.chatRoomId}>
                             <MessageCircle className="h-4 w-4 mr-1" />
                             Class Chat
                           </Button>

@@ -62,6 +62,7 @@ export default function FriendsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [processingRequest, setProcessingRequest] = useState<string | null>(null);
+  const [startingChat, setStartingChat] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -151,6 +152,26 @@ export default function FriendsPage() {
       }
     } catch (error) {
       console.error("Failed to cancel request:", error);
+    }
+  };
+
+  const startChat = async (userId: string) => {
+    setStartingChat(userId);
+    try {
+      const response = await fetch("/api/chat/rooms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "DM", userId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        window.location.href = `/chat/room/${data.room.id}`;
+      }
+    } catch (error) {
+      console.error("Failed to start chat:", error);
+    } finally {
+      setStartingChat(null);
     }
   };
 
@@ -326,11 +347,18 @@ export default function FriendsPage() {
                     </div>
 
                     <div className="flex gap-2">
-                      <Link href={`/chat/${friend.user.id}`}>
-                        <Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => startChat(friend.user.id)}
+                        disabled={startingChat === friend.user.id}
+                      >
+                        {startingChat === friend.user.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
                           <MessageCircle className="h-4 w-4" />
-                        </Button>
-                      </Link>
+                        )}
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"

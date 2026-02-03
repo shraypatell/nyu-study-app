@@ -4,8 +4,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 const updateProfileSchema = z.object({
-  displayName: z.string().max(50).optional(),
-  bio: z.string().max(500).optional(),
+  displayName: z.string().max(50).optional().nullable(),
+  bio: z.string().max(500).optional().nullable(),
   avatarUrl: z.string().url().max(500).optional().nullable(),
   isTimerPublic: z.boolean().optional(),
   isClassesPublic: z.boolean().optional(),

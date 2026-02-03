@@ -50,6 +50,9 @@ export async function GET(request: Request) {
           _count: {
             select: { userClasses: true },
           },
+          chatRoom: {
+            select: { id: true },
+          },
         },
         orderBy: [{ semester: "desc" }, { code: "asc" }],
         ...(joinedOnly ? {} : { skip, take: limit }),
@@ -57,7 +60,7 @@ export async function GET(request: Request) {
       prisma.class.count({ where }),
     ]);
 
-    const formattedClasses = classes.map((cls: { id: string; name: string; code: string; section: string | null; semester: string; _count: { userClasses: number }; userClasses: Array<{ id: string }> }) => ({
+    const formattedClasses = classes.map((cls: { id: string; name: string; code: string; section: string | null; semester: string; _count: { userClasses: number }; userClasses: Array<{ id: string }>; chatRoom: { id: string } | null }) => ({
       id: cls.id,
       name: cls.name,
       code: cls.code,
@@ -65,6 +68,7 @@ export async function GET(request: Request) {
       semester: cls.semester,
       memberCount: cls._count.userClasses,
       isJoined: cls.userClasses.length > 0,
+      chatRoomId: cls.chatRoom?.id || null,
     }));
 
     const totalPages = joinedOnly ? 1 : Math.max(1, Math.ceil(totalCount / limit));
