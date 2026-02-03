@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -26,8 +27,8 @@ export async function GET(request: Request) {
       isActive: true,
       ...(search && {
         OR: [
-          { name: { contains: search, mode: "insensitive" } },
-          { code: { contains: search, mode: "insensitive" } },
+          { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { code: { contains: search, mode: Prisma.QueryMode.insensitive } },
         ],
       }),
       ...(semester && { semester }),
