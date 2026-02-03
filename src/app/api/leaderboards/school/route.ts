@@ -77,6 +77,8 @@ export async function GET(request: Request) {
         : 0;
       const totalLiveSeconds = baseSeconds + liveSessionSeconds;
 
+      console.log(`[School Leaderboard] User: ${entry.username}, base: ${baseSeconds}, active: ${isActive}, liveSeconds: ${liveSessionSeconds}, totalLive: ${totalLiveSeconds}`);
+
       return {
         userId: entry.id,
         username: entry.username,
@@ -98,6 +100,8 @@ export async function GET(request: Request) {
     });
 
     const sortedLeaderboard = leaderboardWithLiveTime.sort((a, b) => b.totalLiveSeconds - a.totalLiveSeconds);
+
+    console.log(`[School Leaderboard] Sorted order:`, sortedLeaderboard.map(e => ({ username: e.username, totalLive: e.totalLiveSeconds })));
 
     const hasMore = sortedLeaderboard.length > LEADERBOARD_LIMIT;
     const results = hasMore ? sortedLeaderboard.slice(0, LEADERBOARD_LIMIT) : sortedLeaderboard;
