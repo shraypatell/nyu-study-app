@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { getNyDateStart } from "@/lib/date";
 import LocationSelector from "@/components/location/LocationSelector";
 import TimerContainer from "@/components/timer/TimerContainer";
 import DashboardLeaderboardWidget from "@/components/dashboard/DashboardLeaderboardWidget";
 import DashboardFriendsWidget from "@/components/dashboard/DashboardFriendsWidget";
 
 async function getDashboardData(userId: string) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getNyDateStart();
 
   const userLocation = await prisma.userLocation.findUnique({
     where: { userId },
@@ -97,6 +97,12 @@ async function getDashboardData(userId: string) {
         });
 
         const session = ul.user.studySessions[0];
+        const baseSeconds = dailyStat?.totalSeconds || 0;
+        const isActive = session?.isActive || false;
+        const liveSessionSeconds = isActive && session
+          ? Math.floor((Date.now() - session.startedAt.getTime()) / 1000)
+          : 0;
+        const totalLiveSeconds = baseSeconds + liveSessionSeconds;
 
         return {
           rank: 0,
@@ -104,8 +110,9 @@ async function getDashboardData(userId: string) {
           username: ul.user.username,
           displayName: ul.user.displayName,
           avatarUrl: ul.user.avatarUrl,
-          totalSeconds: dailyStat?.totalSeconds || 0,
-          isActive: session?.isActive || false,
+          totalSeconds: baseSeconds,
+          totalLiveSeconds,
+          isActive,
           session: session
             ? {
                 startedAt: session.startedAt.toISOString(),
@@ -124,73 +131,79 @@ async function getDashboardData(userId: string) {
       })
     );
 
-    unsortedLeaderboard.sort((a, b) => b.totalSeconds - a.totalSeconds);
+    unsortedLeaderboard.sort((a, b) => b.totalLiveSeconds - a.totalLiveSeconds);
     locationLeaderboard = unsortedLeaderboard.map((entry, index) => ({
       ...entry,
       rank: index + 1,
     }));
   }
 
-  const schoolDailyStats = await prisma.dailyStat.findMany({
-    where: {
-      date: today,
-      isPublic: true,
-      totalSeconds: { gt: 0 },
-    },
+  const schoolUsers = await prisma.user.findMany({
     take: 20,
-    orderBy: { totalSeconds: "desc" },
-    include: {
-      user: {
+    select: {
+      id: true,
+      username: true,
+      displayName: true,
+      avatarUrl: true,
+      studySessions: {
+        take: 1,
+        orderBy: { startedAt: "desc" },
         select: {
-          id: true,
-          username: true,
-          displayName: true,
-          avatarUrl: true,
-          studySessions: {
-            take: 1,
-            orderBy: { startedAt: "desc" },
+          isActive: true,
+          startedAt: true,
+          endedAt: true,
+        },
+      },
+      userLocations: {
+        take: 1,
+        select: {
+          location: {
             select: {
-              isActive: true,
-              startedAt: true,
-              endedAt: true,
-            },
-          },
-          userLocations: {
-            take: 1,
-            select: {
-              location: {
+              id: true,
+              name: true,
+              slug: true,
+              parent: {
                 select: {
                   id: true,
                   name: true,
                   slug: true,
-                  parent: {
-                    select: {
-                      id: true,
-                      name: true,
-                      slug: true,
-                    },
-                  },
                 },
               },
             },
           },
         },
       },
+      dailyStats: {
+        where: { date: today },
+        take: 1,
+        select: {
+          totalSeconds: true,
+          isPublic: true,
+        },
+      },
     },
   });
 
-  const schoolLeaderboard = schoolDailyStats.map((entry, index) => {
-    const session = entry.user.studySessions[0];
-    const userLocation = entry.user.userLocations[0]?.location;
+  const schoolLeaderboardWithLiveTime = schoolUsers.map((user) => {
+    const dailyStat = user.dailyStats[0];
+    const baseSeconds = dailyStat?.isPublic ? dailyStat.totalSeconds : 0;
+    const session = user.studySessions[0];
+    const isActive = session?.isActive || false;
+    const liveSessionSeconds = isActive && session
+      ? Math.floor((Date.now() - session.startedAt.getTime()) / 1000)
+      : 0;
+    const totalLiveSeconds = baseSeconds + liveSessionSeconds;
+    const userLocation = user.userLocations[0]?.location;
 
     return {
-      rank: index + 1,
-      userId: entry.user.id,
-      username: entry.user.username,
-      displayName: entry.user.displayName,
-      avatarUrl: entry.user.avatarUrl,
-      totalSeconds: entry.totalSeconds,
-      isActive: session?.isActive || false,
+      rank: 0,
+      userId: user.id,
+      username: user.username,
+      displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
+      totalSeconds: baseSeconds,
+      totalLiveSeconds,
+      isActive,
       session: session
         ? {
             startedAt: session.startedAt.toISOString(),
@@ -207,6 +220,12 @@ async function getDashboardData(userId: string) {
         : null,
     };
   });
+
+  schoolLeaderboardWithLiveTime.sort((a, b) => b.totalLiveSeconds - a.totalLiveSeconds);
+  const schoolLeaderboard = schoolLeaderboardWithLiveTime.map((entry, index) => ({
+    ...entry,
+    rank: index + 1,
+  }));
 
   const friendships = await prisma.friendship.findMany({
     where: {

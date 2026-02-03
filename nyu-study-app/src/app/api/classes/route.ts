@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -17,30 +18,44 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search")?.trim();
     const semester = searchParams.get("semester");
+    const joinedOnly = searchParams.get("joined") === "true";
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "32", 10)));
+    const skip = (page - 1) * limit;
 
-    const classes = await prisma.class.findMany({
-      where: {
-        isActive: true,
-        ...(search && {
-          OR: [
-            { name: { contains: search, mode: "insensitive" } },
-            { code: { contains: search, mode: "insensitive" } },
-          ],
-        }),
-        ...(semester && { semester }),
-      },
-      include: {
+    const where = {
+      isActive: true,
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { code: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        ],
+      }),
+      ...(semester && { semester }),
+      ...(joinedOnly && {
         userClasses: {
-          where: { userId: user.id },
-          select: { id: true },
+          some: { userId: user.id },
         },
-        _count: {
-          select: { userClasses: true },
+      }),
+    };
+
+    const [classes, totalCount] = await Promise.all([
+      prisma.class.findMany({
+        where,
+        include: {
+          userClasses: {
+            where: { userId: user.id },
+            select: { id: true },
+          },
+          _count: {
+            select: { userClasses: true },
+          },
         },
-      },
-      orderBy: [{ semester: "desc" }, { code: "asc" }],
-      take: 100,
-    });
+        orderBy: [{ semester: "desc" }, { code: "asc" }],
+        ...(joinedOnly ? {} : { skip, take: limit }),
+      }),
+      prisma.class.count({ where }),
+    ]);
 
     const formattedClasses = classes.map((cls: { id: string; name: string; code: string; section: string | null; semester: string; _count: { userClasses: number }; userClasses: Array<{ id: string }> }) => ({
       id: cls.id,
@@ -52,7 +67,15 @@ export async function GET(request: Request) {
       isJoined: cls.userClasses.length > 0,
     }));
 
-    return NextResponse.json({ classes: formattedClasses });
+    const totalPages = joinedOnly ? 1 : Math.max(1, Math.ceil(totalCount / limit));
+
+    return NextResponse.json({
+      classes: formattedClasses,
+      totalCount,
+      page: joinedOnly ? 1 : page,
+      limit: joinedOnly ? totalCount : limit,
+      totalPages,
+    });
   } catch (error) {
     console.error("Get classes error:", error);
     return NextResponse.json(

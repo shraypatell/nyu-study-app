@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { getNyDateStart } from "@/lib/date";
 
 const LEADERBOARD_LIMIT = 100;
 
@@ -19,9 +20,6 @@ export async function GET(
         { status: 401 }
       );
     }
-
-    const { searchParams } = new URL(request.url);
-    const cursor = searchParams.get("cursor");
 
     const location = await prisma.location.findUnique({
       where: { id, isActive: true },
@@ -43,8 +41,7 @@ export async function GET(
       );
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = getNyDateStart();
 
     const userLocations = await prisma.userLocation.findMany({
       where: {
@@ -83,19 +80,10 @@ export async function GET(
           },
         },
       },
-      orderBy: { updatedAt: "desc" },
-      take: LEADERBOARD_LIMIT + 1,
-      ...(cursor && {
-        skip: 1,
-        cursor: { id: cursor },
-      }),
     });
 
-    const hasMore = userLocations.length > LEADERBOARD_LIMIT;
-    const results = hasMore ? userLocations.slice(0, LEADERBOARD_LIMIT) : userLocations;
-
     const leaderboardWithStats = await Promise.all(
-      results.map(async (userLocation: {
+      userLocations.map(async (userLocation: {
         userId: string;
         updatedAt: Date;
         user: {
@@ -133,14 +121,21 @@ export async function GET(
         });
 
         const isActiveNow = userLocation.user.studySessions[0]?.isActive ?? false;
+        const sessionStart = userLocation.user.studySessions[0]?.startedAt;
+        const liveSessionSeconds = isActiveNow && sessionStart
+          ? Math.floor((Date.now() - new Date(sessionStart).getTime()) / 1000)
+          : 0;
+        const baseSeconds = dailyStat?.isPublic ? dailyStat.totalSeconds : 0;
+        const totalLiveSeconds = baseSeconds + liveSessionSeconds;
 
         return {
-          rank: cursor ? parseInt(atob(cursor).split(":".charAt(0))[1] || "0") + index + 1 : index + 1,
+          rank: index + 1,
           userId: userLocation.user.id,
           username: userLocation.user.username,
           displayName: userLocation.user.displayName,
           avatarUrl: userLocation.user.avatarUrl,
-          totalSeconds: dailyStat?.isPublic ? dailyStat.totalSeconds : 0,
+          totalSeconds: baseSeconds,
+          totalLiveSeconds,
           isTimerPublic: userLocation.user.isTimerPublic,
           session: userLocation.user.studySessions[0]
             ? {
@@ -156,13 +151,14 @@ export async function GET(
       })
     );
 
-    const sortedLeaderboard = leaderboardWithStats.sort((a: { totalSeconds: number }, b: { totalSeconds: number }) => b.totalSeconds - a.totalSeconds);
+    const sortedLeaderboard = leaderboardWithStats.sort((a: { totalLiveSeconds: number }, b: { totalLiveSeconds: number }) => b.totalLiveSeconds - a.totalLiveSeconds);
 
-    sortedLeaderboard.forEach((entry: { rank: number }, index: number) => {
-      entry.rank = cursor ? parseInt(atob(cursor).split(":".charAt(0))[1] || "0") + index + 1 : index + 1;
+    const hasMore = sortedLeaderboard.length > LEADERBOARD_LIMIT;
+    const results = hasMore ? sortedLeaderboard.slice(0, LEADERBOARD_LIMIT) : sortedLeaderboard;
+
+    results.forEach((entry: { rank: number }, index: number) => {
+      entry.rank = index + 1;
     });
-
-    const nextCursor = hasMore ? results[results.length - 1]?.id : null;
 
     return NextResponse.json({
       location: {
@@ -171,10 +167,10 @@ export async function GET(
         slug: location.slug,
         parent: location.parent,
       },
-      leaderboard: sortedLeaderboard,
-      date: today.toISOString().split("T".charAt(0))[0],
+      leaderboard: results,
+      date: today.toISOString().split("T")[0],
       hasMore,
-      nextCursor,
+      nextCursor: null,
     });
   } catch (error) {
     console.error("Location leaderboard error:", error);

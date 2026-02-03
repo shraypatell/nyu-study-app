@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ interface LeaderboardEntry {
   displayName: string | null;
   avatarUrl: string | null;
   totalSeconds: number;
+  totalLiveSeconds?: number;
   isTimerPublic?: boolean;
   session?: {
     isActive: boolean;
@@ -196,6 +197,38 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
     return "bg-gray-50 text-gray-600";
   };
 
+  const sortedLeaderboard = useMemo(() => {
+    if (!data?.leaderboard) return [];
+    
+    return [...data.leaderboard]
+      .map((entry) => ({
+        ...entry,
+        computedLiveSeconds: getTotalLiveSeconds(entry),
+      }))
+      .sort((a, b) => b.computedLiveSeconds - a.computedLiveSeconds)
+      .map((entry, index) => ({
+        ...entry,
+        rank: index + 1,
+      }));
+  }, [data?.leaderboard, now]);
+
+  const sortedCurrentUserEntry = useMemo(() => {
+    if (!data?.currentUserEntry) return null;
+    const idx = sortedLeaderboard.findIndex((e) => e.isCurrentUser);
+    if (idx >= 0) {
+      return { ...sortedLeaderboard[idx], rank: idx + 1 };
+    }
+    const liveSeconds = getTotalLiveSeconds(data.currentUserEntry);
+    let rank = sortedLeaderboard.length + 1;
+    for (let i = 0; i < sortedLeaderboard.length; i++) {
+      if (liveSeconds > sortedLeaderboard[i].computedLiveSeconds) {
+        rank = i + 1;
+        break;
+      }
+    }
+    return { ...data.currentUserEntry, rank, computedLiveSeconds: liveSeconds };
+  }, [data?.currentUserEntry, sortedLeaderboard, now]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -239,7 +272,7 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {data.leaderboard.map((entry) => (
+            {sortedLeaderboard.map((entry) => (
               <Link key={entry.userId} href={`/users/${entry.userId}`}>
                 <div
                   className={`flex items-center gap-4 p-3 rounded-lg transition-colors hover:bg-gray-50 ${
@@ -299,49 +332,49 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
             ))}
           </div>
 
-          {data.currentUserEntry &&
-            !data.leaderboard.some((e) => e.isCurrentUser) && (
+          {sortedCurrentUserEntry &&
+            !sortedLeaderboard.some((e) => e.isCurrentUser) && (
               <>
                 <div className="my-4 border-t border-dashed" />
                 <div className="flex items-center gap-4 p-3 rounded-lg bg-purple-50 border border-purple-200">
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 ${getRankStyle(
-                      data.currentUserEntry.rank
+                      sortedCurrentUserEntry.rank
                     )}`}
                   >
-                    {data.currentUserEntry.rank}
+                    {sortedCurrentUserEntry.rank}
                   </div>
 
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={data.currentUserEntry.avatarUrl || undefined} />
+                    <AvatarImage src={sortedCurrentUserEntry.avatarUrl || undefined} />
                     <AvatarFallback className="bg-purple-100 text-purple-700">
-                      {data.currentUserEntry.username.slice(0, 2).toUpperCase()}
+                      {sortedCurrentUserEntry.username.slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium truncate">
-                        {data.currentUserEntry.displayName ||
-                          data.currentUserEntry.username}
+                        {sortedCurrentUserEntry.displayName ||
+                          sortedCurrentUserEntry.username}
                       </span>
                       <Badge variant="secondary" className="text-xs">
                         You
                       </Badge>
                     </div>
                     <div className="text-sm text-gray-500">
-                      @{data.currentUserEntry.username}
+                      @{sortedCurrentUserEntry.username}
                     </div>
-                    {getStatusText(data.currentUserEntry) && (
+                    {getStatusText(sortedCurrentUserEntry) && (
                       <div className="text-xs text-gray-600">
-                        {getStatusText(data.currentUserEntry)}
+                        {getStatusText(sortedCurrentUserEntry)}
                       </div>
                     )}
                   </div>
 
                   <div className="text-right">
                     <p className="font-mono font-semibold">
-                      {formatTime(getTotalLiveSeconds(data.currentUserEntry))}
+                      {formatTime(getTotalLiveSeconds(sortedCurrentUserEntry))}
                     </p>
                   </div>
                 </div>

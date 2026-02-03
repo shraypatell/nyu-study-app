@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { getNyDateStart } from "@/lib/date";
 import { NextResponse } from "next/server";
 
 // Simple rate limiting
@@ -69,8 +70,7 @@ export async function POST(request: Request) {
     });
 
     // Update daily stats
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = getNyDateStart();
 
     await prisma.dailyStat.upsert({
       where: {
