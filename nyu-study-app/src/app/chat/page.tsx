@@ -48,7 +48,6 @@ interface User {
 }
 
 export default function ChatPage() {
-  const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [classRooms, setClassRooms] = useState<ChatRoom[]>([]);
   const [dmRooms, setDmRooms] = useState<ChatRoom[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +74,6 @@ export default function ChatPage() {
       const response = await fetch("/api/chat/rooms");
       if (response.ok) {
         const data = await response.json();
-        setRooms(data.rooms);
         setClassRooms(data.classRooms);
         setDmRooms(data.dmRooms);
       }
@@ -218,36 +216,24 @@ export default function ChatPage() {
         </Dialog>
       </div>
 
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="all">
-            All
-            {rooms.length > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {rooms.length}
-              </Badge>
-            )}
+      <Tabs defaultValue="dms" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="dms">
+            <MessageSquare className="h-4 w-4 mr-1" />
+            DMs
           </TabsTrigger>
           <TabsTrigger value="classes">
             <Users className="h-4 w-4 mr-1" />
             Classes
           </TabsTrigger>
-          <TabsTrigger value="dms">
-            <MessageSquare className="h-4 w-4 mr-1" />
-            DMs
-          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all" className="mt-6">
-          <RoomList rooms={rooms} />
+        <TabsContent value="dms" className="mt-6">
+          <RoomList rooms={dmRooms} emptyMessage="No direct messages yet. Start a new conversation!" />
         </TabsContent>
 
         <TabsContent value="classes" className="mt-6">
           <RoomList rooms={classRooms} emptyMessage="No class chats yet. Join a class to start chatting!" />
-        </TabsContent>
-
-        <TabsContent value="dms" className="mt-6">
-          <RoomList rooms={dmRooms} emptyMessage="No direct messages yet. Start a new conversation!" />
         </TabsContent>
       </Tabs>
     </div>
