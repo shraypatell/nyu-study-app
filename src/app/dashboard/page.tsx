@@ -84,19 +84,55 @@ async function getDashboardData(userId: string) {
       },
     });
 
+    const currentUserData = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        avatarUrl: true,
+        studySessions: {
+          take: 1,
+          orderBy: { startedAt: "desc" },
+          select: {
+            isActive: true,
+            startedAt: true,
+            endedAt: true,
+          },
+        },
+      },
+    });
+
+    const currentUserDailyStat = await prisma.dailyStat.findUnique({
+      where: {
+        userId_date: {
+          userId,
+          date: today,
+        },
+      },
+      select: { totalSeconds: true },
+    });
+
     const unsortedLeaderboard = await Promise.all(
       locationUsers.map(async (ul) => {
-        const dailyStat = await prisma.dailyStat.findUnique({
-          where: {
-            userId_date: {
-              userId: ul.userId,
-              date: today,
-            },
-          },
-          select: { totalSeconds: true },
-        });
+        const entryUserId = ul.user.id;
+        
+        const isCurrentUser = entryUserId === userId;
+        const user = isCurrentUser && currentUserData ? currentUserData : ul.user;
+        
+        const dailyStat = isCurrentUser 
+          ? currentUserDailyStat 
+          : await prisma.dailyStat.findUnique({
+              where: {
+                userId_date: {
+                  userId: entryUserId,
+                  date: today,
+                },
+              },
+              select: { totalSeconds: true },
+            });
 
-        const session = ul.user.studySessions[0];
+        const session = user.studySessions[0];
         const baseSeconds = dailyStat?.totalSeconds || 0;
         const isActive = session?.isActive || false;
         const liveSessionSeconds = isActive && session
@@ -106,10 +142,10 @@ async function getDashboardData(userId: string) {
 
         return {
           rank: 0,
-          userId: ul.user.id,
-          username: ul.user.username,
-          displayName: ul.user.displayName,
-          avatarUrl: ul.user.avatarUrl,
+          userId: entryUserId,
+          username: user.username,
+          displayName: user.displayName,
+          avatarUrl: user.avatarUrl,
           totalSeconds: baseSeconds,
           totalLiveSeconds,
           isActive,
