@@ -414,7 +414,6 @@ export default async function DashboardPage() {
             entries={data.locationLeaderboard}
             href={data.locationId ? `/leaderboard/${data.locationId}` : "/leaderboard"}
             isClickable={false}
-            refreshUrl={data.locationId ? `/api/leaderboards/location/${data.locationId}` : undefined}
           />
 
           <DashboardLeaderboardWidget
