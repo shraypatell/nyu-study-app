@@ -149,8 +149,10 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
         <div className="text-center space-y-6">
           <div>
             <p className="text-sm text-gray-500 mb-2">Current Session</p>
-            <div className={`text-6xl font-mono font-bold ${isActive ? "text-green-600" : "text-gray-700"}`}>
-              {formatTime(elapsedTime)}
+            <div className="flex justify-center">
+              <div className={`text-[clamp(2.25rem,4vw,3.5rem)] leading-none font-mono font-bold tabular-nums ${isActive ? "text-green-600" : "text-gray-700"}`}>
+                {formatTime(elapsedTime)}
+              </div>
             </div>
           </div>
 
