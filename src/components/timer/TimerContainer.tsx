@@ -144,7 +144,7 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full">
       <CardContent className="p-6">
         <div className="text-center space-y-6">
           <div>

@@ -38,7 +38,13 @@ export default function ClassSelector() {
         throw new Error("Failed to load classes");
       }
       const data = await response.json();
-      setClasses(data.classes || []);
+      const loadedClasses = data.classes || [];
+      setClasses(loadedClasses);
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored && !loadedClasses.some((cls: Class) => cls.id === stored)) {
+        localStorage.removeItem(STORAGE_KEY);
+        setSelectedId(null);
+      }
     } catch (err) {
       setError("Unable to load classes");
     } finally {
@@ -58,7 +64,7 @@ export default function ClassSelector() {
   const selectedClass = classes.find((c) => c.id === selectedId);
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <BookOpen className="h-5 w-5" />
