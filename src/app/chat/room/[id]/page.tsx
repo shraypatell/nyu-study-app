@@ -41,7 +41,7 @@ export default function ChatRoomPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
 
-  const { messages, isConnected } = useRealtimeMessages(
+  const { messages, isConnected, refreshMessages } = useRealtimeMessages(
     roomId,
     initialMessages
   );
@@ -104,6 +104,7 @@ export default function ChatRoomPage() {
           setInitialMessages((prev) => [...prev, data.message]);
         }
         setShouldScrollToBottom(true);
+        refreshMessages();
       }
     } catch (error) {
       console.error("Failed to send message:", error);
