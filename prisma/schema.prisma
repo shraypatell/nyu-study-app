@@ -44,16 +44,19 @@ model User {
 model StudySession {
   id              String    @id @default(uuid())
   userId          String    @map("user_id")
+  classId         String?   @map("class_id")
   startedAt       DateTime  @map("started_at")
   endedAt         DateTime? @map("ended_at")
   durationSeconds Int       @default(0) @map("duration_seconds")
   isActive        Boolean   @default(true) @map("is_active")
   createdDate     DateTime  @default(now()) @map("created_date")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class Class? @relation(fields: [classId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdDate])
   @@index([isActive])
+  @@index([classId])
   @@map("study_sessions")
 }
 
@@ -115,8 +118,9 @@ model Class {
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
 
-  userClasses UserClass[]
-  chatRoom    ChatRoom?
+  userClasses   UserClass[]
+  chatRoom      ChatRoom?
+  studySessions StudySession[]
 
   @@unique([code, section, semester])
   @@map("classes")

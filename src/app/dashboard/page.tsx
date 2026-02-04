@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getNyDateStart } from "@/lib/date";
 import LocationSelector from "@/components/location/LocationSelector";
 import TimerContainer from "@/components/timer/TimerContainer";
+import ClassSelector from "@/components/timer/ClassSelector";
 import DashboardLeaderboardWidget from "@/components/dashboard/DashboardLeaderboardWidget";
 import DashboardFriendsWidget from "@/components/dashboard/DashboardFriendsWidget";
 
@@ -401,7 +402,8 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:items-start">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
+          <ClassSelector />
           <TimerContainer userId={user.id} />
           <LocationSelector />
         </div>

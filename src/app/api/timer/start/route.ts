@@ -29,7 +29,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Rate limiting
     if (!checkRateLimit(user.id)) {
       return NextResponse.json(
         { error: "Rate limit exceeded. Please wait 1 second." },
@@ -37,7 +36,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if user already has an active session
+    let classId: string | null = null;
+    try {
+      const body = await request.json();
+      classId = body.classId || null;
+    } catch {
+    }
+
     const existingSession = await prisma.studySession.findFirst({
       where: {
         userId: user.id,
@@ -52,10 +57,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create new study session
     const session = await prisma.studySession.create({
       data: {
         userId: user.id,
+        classId,
         startedAt: new Date(),
         isActive: true,
         createdDate: new Date(),
@@ -66,6 +71,7 @@ export async function POST(request: Request) {
       success: true,
       sessionId: session.id,
       startedAt: session.startedAt,
+      classId: session.classId,
     });
   } catch (error) {
     console.error("Start timer error:", error);
