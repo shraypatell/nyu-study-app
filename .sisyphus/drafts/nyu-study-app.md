@@ -264,3 +264,53 @@ leaderboards (view or cached table)
 
 ## Research Results
 *To be added when background agents complete*
+
+---
+
+# Draft: UI Redesign Planning
+
+## Requirements (confirmed)
+- Wants complete UI overhaul while keeping backend and functionality unchanged.
+- Beginner to coding; wants step-by-step guidance for editing UI of each part.
+- Plans to use pencil.dev for UI edits.
+- Wants a plan to hand off to Sisyphus for execution.
+- Scope: all pages (full app UI overhaul).
+- Wants me to propose visual directions to choose from.
+- Prefers to wait for Pencil.dev docs to refine the plan workflow.
+- Pencil.dev will be used locally (not GitHub integration).
+- User on macOS; wants step-by-step click instructions for Pencil desktop app.
+- Pencil.dev requires converting project to a .pen file.
+
+## Technical Decisions
+- UI-only scope; backend/API contracts treated as read-only.
+- Keep ShadCN + Tailwind and restyle; avoid swapping UI kits.
+- File boundaries for UI vs backend to be confirmed.
+- Verification: manual only (no new tests).
+
+## Research Findings
+- UI routes (page.tsx):
+  - /, /login, /signup
+  - /dashboard
+  - /leaderboard, /leaderboard/[location]
+  - /friends
+  - /classes
+  - /chat, /chat/room/[id]
+  - /search
+  - /settings/profile
+  - /users/[id]
+  - /admin
+- Layout: src/app/layout.tsx
+- Shared components: src/components/* (dashboard widgets, leaderboard table, location selector, timer, navigation)
+- UI primitives: src/components/ui/* (shadcn + radix)
+- Styling: src/app/globals.css (design tokens + Tailwind v4 @import)
+- Tests: Vitest configured (npm scripts), tests under tests/*
+- Pencil.dev workflow: pending
+
+## Open Questions
+- Visual direction: brand/typography/color preferences.
+- Pencil.dev output: direct code edits vs component-level changes.
+- Pencil.dev interface details (exact labels in desktop app) to tailor steps.
+
+## Scope Boundaries
+- INCLUDE: UI pages, components, styles, layout.
+- EXCLUDE: API routes, database/prisma, auth, server logic, data models.

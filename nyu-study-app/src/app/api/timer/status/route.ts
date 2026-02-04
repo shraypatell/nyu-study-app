@@ -21,6 +21,15 @@ export async function GET(request: Request) {
         userId: user.id,
         isActive: true,
       },
+      include: {
+        class: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
+      },
     });
 
     // Get today's stats
@@ -40,6 +49,11 @@ export async function GET(request: Request) {
       startedAt?: Date;
       currentDuration?: number;
       totalSecondsToday: number;
+      currentClass?: {
+        id: string;
+        name: string;
+        code: string;
+      } | null;
     } = {
       isActive: !!activeSession,
       totalSecondsToday: dailyStat?.totalSeconds || 0,
@@ -52,6 +66,7 @@ export async function GET(request: Request) {
       );
       response.startedAt = activeSession.startedAt;
       response.currentDuration = currentDuration;
+      response.currentClass = activeSession.class;
     }
 
     return NextResponse.json(response);

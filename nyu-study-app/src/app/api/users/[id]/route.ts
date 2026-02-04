@@ -48,6 +48,15 @@ export async function GET(
             startedAt: "desc",
           },
           take: 1,
+          include: {
+            class: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+              },
+            },
+          },
         },
       },
     });
@@ -95,6 +104,11 @@ export async function GET(
         startedAt: Date;
         endedAt: Date | null;
       } | null;
+      currentClass?: {
+        id: string;
+        name: string;
+        code: string;
+      } | null;
     } = {
       id: user.id,
       username: user.username,
@@ -116,6 +130,7 @@ export async function GET(
           startedAt: latestSession.startedAt,
           currentDuration,
         };
+        response.currentClass = latestSession.class;
       } else {
         response.timer = null;
       }

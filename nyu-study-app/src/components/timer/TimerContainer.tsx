@@ -9,11 +9,14 @@ interface TimerContainerProps {
   userId: string;
 }
 
+const STORAGE_KEY = "selectedStudyClass";
+
 export default function TimerContainer({ userId }: TimerContainerProps) {
   const [isActive, setIsActive] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [totalTimeToday, setTotalTimeToday] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [currentClass, setCurrentClass] = useState<{ id: string; name: string; code: string } | null>(null);
 
   useEffect(() => {
     fetchTimerStatus();
@@ -89,6 +92,7 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
         setIsActive(data.isActive);
         setElapsedTime(data.currentDuration || 0);
         setTotalTimeToday(data.totalSecondsToday);
+        setCurrentClass(data.currentClass || null);
       }
     } catch (error) {
       console.error("Failed to fetch timer status:", error);
@@ -98,8 +102,11 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
   const handleStart = async () => {
     setLoading(true);
     try {
+      const storedClassId = localStorage.getItem(STORAGE_KEY);
       const response = await fetch("/api/timer/start", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ classId: storedClassId || null }),
       });
       if (response.ok) {
         setIsActive(true);
@@ -178,9 +185,16 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
           </div>
 
           {isActive && (
-            <p className="text-sm text-green-600 animate-pulse">
-              Studying...
-            </p>
+            <div className="space-y-2">
+              <p className="text-sm text-green-600 animate-pulse">
+                Studying...
+              </p>
+              {currentClass && (
+                <p className="text-sm text-gray-600">
+                  {currentClass.name} ({currentClass.code})
+                </p>
+              )}
+            </div>
           )}
         </div>
       </CardContent>

@@ -44,6 +44,11 @@ interface PublicProfile {
     startedAt: string;
     endedAt: string | null;
   } | null;
+  currentClass?: {
+    id: string;
+    name: string;
+    code: string;
+  } | null;
 }
 
 export default function PublicProfilePage() {
@@ -119,6 +124,10 @@ export default function PublicProfilePage() {
       ? new Date(profileData.session.endedAt).getTime()
       : null;
 
+    const classText = profileData.currentClass
+      ? ` for ${profileData.currentClass.name}`
+      : "";
+
     if (profileData.session.isActive) {
       const durationSeconds = Math.max(0, Math.floor((now - startedAt) / 1000));
       const locationText = profileData.location?.name
@@ -126,7 +135,7 @@ export default function PublicProfilePage() {
           ? ` at ${profileData.location.name} in ${profileData.location.parent.name}`
           : ` at ${profileData.location.name}`
         : "";
-      return `Studying ${formatTime(durationSeconds)}${locationText}`;
+      return `Studying${classText} ${formatTime(durationSeconds)}${locationText}`;
     }
 
     const endTime = endedAt ?? startedAt;
@@ -255,6 +264,14 @@ export default function PublicProfilePage() {
                   <Badge variant="secondary" className="bg-green-100 text-green-700">
                     Currently Studying
                   </Badge>
+                  {profile.currentClass && (
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                      <BookOpen className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm text-gray-700">
+                        {profile.currentClass.name} ({profile.currentClass.code})
+                      </span>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
