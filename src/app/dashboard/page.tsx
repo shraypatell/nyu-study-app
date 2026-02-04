@@ -52,7 +52,6 @@ async function getDashboardData(userId: string) {
         locationId: userLocation.locationId,
         isPublic: true,
       },
-      take: 20,
       include: {
         user: {
           select: {
@@ -133,7 +132,7 @@ async function getDashboardData(userId: string) {
     );
 
     unsortedLeaderboard.sort((a, b) => b.totalLiveSeconds - a.totalLiveSeconds);
-    locationLeaderboard = unsortedLeaderboard.map((entry, index) => ({
+    locationLeaderboard = unsortedLeaderboard.slice(0, 20).map((entry, index) => ({
       ...entry,
       rank: index + 1,
     }));
@@ -415,6 +414,7 @@ export default async function DashboardPage() {
             entries={data.locationLeaderboard}
             href={data.locationId ? `/leaderboard/${data.locationId}` : "/leaderboard"}
             isClickable={false}
+            refreshUrl={data.locationId ? `/api/leaderboards/location/${data.locationId}` : undefined}
           />
 
           <DashboardLeaderboardWidget

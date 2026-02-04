@@ -34,6 +34,7 @@ interface DashboardLeaderboardWidgetProps {
   entries: LeaderboardEntry[];
   href: string;
   isClickable?: boolean;
+  refreshUrl?: string;
 }
 
 export default function DashboardLeaderboardWidget({
@@ -42,8 +43,10 @@ export default function DashboardLeaderboardWidget({
   entries,
   href,
   isClickable = true,
+  refreshUrl,
 }: DashboardLeaderboardWidgetProps) {
   const [now, setNow] = useState(Date.now());
+  const [liveEntries, setLiveEntries] = useState<LeaderboardEntry[]>(entries);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -51,6 +54,59 @@ export default function DashboardLeaderboardWidget({
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    setLiveEntries(entries);
+  }, [entries]);
+
+  useEffect(() => {
+    if (!refreshUrl) return;
+
+    let isMounted = true;
+    const fetchLeaderboard = async () => {
+      try {
+        const response = await fetch(refreshUrl, { cache: "no-store" });
+        if (!response.ok) return;
+        const data = await response.json();
+        const nextEntries = Array.isArray(data.leaderboard)
+          ? data.leaderboard.slice(0, 20)
+          : [];
+        const normalized = nextEntries.map((entry: {
+          userId: string;
+          username: string;
+          displayName?: string | null;
+          avatarUrl?: string | null;
+          totalSeconds?: number;
+          isActive?: boolean;
+          isActiveNow?: boolean;
+          session?: { startedAt: string; endedAt: string | null; isActive?: boolean } | null;
+          location?: LeaderboardEntry["location"] | null;
+        }) => ({
+          userId: entry.userId,
+          username: entry.username,
+          displayName: entry.displayName ?? null,
+          avatarUrl: entry.avatarUrl ?? null,
+          totalSeconds: entry.totalSeconds ?? 0,
+          isActive: entry.session?.isActive ?? entry.isActive ?? entry.isActiveNow ?? false,
+          session: entry.session
+            ? { startedAt: entry.session.startedAt, endedAt: entry.session.endedAt }
+            : null,
+          location: entry.location ?? null,
+        }));
+        if (isMounted) {
+          setLiveEntries(normalized);
+        }
+      } catch {
+      }
+    };
+
+    fetchLeaderboard();
+    const interval = setInterval(fetchLeaderboard, 15000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [refreshUrl]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -119,7 +175,7 @@ export default function DashboardLeaderboardWidget({
   };
 
   const sortedEntries = useMemo(() => {
-    return [...entries]
+    return [...liveEntries]
       .map((entry) => ({
         ...entry,
         computedLiveSeconds: getTotalLiveSeconds(entry),
@@ -129,7 +185,7 @@ export default function DashboardLeaderboardWidget({
         ...entry,
         rank: index + 1,
       }));
-  }, [entries, now]);
+  }, [liveEntries, now]);
 
   const content = (
     <div
