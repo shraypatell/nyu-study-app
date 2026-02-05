@@ -165,7 +165,7 @@ export default function Navigation() {
                 width={140}
                 height={48}
                 priority
-                className={`${isCollapsed ? "h-7 w-7" : "h-8 w-auto"}`}
+                className={`${isCollapsed ? "h-7 w-auto max-w-10" : "h-8 w-auto"} object-contain`}
               />
             </Link>
             <Button

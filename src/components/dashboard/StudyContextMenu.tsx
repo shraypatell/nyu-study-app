@@ -103,7 +103,9 @@ export default function StudyContextMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-[360px] max-h-[70vh] overflow-y-auto p-4 glass-panel"
+        side="bottom"
+        sideOffset={8}
+        className="w-[360px] max-h-[70vh] overflow-y-auto p-4 glass-panel data-[state=open]:animate-none data-[state=closed]:animate-none"
       >
         <div className="space-y-4">
           <ClassSelector />
