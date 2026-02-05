@@ -143,7 +143,7 @@
   --radius-full: 9999px;
   
   /* Typography */
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-ibm-plex-sans);
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
   
   /* Transitions */
@@ -247,6 +247,7 @@
   }
   body {
     @apply text-foreground antialiased;
+    font-family: var(--font-ibm-plex-sans);
     background-color: #eeeae1;
     transition: background-color 400ms ease, color 400ms ease;
     animation: page-enter 420ms ease;
@@ -255,6 +256,19 @@
   * {
     transition: color 200ms ease, border-color 200ms ease, box-shadow 250ms ease,
       background-color 250ms ease, opacity 200ms ease, transform 200ms ease;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  [data-slot="card-title"],
+  [data-slot="dialog-title"],
+  [data-slot="alert-title"],
+  [data-slot="dropdown-menu-label"] {
+    font-family: var(--font-geist-sans);
   }
 
   @keyframes page-enter {
