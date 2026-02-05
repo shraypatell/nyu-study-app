@@ -137,9 +137,9 @@ export default function LocationSelector() {
   };
 
   return (
-    <Card className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm">
+    <Card className="w-full glass-card">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <MapPin className="h-5 w-5 text-primary" />
           Study Location
         </CardTitle>
@@ -152,22 +152,22 @@ export default function LocationSelector() {
         ) : (
           <>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="text-sm font-medium text-muted-foreground">
                 Current Location
               </label>
-              <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-300">
+              <div className="glass-panel rounded-xl px-3 py-2 text-sm text-foreground">
                 {formatLocationName(currentLocation)}
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="text-sm font-medium text-muted-foreground">
                 Main Location
               </label>
               <select
                 value={selectedParentId}
                 onChange={(e) => handleParentChange(e.target.value)}
-                className="w-full h-9 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                className="w-full h-10 rounded-xl glass-input px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
               >
                 <option value="">Select a main location</option>
                 {parentLocations.map((location) => (
@@ -180,13 +180,13 @@ export default function LocationSelector() {
 
             {selectedParentId && availableChildren.length > 0 && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="text-sm font-medium text-muted-foreground">
                   Specific Area (optional)
                 </label>
                 <select
                   value={selectedLocationId}
                   onChange={(e) => setSelectedLocationId(e.target.value)}
-                  className="w-full h-9 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                  className="w-full h-10 rounded-xl glass-input px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
                 >
                   <option value="">Select a specific area (or use main location)</option>
                   {availableChildren.map((child) => (

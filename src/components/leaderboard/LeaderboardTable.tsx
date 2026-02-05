@@ -191,10 +191,10 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
   };
 
   const getRankStyle = (rank: number) => {
-    if (rank === 1) return "bg-yellow-100 text-yellow-800 border-yellow-300";
-    if (rank === 2) return "bg-gray-100 text-gray-800 border-gray-300";
-    if (rank === 3) return "bg-orange-100 text-orange-800 border-orange-300";
-    return "bg-gray-50 text-gray-600";
+    if (rank === 1) return "glass-chip text-amber-600";
+    if (rank === 2) return "glass-chip text-slate-600";
+    if (rank === 3) return "glass-chip text-orange-600";
+    return "glass-chip text-muted-foreground";
   };
 
   const sortedLeaderboard = useMemo(() => {
@@ -239,8 +239,8 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
 
   if (!data || data.leaderboard.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-12 text-center text-gray-500">
+      <Card className="glass-card">
+        <CardContent className="py-12 text-center text-muted-foreground">
           <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
           <p className="text-lg">No study data yet today</p>
           <p className="text-sm mt-2">Be the first to start studying!</p>
@@ -252,20 +252,20 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
   return (
     <div className="space-y-4">
       {data.location && (
-        <div className="flex items-center gap-2 text-gray-600 mb-4">
-          <MapPin className="h-5 w-5" />
+        <div className="flex items-center gap-2 text-muted-foreground mb-4">
+          <MapPin className="h-5 w-5 text-primary" />
           <span className="font-medium">{data.location.name}</span>
         </div>
       )}
 
-      <Card>
+      <Card className="glass-card">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-yellow-500" />
+              <Trophy className="h-5 w-5 text-amber-500" />
               {locationId ? "Location Leaderboard" : "School Leaderboard"}
             </span>
-            <span className="text-sm font-normal text-gray-500">
+            <span className="text-sm font-normal text-muted-foreground">
               {data.date}
             </span>
           </CardTitle>
@@ -275,12 +275,12 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
             {sortedLeaderboard.map((entry) => (
               <Link key={entry.userId} href={`/users/${entry.userId}`}>
                 <div
-                  className={`flex items-center gap-4 p-3 rounded-lg transition-colors hover:bg-gray-50 ${
-                    entry.isCurrentUser ? "bg-purple-50 border border-purple-200" : ""
+                  className={`flex items-center gap-4 p-3 rounded-2xl transition-colors hover:bg-white/60 ${
+                    entry.isCurrentUser ? "glass-panel" : ""
                   }`}
                 >
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 ${getRankStyle(
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border ${getRankStyle(
                       entry.rank
                     )}`}
                   >
@@ -289,7 +289,7 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
 
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={entry.avatarUrl || undefined} />
-                    <AvatarFallback className="bg-purple-100 text-purple-700">
+                    <AvatarFallback className="glass-chip text-foreground">
                       {entry.username.slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -307,16 +307,16 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
                       {entry.session?.isActive && entry.isTimerPublic && (
                         <Badge
                           variant="secondary"
-                          className="text-xs bg-green-100 text-green-700"
+                          className="text-xs"
                         >
                           <Clock className="h-3 w-3 mr-1" />
                           Studying
                         </Badge>
                       )}
                     </div>
-                    <div className="text-sm text-gray-500">@{entry.username}</div>
+                    <div className="text-sm text-muted-foreground">@{entry.username}</div>
                     {getStatusText(entry) && (
-                      <div className="text-xs text-gray-600">
+                      <div className="text-xs text-muted-foreground">
                         {getStatusText(entry)}
                       </div>
                     )}
@@ -335,10 +335,10 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
           {sortedCurrentUserEntry &&
             !sortedLeaderboard.some((e) => e.isCurrentUser) && (
               <>
-                <div className="my-4 border-t border-dashed" />
-                <div className="flex items-center gap-4 p-3 rounded-lg bg-purple-50 border border-purple-200">
+                <div className="my-4 border-t border-dashed border-white/40" />
+                <div className="flex items-center gap-4 p-3 rounded-2xl glass-panel">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 ${getRankStyle(
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border ${getRankStyle(
                       sortedCurrentUserEntry.rank
                     )}`}
                   >
@@ -347,7 +347,7 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
 
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={sortedCurrentUserEntry.avatarUrl || undefined} />
-                    <AvatarFallback className="bg-purple-100 text-purple-700">
+                    <AvatarFallback className="glass-chip text-foreground">
                       {sortedCurrentUserEntry.username.slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -362,11 +362,11 @@ export default function LeaderboardTable({ locationId }: LeaderboardTableProps) 
                         You
                       </Badge>
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-muted-foreground">
                       @{sortedCurrentUserEntry.username}
                     </div>
                     {getStatusText(sortedCurrentUserEntry) && (
-                      <div className="text-xs text-gray-600">
+                      <div className="text-xs text-muted-foreground">
                         {getStatusText(sortedCurrentUserEntry)}
                       </div>
                     )}

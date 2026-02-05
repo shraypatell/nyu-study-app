@@ -428,14 +428,14 @@ export default async function DashboardPage() {
   const data = await getDashboardData(user.id);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-8">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+        <div className="glass-panel rounded-3xl px-6 py-6 text-left">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
             Study Timer
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-            Track your study sessions and compete on leaderboards
+          <p className="text-muted-foreground max-w-md">
+            Track your study sessions and compete on leaderboards.
           </p>
         </div>
 

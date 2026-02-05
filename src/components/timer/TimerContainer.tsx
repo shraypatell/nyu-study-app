@@ -144,30 +144,30 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
   };
 
   return (
-    <Card className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm">
+    <Card className="w-full glass-card">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <Clock className="h-5 w-5 text-primary" />
           Study Timer
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="text-center space-y-2">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+          <p className="text-sm font-medium text-muted-foreground">
             Current Session
           </p>
           <div className={`text-[clamp(2.25rem,4vw,3.5rem)] leading-none font-mono font-bold tabular-nums ${
-            isActive ? "text-success" : "text-gray-700 dark:text-gray-300"
+            isActive ? "text-success" : "text-foreground"
           }`}>
             {formatTime(elapsedTime)}
           </div>
         </div>
 
         <div className="text-center">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <p className="text-sm font-medium text-muted-foreground mb-1">
             Total Today
           </p>
-          <div className="text-2xl font-mono font-semibold text-gray-700 dark:text-gray-300">
+          <div className="text-2xl font-mono font-semibold text-foreground">
             {formatTime(totalTimeToday + elapsedTime)}
           </div>
         </div>
@@ -177,7 +177,7 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
             <Button
               onClick={handleStart}
               disabled={loading}
-              className="bg-success hover:bg-accent-light text-white px-8 py-3 text-base font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98]"
+              className="px-8 py-3 text-base font-semibold"
             >
               <Play className="h-5 w-5 mr-2" />
               Start Studying
@@ -187,7 +187,7 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
               onClick={handlePause}
               disabled={loading}
               variant="outline"
-              className="px-8 py-3 text-base font-semibold rounded-xl border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 active:scale-[0.98]"
+              className="px-8 py-3 text-base font-semibold"
             >
               <Pause className="h-5 w-5 mr-2" />
               Pause
@@ -202,8 +202,8 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
               Studying...
             </div>
             {currentClass && (
-              <div className="flex items-center justify-center gap-2 px-3 py-2 bg-primary/5 dark:bg-primary/10 rounded-lg">
-                <span className="text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex items-center justify-center gap-2 px-3 py-2 glass-chip rounded-full">
+                <span className="text-sm text-muted-foreground">
                   Studying for
                 </span>
                 <span className="text-sm font-medium text-primary">

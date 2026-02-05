@@ -174,8 +174,11 @@ export default function ProfileSettingsPage() {
   }
 
   return (
-    <div className="container max-w-2xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8">Profile Settings</h1>
+    <div className="container max-w-3xl mx-auto py-10 px-4">
+      <div className="glass-panel rounded-3xl px-6 py-6 mb-8">
+        <h1 className="text-3xl font-semibold text-foreground">Profile Settings</h1>
+        <p className="text-muted-foreground">Manage your profile, privacy, and public visibility.</p>
+      </div>
 
       {error && (
         <Alert variant="destructive" className="mb-6">
@@ -185,42 +188,42 @@ export default function ProfileSettingsPage() {
       )}
 
       {success && (
-        <Alert className="mb-6 bg-green-50 border-green-200">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">
+        <Alert className="mb-6">
+          <CheckCircle className="h-4 w-4 text-success" />
+          <AlertDescription className="text-success">
             Profile updated successfully!
           </AlertDescription>
         </Alert>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>
-              Update your public profile information
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+              <CardDescription>
+                Update your public profile information
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <div className="relative">
-                <Input
-                  id="username"
-                  value={formData.username}
-                  onChange={(e) => handleUsernameChange(e.target.value)}
-                  disabled={!canChangeUsername}
-                  className={canChangeUsername ? "" : "bg-gray-100"}
-                  maxLength={30}
-                />
+                  <Input
+                    id="username"
+                    value={formData.username}
+                    onChange={(e) => handleUsernameChange(e.target.value)}
+                    disabled={!canChangeUsername}
+                    className={canChangeUsername ? "" : "opacity-70"}
+                    maxLength={30}
+                  />
                 {isCheckingUsername && (
-                  <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-gray-400" />
+                  <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
                 )}
               </div>
               {usernameError && (
-                <p className="text-sm text-red-500">{usernameError}</p>
+                <p className="text-sm text-error">{usernameError}</p>
               )}
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 {canChangeUsername ? (
                   <>
                     {remainingChanges} username change{remainingChanges !== 1 ? "s" : ""} remaining. Must be 3-30 characters, letters, numbers, underscores, hyphens only.
@@ -244,7 +247,7 @@ export default function ProfileSettingsPage() {
                 placeholder="How you want to be called"
                 maxLength={50}
               />
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 {formData.displayName.length}/50 characters
               </p>
             </div>
@@ -261,7 +264,7 @@ export default function ProfileSettingsPage() {
                 maxLength={500}
                 rows={4}
               />
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 {formData.bio.length}/500 characters
               </p>
             </div>
@@ -277,14 +280,14 @@ export default function ProfileSettingsPage() {
                 placeholder="https://example.com/avatar.jpg"
                 type="url"
               />
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 Link to an image (optional)
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card">
           <CardHeader>
             <CardTitle>Privacy Settings</CardTitle>
             <CardDescription>
@@ -295,7 +298,7 @@ export default function ProfileSettingsPage() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="timer-public">Show Timer</Label>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   Allow others to see your current study time
                 </p>
               </div>
@@ -311,7 +314,7 @@ export default function ProfileSettingsPage() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="classes-public">Show Classes</Label>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   Allow others to see which classes you&apos;re taking
                 </p>
               </div>
@@ -327,7 +330,7 @@ export default function ProfileSettingsPage() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="location-public">Show Location</Label>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   Allow others to see where you&apos;re studying
                 </p>
               </div>

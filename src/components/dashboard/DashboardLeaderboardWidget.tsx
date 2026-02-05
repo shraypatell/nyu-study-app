@@ -133,17 +133,17 @@ export default function DashboardLeaderboardWidget({
 
   const content = (
     <div
-      className={`bg-white p-4 rounded-lg shadow-sm ${
-        isClickable ? "hover:shadow-md transition-shadow cursor-pointer" : ""
+      className={`glass-card p-4 rounded-2xl ${
+        isClickable ? "hover:shadow-lg transition-shadow cursor-pointer" : ""
       }`}
     >
       <div className="flex items-center gap-2 mb-3">
         {icon === "location" ? (
-          <MapPin className="h-5 w-5 text-purple-600" />
+          <MapPin className="h-5 w-5 text-primary" />
         ) : (
-          <Trophy className="h-5 w-5 text-yellow-500" />
+          <Trophy className="h-5 w-5 text-amber-500" />
         )}
-        <h3 className="font-semibold text-gray-700">{title}</h3>
+        <h3 className="font-semibold text-foreground">{title}</h3>
       </div>
       {sortedEntries.length > 0 ? (
         <div className="max-h-[200px] overflow-y-auto space-y-2 pr-1">
@@ -155,7 +155,7 @@ export default function DashboardLeaderboardWidget({
               <span className={`w-5 text-center ${getRankStyle(entry.rank || 0)}`}>
                 {entry.rank}
               </span>
-              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs text-gray-700 shrink-0">
+              <div className="w-6 h-6 rounded-full glass-chip flex items-center justify-center text-xs text-foreground shrink-0">
                 {entry.displayName?.charAt(0) || entry.username.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
@@ -167,18 +167,18 @@ export default function DashboardLeaderboardWidget({
                     <span className="w-2 h-2 bg-green-500 rounded-full shrink-0" />
                   )}
                 </div>
-                <div className="text-xs text-gray-500 truncate">
+                <div className="text-xs text-muted-foreground truncate">
                   {getStatusText(entry)}
                 </div>
               </div>
-              <div className="font-mono text-gray-700 shrink-0">
+              <div className="font-mono text-foreground shrink-0">
                 {formatTime(getTotalLiveSeconds(entry))}
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-sm text-gray-500 text-center py-4">
+        <p className="text-sm text-muted-foreground text-center py-4">
           {icon === "location"
             ? "No one studying here yet"
             : "No study data yet today"}

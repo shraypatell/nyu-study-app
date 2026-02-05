@@ -257,8 +257,11 @@ export default function FriendsPage() {
   }
 
   return (
-    <div className="container max-w-2xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8">Friends</h1>
+    <div className="container max-w-4xl mx-auto py-10 px-4">
+      <div className="glass-panel rounded-3xl px-6 py-6 mb-8">
+        <h1 className="text-3xl font-semibold text-foreground">Friends</h1>
+        <p className="text-muted-foreground">Manage requests and stay in sync with your study circle.</p>
+      </div>
 
       <Tabs defaultValue="friends" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
@@ -283,7 +286,7 @@ export default function FriendsPage() {
 
         <TabsContent value="friends" className="mt-6">
           <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               type="text"
               placeholder="Search friends..."
@@ -296,7 +299,7 @@ export default function FriendsPage() {
           </div>
 
           {filteredFriends.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-muted-foreground">
               <UserCheck className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p className="text-lg">
                 {searchQuery ? "No friends match your search" : "No friends yet"}
@@ -310,7 +313,7 @@ export default function FriendsPage() {
           ) : (
             <div className="space-y-3">
               {filteredFriends.map((friend, index) => (
-                <Card key={friend.friendshipId}>
+                <Card key={friend.friendshipId} className="glass-card">
                   <CardContent className="p-4 flex items-center gap-4">
                     <div className={`w-8 text-center text-sm font-medium ${getRankStyle(index + 1)}`}>
                       {index + 1}
@@ -318,9 +321,9 @@ export default function FriendsPage() {
 
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={friend.user.avatarUrl || undefined} />
-                      <AvatarFallback className="bg-purple-100 text-purple-700">
-                        {friend.user.username.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
+                    <AvatarFallback className="glass-chip text-foreground">
+                      {friend.user.username.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
                     </Avatar>
 
                     <div className="flex-1 min-w-0">
@@ -332,17 +335,17 @@ export default function FriendsPage() {
                           <span className="w-2 h-2 bg-green-500 rounded-full" />
                         )}
                       </div>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         @{friend.user.username}
                       </p>
                       {getStatusText(friend) && (
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-muted-foreground">
                           {getStatusText(friend)}
                         </p>
                       )}
                     </div>
 
-                    <div className="font-mono text-gray-700 text-right">
+                    <div className="font-mono text-foreground text-right">
                       {formatTime(getTotalLiveSeconds(friend))}
                     </div>
 
@@ -376,17 +379,17 @@ export default function FriendsPage() {
 
         <TabsContent value="received" className="mt-6">
           {receivedRequests.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-muted-foreground">
               <p>No pending friend requests</p>
             </div>
           ) : (
             <div className="space-y-3">
               {receivedRequests.map((request) => (
-                <Card key={request.id}>
+                <Card key={request.id} className="glass-card">
                   <CardContent className="p-4 flex items-center gap-4">
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={request.requester?.avatarUrl || undefined} />
-                      <AvatarFallback className="bg-purple-100 text-purple-700">
+                      <AvatarFallback className="glass-chip text-foreground">
                         {request.requester?.username.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -394,7 +397,7 @@ export default function FriendsPage() {
                       <h3 className="font-semibold">
                         {request.requester?.displayName || request.requester?.username}
                       </h3>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         @{request.requester?.username}
                       </p>
                     </div>
@@ -428,17 +431,17 @@ export default function FriendsPage() {
 
         <TabsContent value="sent" className="mt-6">
           {sentRequests.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-muted-foreground">
               <p>No sent friend requests</p>
             </div>
           ) : (
             <div className="space-y-3">
               {sentRequests.map((request) => (
-                <Card key={request.id}>
+                <Card key={request.id} className="glass-card">
                   <CardContent className="p-4 flex items-center gap-4">
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={request.addressee?.avatarUrl || undefined} />
-                      <AvatarFallback className="bg-purple-100 text-purple-700">
+                      <AvatarFallback className="glass-chip text-foreground">
                         {request.addressee?.username.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -446,10 +449,10 @@ export default function FriendsPage() {
                       <h3 className="font-semibold">
                         {request.addressee?.displayName || request.addressee?.username}
                       </h3>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         @{request.addressee?.username}
                       </p>
-                      <p className="text-xs text-gray-400">Pending</p>
+                      <p className="text-xs text-muted-foreground">Pending</p>
                     </div>
                     <Button
                       variant="ghost"

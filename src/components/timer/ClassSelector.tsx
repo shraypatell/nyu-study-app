@@ -64,9 +64,9 @@ export default function ClassSelector() {
   const selectedClass = classes.find((c) => c.id === selectedId);
 
   return (
-    <Card className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm">
+    <Card className="w-full glass-card">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <BookOpen className="h-5 w-5 text-primary" />
           Study Class
         </CardTitle>
@@ -79,10 +79,10 @@ export default function ClassSelector() {
         ) : (
           <>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="text-sm font-medium text-muted-foreground">
                 Current Selection
               </label>
-              <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-300">
+              <div className="glass-panel rounded-xl px-3 py-2 text-sm text-foreground">
                 {selectedClass
                   ? `${selectedClass.name} (${selectedClass.code})`
                   : "General Study"}
@@ -90,7 +90,7 @@ export default function ClassSelector() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="text-sm font-medium text-muted-foreground">
                 Select Class
               </label>
               <div className="grid grid-cols-1 gap-2">
@@ -118,7 +118,7 @@ export default function ClassSelector() {
                     </Button>
                   ))
                 ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-3 px-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <p className="text-sm text-muted-foreground text-center py-3 px-2 glass-panel rounded-xl">
                     No classes joined yet. Visit the Classes page to join.
                   </p>
                 )}

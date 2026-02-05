@@ -113,10 +113,10 @@ export default function DashboardFriendsWidget({
 
   return (
     <Link href="/friends">
-      <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+      <div className="glass-card p-4 rounded-2xl hover:shadow-lg transition-shadow cursor-pointer">
         <div className="flex items-center gap-2 mb-3">
-          <Users className="h-5 w-5 text-blue-600" />
-          <h3 className="font-semibold text-gray-700">Friends</h3>
+          <Users className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold text-foreground">Friends</h3>
         </div>
         {friends.length > 0 ? (
           <div className="max-h-[200px] overflow-y-auto space-y-2 pr-1">
@@ -128,7 +128,7 @@ export default function DashboardFriendsWidget({
                 <span className={`w-5 text-center ${getRankStyle(friend.rank)}`}>
                   {friend.rank}
                 </span>
-                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs text-blue-700 shrink-0">
+                <div className="w-6 h-6 rounded-full glass-chip flex items-center justify-center text-xs text-foreground shrink-0">
                   {friend.displayName?.charAt(0) || friend.username.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -141,19 +141,19 @@ export default function DashboardFriendsWidget({
                     )}
                   </div>
                   {getStatusText(friend) && (
-                    <div className="text-xs text-gray-500 truncate">
+                    <div className="text-xs text-muted-foreground truncate">
                       {getStatusText(friend)}
                     </div>
                   )}
                 </div>
-                <div className="font-mono text-gray-700 shrink-0">
+                <div className="font-mono text-foreground shrink-0">
                   {formatTime(getTotalLiveSeconds(friend))}
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-500 text-center py-4">No friends yet</p>
+          <p className="text-sm text-muted-foreground text-center py-4">No friends yet</p>
         )}
       </div>
     </Link>
