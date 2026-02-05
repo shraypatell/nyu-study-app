@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { getNyDateStart } from "@/lib/date";
-import TimerContainer from "@/components/timer/TimerContainer";
 import DashboardLeaderboardWidget from "@/components/dashboard/DashboardLeaderboardWidget";
 import DashboardFriendsWidget from "@/components/dashboard/DashboardFriendsWidget";
 import StudyContextMenu from "@/components/dashboard/StudyContextMenu";
@@ -431,15 +430,9 @@ export default async function DashboardPage() {
       <div className="max-w-6xl mx-auto space-y-10">
         <div className="flex items-start justify-between gap-4">
           <h1 className="text-[clamp(2.5rem,6vw,4.5rem)] font-bold tracking-[-0.03em] text-black">
-            the timer
+            dashboard
           </h1>
           <StudyContextMenu />
-        </div>
-
-        <div className="flex justify-center bg-white py-12">
-          <div className="w-full max-w-3xl">
-            <TimerContainer userId={user.id} />
-          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
@@ -449,7 +442,7 @@ export default async function DashboardPage() {
             entries={data.locationLeaderboard}
             href={data.locationId ? `/leaderboard/${data.locationId}` : "/leaderboard"}
             isClickable={false}
-            className="bg-[#f3b2b2]"
+            className="bg-[#f6c2c2]"
           />
 
           <DashboardLeaderboardWidget
@@ -458,10 +451,10 @@ export default async function DashboardPage() {
             entries={data.schoolLeaderboard}
             href="/leaderboard"
             isClickable={true}
-            className="bg-[#b7d9ff]"
+            className="bg-[#cde6ff]"
           />
 
-          <DashboardFriendsWidget friends={data.friends} className="bg-[#fff2a3]" />
+          <DashboardFriendsWidget friends={data.friends} className="bg-[#fff7bf]" />
         </div>
       </div>
     </div>

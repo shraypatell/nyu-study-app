@@ -22,6 +22,7 @@ import {
   Search,
   Settings,
   Users,
+  MapPin,
   Menu,
   LogOut,
   Loader2,
@@ -37,11 +38,12 @@ interface User {
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
-  { name: "Leaderboards", href: "/leaderboard", icon: Trophy },
+  { name: "Leaderboards", href: "/leaderboard", icon: Trophy, hoverClass: "hover:bg-[#cde6ff]" },
+  { name: "Location Leaderboard", href: "/leaderboard", icon: MapPin, hoverClass: "hover:bg-[#f6c2c2]" },
   { name: "Classes", href: "/classes", icon: BookOpen },
   { name: "Chat", href: "/chat", icon: MessageSquare },
   { name: "Search", href: "/search", icon: Search },
-  { name: "Friends", href: "/friends", icon: Users },
+  { name: "Friends", href: "/friends", icon: Users, hoverClass: "hover:bg-[#fff7bf]" },
 ];
 
 const settingsItem = { name: "Settings", href: "/settings/profile", icon: Settings };
@@ -52,10 +54,12 @@ export default function Navigation() {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [locationHref, setLocationHref] = useState<string>("/leaderboard");
   const pathname = usePathname();
 
   useEffect(() => {
     fetchUser();
+    fetchLocation();
   }, []);
 
   const fetchUser = async () => {
@@ -78,6 +82,21 @@ export default function Navigation() {
       window.location.href = "/login";
     } catch (error) {
       console.error("Logout failed:", error);
+    }
+  };
+
+  const fetchLocation = async () => {
+    try {
+      const response = await fetch("/api/user/location");
+      if (response.ok) {
+        const data = await response.json();
+        const locationId = data.location?.id as string | undefined;
+        if (locationId) {
+          setLocationHref(`/leaderboard/${locationId}`);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch location:", error);
     }
   };
 
@@ -114,16 +133,20 @@ export default function Navigation() {
             <SheetContent side="left" className="w-72">
               <div className="flex flex-col gap-2 mt-8">
                 {navigation.map((item) => {
-                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  const itemHref = item.name === "Location Leaderboard" ? locationHref : item.href;
+                  const isActive =
+                    item.name === "Location Leaderboard"
+                      ? pathname.startsWith("/leaderboard/")
+                      : pathname === item.href || pathname.startsWith(`${item.href}/`);
                   return (
                     <Link
                       key={item.name}
-                      href={item.href}
+                      href={itemHref}
                       onClick={() => setIsOpen(false)}
                     >
                       <Button
                         variant={isActive ? "secondary" : "ghost"}
-                        className="w-full justify-start gap-3"
+                        className={`w-full justify-start gap-3 ${item.hoverClass ?? ""}`}
                       >
                         <item.icon className="h-4 w-4" />
                         {item.name}
@@ -184,13 +207,19 @@ export default function Navigation() {
 
           <nav className="flex flex-col gap-1">
             {navigation.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const itemHref = item.name === "Location Leaderboard" ? locationHref : item.href;
+              const isActive =
+                item.name === "Location Leaderboard"
+                  ? pathname.startsWith("/leaderboard/")
+                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
-                <Link key={item.name} href={item.href}>
+                <Link key={item.name} href={itemHref}>
                   <Button
                     variant={isActive ? "secondary" : "ghost"}
                     size="sm"
-                    className={`w-full justify-start gap-3 ${isCollapsed ? "px-2" : "px-3"}`}
+                    className={`w-full justify-start gap-3 ${isCollapsed ? "px-2" : "px-3"} ${
+                      item.hoverClass ?? ""
+                    }`}
                   >
                     <item.icon className="h-4 w-4" />
                     {!isCollapsed && <span>{item.name}</span>}
