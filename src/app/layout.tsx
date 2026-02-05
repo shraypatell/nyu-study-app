@@ -36,7 +36,7 @@ export default function RootLayout({
       >
         <div className="min-h-screen flex flex-col md:flex-row">
           <Navigation />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 page-transition">{children}</main>
         </div>
       </body>
     </html>

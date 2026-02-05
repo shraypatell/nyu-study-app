@@ -25,6 +25,7 @@ import {
   Menu,
   LogOut,
   Loader2,
+  ArrowRight,
 } from "lucide-react";
 
 interface User {
@@ -152,7 +153,7 @@ export default function Navigation() {
       </header>
 
       <aside
-        className={`hidden md:flex md:sticky md:top-0 md:h-screen md:flex-col md:justify-between md:py-6 md:px-4 glass-panel rounded-r-3xl ${
+        className={`relative hidden md:flex md:sticky md:top-0 md:h-screen md:flex-col md:justify-between md:py-6 md:px-4 glass-panel rounded-r-3xl ${
           isCollapsed ? "md:w-20" : "md:w-64"
         }`}
       >
@@ -168,15 +169,17 @@ export default function Navigation() {
                 className={`${isCollapsed ? "h-7 w-auto max-w-10" : "h-8 w-auto"} object-contain`}
               />
             </Link>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hidden lg:inline-flex"
-              onClick={() => setIsCollapsed((prev) => !prev)}
-              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              <Menu className="h-4 w-4" />
-            </Button>
+            {!isCollapsed && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hidden lg:inline-flex"
+                onClick={() => setIsCollapsed(true)}
+                aria-label="Collapse sidebar"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            )}
           </div>
 
           <nav className="flex flex-col gap-1">
@@ -239,6 +242,18 @@ export default function Navigation() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        {isCollapsed && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute -right-4 top-8 hidden lg:inline-flex bg-[#f7f4ee] border border-[#cfcac0]"
+            onClick={() => setIsCollapsed(false)}
+            aria-label="Expand sidebar"
+          >
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        )}
       </aside>
     </>
   );

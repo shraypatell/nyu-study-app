@@ -429,42 +429,36 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-10">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-semibold text-foreground tracking-tight">
-              Study Timer
-            </h1>
-            <p className="text-muted-foreground max-w-md">
-              Track your study sessions and compete on leaderboards.
-            </p>
-          </div>
+        <div className="flex items-start justify-end">
           <StudyContextMenu />
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex justify-center bg-white py-12">
           <div className="w-full max-w-3xl">
             <TimerContainer userId={user.id} />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           <DashboardLeaderboardWidget
-            title={data.locationName || "Location Leaderboard"}
+            title={data.locationName || "Location"}
             icon="location"
             entries={data.locationLeaderboard}
             href={data.locationId ? `/leaderboard/${data.locationId}` : "/leaderboard"}
             isClickable={false}
+            className="bg-[#d60000]"
           />
 
           <DashboardLeaderboardWidget
-            title="School Leaderboard"
+            title="School"
             icon="school"
             entries={data.schoolLeaderboard}
             href="/leaderboard"
             isClickable={true}
+            className="bg-[#00a2ff]"
           />
 
-          <DashboardFriendsWidget friends={data.friends} />
+          <DashboardFriendsWidget friends={data.friends} className="bg-[#ffe600]" />
         </div>
       </div>
     </div>

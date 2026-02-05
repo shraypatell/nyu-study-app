@@ -105,7 +105,7 @@ export default function StudyContextMenu() {
         align="end"
         side="bottom"
         sideOffset={8}
-        className="w-[360px] max-h-[70vh] overflow-y-auto p-4 glass-panel data-[state=open]:animate-none data-[state=closed]:animate-none"
+        className="w-[360px] max-h-[70vh] overflow-y-auto p-4 glass-panel data-[state=open]:[animation:widget-enter_180ms_ease] data-[state=closed]:[animation:widget-exit_160ms_ease]"
       >
         <div className="space-y-4">
           <ClassSelector />

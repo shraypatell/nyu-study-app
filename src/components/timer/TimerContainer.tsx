@@ -145,63 +145,48 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
   return (
     <div className="w-full">
       <div className="text-center space-y-6">
-        <div className="flex items-center justify-center gap-2 text-sm font-medium uppercase tracking-[0.3em] text-muted-foreground">
-          <Clock className="h-4 w-4 text-primary" />
-          Focus Timer
-        </div>
-
         <div className="inline-flex flex-col items-center justify-center px-2">
-          <p className="text-sm font-medium text-muted-foreground">Current Session</p>
           <div
-            className={`mt-2 text-[clamp(2.75rem,5vw,4.5rem)] leading-none font-sans font-semibold tracking-tight tabular-nums ${
+            className={`text-[clamp(3rem,6vw,5rem)] leading-none font-sans font-semibold tracking-tight tabular-nums ${
               isActive ? "text-success" : "text-foreground"
             }`}
           >
             {formatTime(elapsedTime)}
           </div>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-center gap-4">
-          <div className="glass-chip rounded-full px-4 py-2 text-base font-medium text-foreground">
-            Total Today: {formatTime(totalTimeToday + elapsedTime)}
+          <div className="mt-3 text-[clamp(1rem,2vw,1.4rem)] font-sans font-semibold tracking-tight text-foreground">
+            {formatTime(totalTimeToday + elapsedTime)}
           </div>
-          {isActive && (
-            <div className="glass-chip rounded-full px-4 py-2 text-sm text-success flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
-              Studying...
-            </div>
-          )}
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex justify-center gap-3">
           {!isActive ? (
             <Button
               onClick={handleStart}
               disabled={loading}
-              className="px-10 py-3 text-base font-semibold"
+              variant="outline"
+              size="icon"
+              aria-label="Start studying"
+              className="h-12 w-12"
             >
-              <Play className="h-5 w-5 mr-2" />
-              Start Studying
+              <Play className="h-5 w-5" />
             </Button>
           ) : (
             <Button
               onClick={handlePause}
               disabled={loading}
               variant="outline"
-              className="px-10 py-3 text-base font-semibold"
+              size="icon"
+              aria-label="Pause studying"
+              className="h-12 w-12"
             >
-              <Pause className="h-5 w-5 mr-2" />
-              Pause
+              <Pause className="h-5 w-5" />
             </Button>
           )}
         </div>
 
         {currentClass && (
-          <div className="flex items-center justify-center gap-2 px-4 py-2 glass-chip rounded-full text-sm text-muted-foreground">
-            <span>Studying for</span>
-            <span className="font-medium text-primary">
-              {currentClass.name} ({currentClass.code})
-            </span>
+          <div className="text-sm text-muted-foreground">
+            Studying for <span className="font-medium text-foreground">{currentClass.name}</span>
           </div>
         )}
       </div>
