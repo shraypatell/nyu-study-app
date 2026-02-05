@@ -312,6 +312,12 @@
     backdrop-filter: blur(var(--glass-blur));
   }
 
+  .glass-glow {
+    background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4) 60%);
+    box-shadow: 0 28px 80px rgba(76, 125, 255, 0.18);
+    backdrop-filter: blur(var(--glass-blur));
+  }
+
   .glass-panel:focus-within {
     box-shadow: 0 16px 40px rgba(91, 124, 255, 0.16);
     border-color: rgba(91, 124, 255, 0.3);

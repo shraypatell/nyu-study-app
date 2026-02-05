@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Play, Pause, Clock } from "lucide-react";
 
 interface TimerContainerProps {
@@ -144,32 +143,34 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
   };
 
   return (
-    <Card className="w-full glass-card">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
-          <Clock className="h-5 w-5 text-primary" />
-          Study Timer
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="text-center space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">
-            Current Session
-          </p>
-          <div className={`text-[clamp(2.25rem,4vw,3.5rem)] leading-none font-sans font-semibold tracking-tight tabular-nums ${
-            isActive ? "text-success" : "text-foreground"
-          }`}>
+    <div className="w-full">
+      <div className="text-center space-y-6">
+        <div className="flex items-center justify-center gap-2 text-sm font-medium uppercase tracking-[0.3em] text-muted-foreground">
+          <Clock className="h-4 w-4 text-primary" />
+          Focus Timer
+        </div>
+
+        <div className="glass-glow inline-flex flex-col items-center justify-center rounded-[36px] px-10 py-8">
+          <p className="text-sm font-medium text-muted-foreground">Current Session</p>
+          <div
+            className={`mt-2 text-[clamp(2.75rem,5vw,4.5rem)] leading-none font-sans font-semibold tracking-tight tabular-nums ${
+              isActive ? "text-success" : "text-foreground"
+            }`}
+          >
             {formatTime(elapsedTime)}
           </div>
         </div>
 
-        <div className="text-center">
-          <p className="text-sm font-medium text-muted-foreground mb-1">
-            Total Today
-          </p>
-          <div className="text-2xl font-sans font-semibold text-foreground tracking-tight">
-            {formatTime(totalTimeToday + elapsedTime)}
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <div className="glass-chip rounded-full px-4 py-2 text-sm text-muted-foreground">
+            Total Today: {formatTime(totalTimeToday + elapsedTime)}
           </div>
+          {isActive && (
+            <div className="glass-chip rounded-full px-4 py-2 text-sm text-success flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+              Studying...
+            </div>
+          )}
         </div>
 
         <div className="flex justify-center">
@@ -177,7 +178,7 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
             <Button
               onClick={handleStart}
               disabled={loading}
-              className="px-8 py-3 text-base font-semibold"
+              className="px-10 py-3 text-base font-semibold"
             >
               <Play className="h-5 w-5 mr-2" />
               Start Studying
@@ -187,7 +188,7 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
               onClick={handlePause}
               disabled={loading}
               variant="outline"
-              className="px-8 py-3 text-base font-semibold"
+              className="px-10 py-3 text-base font-semibold"
             >
               <Pause className="h-5 w-5 mr-2" />
               Pause
@@ -195,25 +196,15 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
           )}
         </div>
 
-        {isActive && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-center gap-2 text-sm text-success font-medium">
-              <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
-              Studying...
-            </div>
-            {currentClass && (
-              <div className="flex items-center justify-center gap-2 px-3 py-2 glass-chip rounded-full">
-                <span className="text-sm text-muted-foreground">
-                  Studying for
-                </span>
-                <span className="text-sm font-medium text-primary">
-                  {currentClass.name} ({currentClass.code})
-                </span>
-              </div>
-            )}
+        {currentClass && (
+          <div className="flex items-center justify-center gap-2 px-4 py-2 glass-chip rounded-full text-sm text-muted-foreground">
+            <span>Studying for</span>
+            <span className="font-medium text-primary">
+              {currentClass.name} ({currentClass.code})
+            </span>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

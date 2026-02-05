@@ -2,11 +2,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { getNyDateStart } from "@/lib/date";
-import LocationSelector from "@/components/location/LocationSelector";
 import TimerContainer from "@/components/timer/TimerContainer";
-import ClassSelector from "@/components/timer/ClassSelector";
 import DashboardLeaderboardWidget from "@/components/dashboard/DashboardLeaderboardWidget";
 import DashboardFriendsWidget from "@/components/dashboard/DashboardFriendsWidget";
+import StudyContextMenu from "@/components/dashboard/StudyContextMenu";
 
 async function getDashboardData(userId: string) {
   const today = getNyDateStart();
@@ -429,23 +428,26 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <div className="glass-panel rounded-3xl px-6 py-6 text-left">
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
-            Study Timer
-          </h1>
-          <p className="text-muted-foreground max-w-md">
-            Track your study sessions and compete on leaderboards.
-          </p>
+      <div className="max-w-6xl mx-auto space-y-10">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+              Study Timer
+            </h1>
+            <p className="text-muted-foreground max-w-md">
+              Track your study sessions and compete on leaderboards.
+            </p>
+          </div>
+          <StudyContextMenu />
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
-          <ClassSelector />
-          <TimerContainer userId={user.id} />
-          <LocationSelector />
+        <div className="flex justify-center">
+          <div className="w-full max-w-3xl">
+            <TimerContainer userId={user.id} />
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
           <DashboardLeaderboardWidget
             title={data.locationName || "Location Leaderboard"}
             icon="location"
