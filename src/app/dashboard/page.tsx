@@ -429,7 +429,10 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-10">
-        <div className="flex items-start justify-end">
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="text-[clamp(2.5rem,6vw,4.5rem)] font-bold tracking-[-0.03em] text-black">
+            the timer
+          </h1>
           <StudyContextMenu />
         </div>
 

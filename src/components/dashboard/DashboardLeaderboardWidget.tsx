@@ -153,7 +153,7 @@ export default function DashboardLeaderboardWidget({
                 <div className="text-sm font-semibold truncate">
                   {entry.displayName || entry.username}
                 </div>
-                <div className="text-xs text-black/60 truncate">
+                <div className="text-xs text-black truncate">
                   {getStatusText(entry)}
                 </div>
               </div>
@@ -164,7 +164,7 @@ export default function DashboardLeaderboardWidget({
           ))}
         </div>
       ) : (
-        <p className="text-sm text-black/60">
+        <p className="text-sm text-black">
           {icon === "location"
             ? "No one studying here yet"
             : "No study data yet today"}

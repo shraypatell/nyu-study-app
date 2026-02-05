@@ -86,9 +86,9 @@
   /* Semantic Colors */
   --background: #FAFAFA;
   --background-secondary: #F4F4F5;
-  --foreground: #1F2937;
-  --foreground-secondary: #6B7280;
-  --foreground-muted: #9CA3AF;
+  --foreground: #111111;
+  --foreground-secondary: #111111;
+  --foreground-muted: #111111;
   
   /* Card & Surface */
   --card: #FFFFFF;
@@ -176,9 +176,9 @@
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  --muted-foreground: #111111;
   --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --accent-foreground: #111111;
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
@@ -249,6 +249,7 @@
     @apply text-foreground antialiased;
     font-family: var(--font-sans);
     background-color: #ffffff;
+    color: #111111;
     transition: background-color 400ms ease, color 400ms ease;
     animation: page-enter 420ms ease;
   }

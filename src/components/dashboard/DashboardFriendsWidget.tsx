@@ -139,7 +139,7 @@ export default function DashboardFriendsWidget({
                     {friend.displayName || friend.username}
                   </div>
                   {getStatusText(friend) && (
-                    <div className="text-xs text-black/60 truncate">
+                    <div className="text-xs text-black truncate">
                       {getStatusText(friend)}
                     </div>
                   )}
@@ -151,7 +151,7 @@ export default function DashboardFriendsWidget({
             ))}
           </div>
         ) : (
-          <p className="text-sm text-black/60">No friends yet</p>
+          <p className="text-sm text-black">No friends yet</p>
         )}
       </div>
     </Link>
