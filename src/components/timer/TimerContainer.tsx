@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Play, Pause } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Play, Pause, Clock } from "lucide-react";
 
 interface TimerContainerProps {
   userId: string;
@@ -144,61 +144,75 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
   };
 
   return (
-    <Card className="w-full">
-      <CardContent className="p-6">
-        <div className="text-center space-y-6">
-          <div>
-            <p className="text-sm text-gray-500 mb-2">Current Session</p>
-            <div className="flex justify-center">
-              <div className={`text-[clamp(2.25rem,4vw,3.5rem)] leading-none font-mono font-bold tabular-nums ${isActive ? "text-green-600" : "text-gray-700"}`}>
-                {formatTime(elapsedTime)}
-              </div>
-            </div>
+    <Card className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
+          <Clock className="h-5 w-5 text-primary" />
+          Study Timer
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="text-center space-y-2">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            Current Session
+          </p>
+          <div className={`text-[clamp(2.25rem,4vw,3.5rem)] leading-none font-mono font-bold tabular-nums ${
+            isActive ? "text-success" : "text-gray-700 dark:text-gray-300"
+          }`}>
+            {formatTime(elapsedTime)}
           </div>
+        </div>
 
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Total Today</p>
-            <div className="text-2xl font-mono text-gray-600">
-              {formatTime(totalTimeToday + elapsedTime)}
-            </div>
+        <div className="text-center">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+            Total Today
+          </p>
+          <div className="text-2xl font-mono font-semibold text-gray-700 dark:text-gray-300">
+            {formatTime(totalTimeToday + elapsedTime)}
           </div>
+        </div>
 
-          <div className="flex justify-center gap-4">
-            {!isActive ? (
-              <Button
-                onClick={handleStart}
-                disabled={loading}
-                className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 text-lg"
-              >
-                <Play className="mr-2 h-5 w-5" />
-                Start
-              </Button>
-            ) : (
-              <Button
-                onClick={handlePause}
-                disabled={loading}
-                variant="outline"
-                className="px-8 py-6 text-lg"
-              >
-                <Pause className="mr-2 h-5 w-5" />
-                Pause
-              </Button>
-            )}
-          </div>
-
-          {isActive && (
-            <div className="space-y-2">
-              <p className="text-sm text-green-600 animate-pulse">
-                Studying...
-              </p>
-              {currentClass && (
-                <p className="text-sm text-gray-600">
-                  {currentClass.name} ({currentClass.code})
-                </p>
-              )}
-            </div>
+        <div className="flex justify-center">
+          {!isActive ? (
+            <Button
+              onClick={handleStart}
+              disabled={loading}
+              className="bg-success hover:bg-accent-light text-white px-8 py-3 text-base font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98]"
+            >
+              <Play className="h-5 w-5 mr-2" />
+              Start Studying
+            </Button>
+          ) : (
+            <Button
+              onClick={handlePause}
+              disabled={loading}
+              variant="outline"
+              className="px-8 py-3 text-base font-semibold rounded-xl border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 active:scale-[0.98]"
+            >
+              <Pause className="h-5 w-5 mr-2" />
+              Pause
+            </Button>
           )}
         </div>
+
+        {isActive && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-center gap-2 text-sm text-success font-medium">
+              <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+              Studying...
+            </div>
+            {currentClass && (
+              <div className="flex items-center justify-center gap-2 px-3 py-2 bg-primary/5 dark:bg-primary/10 rounded-lg">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Studying for
+                </span>
+                <span className="text-sm font-medium text-primary">
+                  {currentClass.name} ({currentClass.code})
+                </span>
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

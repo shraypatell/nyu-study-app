@@ -137,33 +137,37 @@ export default function LocationSelector() {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="h-5 w-5" />
+    <Card className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
+          <MapPin className="h-5 w-5 text-primary" />
           Study Location
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {loading ? (
           <div className="flex items-center justify-center py-6">
-            <Loader2 className="h-6 w-6 animate-spin" />
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : (
           <>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Current</label>
-              <div className="rounded-md border bg-gray-50 px-3 py-2 text-sm text-gray-700">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Current Location
+              </label>
+              <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-300">
                 {formatLocationName(currentLocation)}
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Main Location</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Main Location
+              </label>
               <select
                 value={selectedParentId}
                 onChange={(e) => handleParentChange(e.target.value)}
-                className="border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                className="w-full h-9 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
               >
                 <option value="">Select a main location</option>
                 {parentLocations.map((location) => (
@@ -176,13 +180,13 @@ export default function LocationSelector() {
 
             {selectedParentId && availableChildren.length > 0 && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Specific Area (optional)
                 </label>
                 <select
                   value={selectedLocationId}
                   onChange={(e) => setSelectedLocationId(e.target.value)}
-                  className="border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                  className="w-full h-9 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 >
                   <option value="">Select a specific area (or use main location)</option>
                   {availableChildren.map((child) => (
@@ -194,10 +198,18 @@ export default function LocationSelector() {
               </div>
             )}
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            {success && <p className="text-sm text-green-600">{success}</p>}
+            {error && (
+              <p className="text-sm text-error font-medium">{error}</p>
+            )}
+            {success && (
+              <p className="text-sm text-success font-medium">{success}</p>
+            )}
 
-            <Button onClick={handleUpdateLocation} disabled={saving} className="w-full">
+            <Button
+              onClick={handleUpdateLocation}
+              disabled={saving}
+              className="w-full font-medium"
+            >
               {saving ? "Updating..." : "Set Location"}
             </Button>
           </>
