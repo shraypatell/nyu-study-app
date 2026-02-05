@@ -5,6 +5,7 @@ import { getNyDateStart } from "@/lib/date";
 import DashboardLeaderboardWidget from "@/components/dashboard/DashboardLeaderboardWidget";
 import DashboardFriendsWidget from "@/components/dashboard/DashboardFriendsWidget";
 import StudyContextMenu from "@/components/dashboard/StudyContextMenu";
+import TimerContainer from "@/components/timer/TimerContainer";
 
 async function getDashboardData(userId: string) {
   const today = getNyDateStart();
@@ -425,6 +426,15 @@ export default async function DashboardPage() {
 
   const data = await getDashboardData(user.id);
 
+  const locationTitle = data.locationName
+    ? data.locationName.includes(" in ")
+      ? (() => {
+          const [child, parent] = data.locationName.split(" in ");
+          return `${parent} - ${child}`;
+        })()
+      : data.locationName
+    : "Location";
+
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-10">
@@ -435,13 +445,19 @@ export default async function DashboardPage() {
           <StudyContextMenu />
         </div>
 
+        <div className="flex justify-center bg-white py-12">
+          <div className="w-full max-w-3xl">
+            <TimerContainer userId={user.id} />
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           <DashboardLeaderboardWidget
-            title={data.locationName || "Location"}
+            title={locationTitle}
             icon="location"
             entries={data.locationLeaderboard}
             href={data.locationId ? `/leaderboard/${data.locationId}` : "/leaderboard"}
-            isClickable={false}
+            isClickable={true}
             className="bg-[#f6c2c2]"
           />
 
