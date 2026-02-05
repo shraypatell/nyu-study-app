@@ -260,7 +260,7 @@ function RoomList({
     <div className="space-y-3">
       {rooms.map((room) => (
         <Link key={room.id} href={`/chat/room/${room.id}`}>
-          <Card className="glass-card hover:shadow-lg transition-shadow cursor-pointer">
+          <Card className="glass-card cursor-pointer">
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
                 <Avatar className="h-12 w-12">

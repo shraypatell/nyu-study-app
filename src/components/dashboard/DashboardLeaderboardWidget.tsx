@@ -134,7 +134,7 @@ export default function DashboardLeaderboardWidget({
   const content = (
     <div
       className={`glass-card p-4 rounded-2xl ${
-        isClickable ? "hover:shadow-lg transition-shadow cursor-pointer" : ""
+        isClickable ? "cursor-pointer" : ""
       }`}
     >
       <div className="flex items-center gap-2 mb-3">

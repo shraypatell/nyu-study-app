@@ -113,7 +113,7 @@ export default function DashboardFriendsWidget({
 
   return (
     <Link href="/friends">
-      <div className="glass-card p-4 rounded-2xl hover:shadow-lg transition-shadow cursor-pointer">
+      <div className="glass-card p-4 rounded-2xl cursor-pointer">
         <div className="flex items-center gap-2 mb-3">
           <Users className="h-5 w-5 text-primary" />
           <h3 className="font-semibold text-foreground">Friends</h3>

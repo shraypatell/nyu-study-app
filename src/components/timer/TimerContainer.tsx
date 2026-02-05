@@ -150,7 +150,7 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
           Focus Timer
         </div>
 
-        <div className="glass-glow inline-flex flex-col items-center justify-center rounded-[36px] px-10 py-8">
+        <div className="inline-flex flex-col items-center justify-center px-2">
           <p className="text-sm font-medium text-muted-foreground">Current Session</p>
           <div
             className={`mt-2 text-[clamp(2.75rem,5vw,4.5rem)] leading-none font-sans font-semibold tracking-tight tabular-nums ${
@@ -162,7 +162,7 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <div className="glass-chip rounded-full px-4 py-2 text-sm text-muted-foreground">
+          <div className="glass-chip rounded-full px-4 py-2 text-base font-medium text-foreground">
             Total Today: {formatTime(totalTimeToday + elapsedTime)}
           </div>
           {isActive && (
