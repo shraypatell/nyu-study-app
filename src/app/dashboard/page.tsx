@@ -446,7 +446,7 @@ export default async function DashboardPage() {
             entries={data.locationLeaderboard}
             href={data.locationId ? `/leaderboard/${data.locationId}` : "/leaderboard"}
             isClickable={false}
-            className="bg-[#d60000]"
+            className="bg-[#f3b2b2]"
           />
 
           <DashboardLeaderboardWidget
@@ -455,10 +455,10 @@ export default async function DashboardPage() {
             entries={data.schoolLeaderboard}
             href="/leaderboard"
             isClickable={true}
-            className="bg-[#00a2ff]"
+            className="bg-[#b7d9ff]"
           />
 
-          <DashboardFriendsWidget friends={data.friends} className="bg-[#ffe600]" />
+          <DashboardFriendsWidget friends={data.friends} className="bg-[#fff2a3]" />
         </div>
       </div>
     </div>

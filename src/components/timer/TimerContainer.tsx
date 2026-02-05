@@ -146,6 +146,9 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
     <div className="w-full">
       <div className="text-center space-y-6">
         <div className="inline-flex flex-col items-center justify-center px-2">
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-foreground mb-2">
+            Session Timer
+          </div>
           <div
             className={`text-[clamp(3rem,6vw,5rem)] leading-none font-sans font-semibold tracking-tight tabular-nums ${
               isActive ? "text-success" : "text-foreground"
@@ -153,7 +156,10 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
           >
             {formatTime(elapsedTime)}
           </div>
-          <div className="mt-3 text-[clamp(1rem,2vw,1.4rem)] font-sans font-semibold tracking-tight text-foreground">
+          <div className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground">
+            Total Time
+          </div>
+          <div className="mt-2 text-[clamp(1rem,2vw,1.4rem)] font-sans font-semibold tracking-tight text-foreground">
             {formatTime(totalTimeToday + elapsedTime)}
           </div>
         </div>
@@ -166,7 +172,7 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
               variant="outline"
               size="icon"
               aria-label="Start studying"
-              className="h-12 w-12"
+              className="h-14 w-14 bg-[#f4f4f4] border border-[#e5e5e5]"
             >
               <Play className="h-5 w-5" />
             </Button>
@@ -177,7 +183,7 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
               variant="outline"
               size="icon"
               aria-label="Pause studying"
-              className="h-12 w-12"
+              className="h-14 w-14 bg-[#f4f4f4] border border-[#e5e5e5]"
             >
               <Pause className="h-5 w-5" />
             </Button>
