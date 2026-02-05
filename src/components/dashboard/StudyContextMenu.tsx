@@ -95,9 +95,9 @@ export default function StudyContextMenu() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className="glass-panel max-w-[360px] justify-between gap-2 text-left font-medium"
+          className="glass-panel max-w-none justify-between gap-2 text-left font-medium"
         >
-          <span className="truncate">{getTriggerText()}</span>
+          <span className="whitespace-nowrap">{getTriggerText()}</span>
           <ChevronDown className="h-4 w-4 shrink-0" />
         </Button>
       </DropdownMenuTrigger>
