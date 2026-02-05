@@ -156,7 +156,7 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
           <p className="text-sm font-medium text-muted-foreground">
             Current Session
           </p>
-          <div className={`text-[clamp(2.25rem,4vw,3.5rem)] leading-none font-mono font-bold tabular-nums ${
+          <div className={`text-[clamp(2.25rem,4vw,3.5rem)] leading-none font-sans font-semibold tracking-tight tabular-nums ${
             isActive ? "text-success" : "text-foreground"
           }`}>
             {formatTime(elapsedTime)}
@@ -167,7 +167,7 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
           <p className="text-sm font-medium text-muted-foreground mb-1">
             Total Today
           </p>
-          <div className="text-2xl font-mono font-semibold text-foreground">
+          <div className="text-2xl font-sans font-semibold text-foreground tracking-tight">
             {formatTime(totalTimeToday + elapsedTime)}
           </div>
         </div>

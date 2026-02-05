@@ -167,7 +167,7 @@ export default function LocationSelector() {
               <select
                 value={selectedParentId}
                 onChange={(e) => handleParentChange(e.target.value)}
-                className="w-full h-10 rounded-xl glass-input px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+                className="w-full h-10 rounded-xl glass-select px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
               >
                 <option value="">Select a main location</option>
                 {parentLocations.map((location) => (
@@ -186,7 +186,7 @@ export default function LocationSelector() {
                 <select
                   value={selectedLocationId}
                   onChange={(e) => setSelectedLocationId(e.target.value)}
-                  className="w-full h-10 rounded-xl glass-input px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+                  className="w-full h-10 rounded-xl glass-select px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
                 >
                   <option value="">Select a specific area (or use main location)</option>
                   {availableChildren.map((child) => (
