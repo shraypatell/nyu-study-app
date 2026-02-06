@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import DashboardLeaderboardContent from "@/components/dashboard/DashboardLeaderboardContent";
 import DashboardFriendsContent from "@/components/dashboard/DashboardFriendsContent";
-import DashboardFluidGlassCard from "@/components/dashboard/DashboardFluidGlassCard";
+import DashboardGlassCard from "@/components/dashboard/DashboardGlassCard";
 
 interface LeaderboardEntry {
   rank?: number;
@@ -207,23 +207,23 @@ export default function DashboardLiveWidgets({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-      <DashboardFluidGlassCard
+      <DashboardGlassCard
         title={locationTitle ? `${locationTitle} leaderboard` : "location leaderboard"}
         href={locationId ? `/leaderboard/${locationId}` : "/leaderboard"}
       >
         <DashboardLeaderboardContent icon="location" entries={locationLeaderboard} />
-      </DashboardFluidGlassCard>
+      </DashboardGlassCard>
 
-      <DashboardFluidGlassCard
+      <DashboardGlassCard
         title="school leaderboard"
         href="/leaderboard"
       >
         <DashboardLeaderboardContent icon="school" entries={schoolLeaderboard} />
-      </DashboardFluidGlassCard>
+      </DashboardGlassCard>
 
-      <DashboardFluidGlassCard title="Friends" href="/friends">
+      <DashboardGlassCard title="Friends" href="/friends">
         <DashboardFriendsContent friends={friends} />
-      </DashboardFluidGlassCard>
+      </DashboardGlassCard>
     </div>
   );
 }
