@@ -16,11 +16,15 @@ export default function DashboardGlassCard({
   href,
 }: DashboardGlassCardProps) {
   const content = (
-    <TiltedCard rotateAmplitude={8} scaleOnHover={1.02} className="aspect-square">
+    <TiltedCard 
+      rotateAmplitude={13}
+      scaleOnHover={1.15}
+      className="aspect-square"
+    >
       <GlassSurface
         width="100%"
         height="100%"
-        borderRadius={16}
+        borderRadius={23}
         borderWidth={0.08}
         brightness={92}
         opacity={0.75}

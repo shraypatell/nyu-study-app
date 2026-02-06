@@ -2,9 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { getNyDateStart } from "@/lib/date";
-import DashboardLiveWidgets from "@/components/dashboard/DashboardLiveWidgets";
-import StudyContextMenu from "@/components/dashboard/StudyContextMenu";
-import TimerContainer from "@/components/timer/TimerContainer";
+import DashboardClient from "@/components/dashboard/DashboardClient";
 
 async function getDashboardData(userId: string) {
   const today = getNyDateStart();
@@ -451,26 +449,16 @@ export default async function DashboardPage() {
   const data = await getDashboardData(user.id);
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8">
-      <div className="absolute top-4 right-4 sm:right-6 lg:right-8 z-20">
-        <StudyContextMenu />
-      </div>
-      
-      <div className="max-w-6xl mx-auto space-y-10">
-        <div className="flex justify-center py-12">
-          <div className="w-full max-w-3xl">
-            <TimerContainer userId={user.id} />
-          </div>
-        </div>
-
-        <DashboardLiveWidgets
-          initialLocationName={data.locationName}
-          initialLocationId={data.locationId}
-          initialLocationLeaderboard={data.locationLeaderboard}
-          initialSchoolLeaderboard={data.schoolLeaderboard}
-          initialFriends={data.friends}
-        />
-      </div>
-    </div>
+    <DashboardClient 
+      userId={user.id} 
+      initialData={{
+        locationName: data.locationName,
+        locationId: data.locationId,
+        locationLeaderboard: data.locationLeaderboard,
+        schoolLeaderboard: data.schoolLeaderboard,
+        friends: data.friends,
+        userTotalSeconds: data.userTotalSeconds,
+      }} 
+    />
   );
 }

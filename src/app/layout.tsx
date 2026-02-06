@@ -37,11 +37,11 @@ export default function RootLayout({
       >
         <div className="fixed inset-0 z-0 pointer-events-none">
           <Grainient
-            color1="#ebebeb"
-            color2="#a8c6fe"
-            color3="#ebebeb"
-            timeSpeed={0.25}
-            colorBalance={0}
+            color1="#a8c6fe"
+            color2="#74a7fe"
+            color3="#a8c6fe"
+            timeSpeed={1}
+            colorBalance={-0.14}
             warpStrength={1}
             warpFrequency={5}
             warpSpeed={2}
