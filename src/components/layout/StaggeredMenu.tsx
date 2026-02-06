@@ -11,12 +11,12 @@ type MenuItem = { label: string; ariaLabel: string; link: string };
 
 const baseItems: (MenuItem & { hoverColor?: string })[] = [
   { label: "Dashboard", ariaLabel: "Go to dashboard", link: "/dashboard" },
-  { label: "School leaderboard", ariaLabel: "Go to school leaderboard", link: "/leaderboard", hoverColor: "#cde6ff" },
-  { label: "Location Leaderboard", ariaLabel: "Go to location leaderboard", link: "/leaderboard", hoverColor: "#f6c2c2" },
+  { label: "School leaderboard", ariaLabel: "Go to school leaderboard", link: "/leaderboard" },
+  { label: "Location Leaderboard", ariaLabel: "Go to location leaderboard", link: "/leaderboard" },
   { label: "Classes", ariaLabel: "Go to classes", link: "/classes" },
   { label: "Chat", ariaLabel: "Go to chat", link: "/chat" },
   { label: "Search", ariaLabel: "Go to search", link: "/search" },
-  { label: "Friends", ariaLabel: "Go to friends", link: "/friends", hoverColor: "#fff7bf" },
+  { label: "Friends", ariaLabel: "Go to friends", link: "/friends" },
 ];
 
 const footerItems: MenuItem[] = [

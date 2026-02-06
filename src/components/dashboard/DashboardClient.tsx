@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import FlowerGarden from "@/components/FlowerGarden";
+import GardenHelpButton from "@/components/GardenHelpButton";
 import DashboardLiveWidgets from "@/components/dashboard/DashboardLiveWidgets";
 import StudyContextMenu from "@/components/dashboard/StudyContextMenu";
 import TimerContainer from "@/components/timer/TimerContainer";
@@ -63,6 +64,8 @@ export default function DashboardClient({ userId, initialData }: DashboardClient
           initialFriends={initialData.friends}
         />
       </div>
+
+      <GardenHelpButton />
     </div>
   );
 }

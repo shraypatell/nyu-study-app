@@ -30,7 +30,7 @@ export default function PillNav({
   className = '',
   ease = 'power3.easeOut',
   pillColor = 'rgba(255, 255, 255, 0.3)',
-  hoveredPillTextColor = '#ffffff',
+  hoveredPillTextColor = '#000000',
   pillTextColor = '#111111'
 }: PillNavProps) {
   const circleRefs = useRef<(HTMLSpanElement | null)[]>([]);
@@ -123,11 +123,11 @@ export default function PillNav({
     onValueChange(value);
   };
 
-  const cssVars = {
-    ['--pill-bg']: pillColor,
-    ['--hover-text']: hoveredPillTextColor,
-    ['--pill-text']: pillTextColor
-  } as React.CSSProperties;
+const cssVars = {
+  ['--pill-bg']: pillColor,
+  ['--hover-text']: hoveredPillTextColor || '#000000',
+  ['--pill-text']: pillTextColor
+} as React.CSSProperties;
 
   return (
     <div className={`pill-nav-glass ${className}`} ref={navRef} style={cssVars}>

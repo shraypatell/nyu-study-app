@@ -1,0 +1,82 @@
+.garden-help-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  z-index: 50;
+}
+
+.garden-help-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(16px) brightness(1.05);
+  -webkit-backdrop-filter: blur(16px) brightness(1.05);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #111111;
+}
+
+.garden-help-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.garden-help-button:active {
+  transform: scale(0.95);
+}
+
+.garden-help-icon {
+  width: 22px;
+  height: 22px;
+  color: #111111;
+}
+
+.garden-help-message {
+  position: absolute;
+  bottom: 56px;
+  right: 0;
+  white-space: nowrap;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #111111;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.garden-help-message.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.garden-help-message::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  right: 16px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(255, 255, 255, 0.3);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.garden-help-message.visible::after {
+  opacity: 1;
+}
