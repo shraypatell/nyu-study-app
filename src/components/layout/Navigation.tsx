@@ -182,15 +182,25 @@ export default function Navigation() {
       >
         <div className="flex flex-col gap-8">
           <div className="flex items-center justify-between">
-            <Link href="/dashboard" className="flex items-center">
-              <Image
-                src="/nyu.edu.png"
-                alt="NYU"
-                width={140}
-                height={48}
-                priority
-                className={`${isCollapsed ? "h-7 w-auto max-w-10" : "h-8 w-auto"} object-contain`}
-              />
+            <Link href="/dashboard" className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-[clamp(1.1rem,1.5vw,1.4rem)] font-bold tracking-[-0.03em] text-black lowercase">
+                  rally
+                </span>
+                <svg
+                  width="20"
+                  height="16"
+                  viewBox="0 0 22 18"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                  className="text-black"
+                >
+                  <rect x="1" y="6" width="6" height="11" fill="currentColor" />
+                  <rect x="8" y="2" width="6" height="15" fill="currentColor" />
+                  <rect x="15" y="8" width="6" height="9" fill="currentColor" />
+                </svg>
+              </div>
             </Link>
             {!isCollapsed && (
               <Button
@@ -231,6 +241,16 @@ export default function Navigation() {
         </div>
 
         <div className="flex flex-col gap-3">
+          <Link href="/dashboard" className={`flex items-center gap-2 ${isCollapsed ? "justify-center" : ""}`}>
+            <Image
+              src="/nyu.edu.png"
+              alt="NYU"
+              width={120}
+              height={40}
+              priority
+              className="h-7 w-auto"
+            />
+          </Link>
           <Link href={settingsItem.href}>
             <Button
               variant={pathname.startsWith(settingsItem.href) ? "secondary" : "ghost"}
@@ -276,7 +296,7 @@ export default function Navigation() {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute -right-4 top-8 hidden lg:inline-flex bg-[#f7f4ee] border border-[#cfcac0]"
+            className="absolute -right-4 top-8 hidden lg:inline-flex bg-[#f4f4f4] border border-[#e5e5e5]"
             onClick={() => setIsCollapsed(false)}
             aria-label="Expand sidebar"
           >
