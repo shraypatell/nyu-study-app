@@ -176,7 +176,7 @@ export default function Navigation() {
       </header>
 
       <aside
-        className={`relative hidden md:flex md:sticky md:top-0 md:h-screen md:flex-col md:justify-between md:py-6 md:px-4 glass-panel rounded-r-3xl ${
+        className={`relative hidden md:flex md:sticky md:top-0 md:h-screen md:flex-col md:justify-between md:py-6 md:px-4 bg-white border-r border-gray-100 rounded-r-3xl ${
           isCollapsed ? "md:w-20" : "md:w-64"
         }`}
       >

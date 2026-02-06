@@ -46,7 +46,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md glass-card">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Login to NYU Study App</CardTitle>
           <CardDescription className="text-center">
