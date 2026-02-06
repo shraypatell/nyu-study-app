@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import Flower from './Flower';
 import './FlowerGarden.css';
 
@@ -16,10 +16,12 @@ interface FlowerGardenProps {
   totalMinutes: number;
 }
 
-const MAX_FLOWERS = 10;
+const MAX_FLOWERS = 22;
 const BASE_SCALE = 0.2;
-const GROWTH_INCREMENT = 0.1;
+const MAX_SCALE = 2.0;
 const SPAWN_INTERVAL = 5;
+const MAX_TIME_MINUTES = 360;
+const GROWTH_PER_INTERVAL = (MAX_SCALE - BASE_SCALE) / (MAX_TIME_MINUTES / SPAWN_INTERVAL);
 
 export default function FlowerGarden({ totalMinutes }: FlowerGardenProps) {
   const [flowers, setFlowers] = useState<FlowerData[]>([]);
@@ -32,55 +34,48 @@ export default function FlowerGarden({ totalMinutes }: FlowerGardenProps) {
       return;
     }
 
-    let currentBatch = 0;
-    let minutesRemaining = totalMinutes;
+    const currentInterval = Math.floor(totalMinutes / SPAWN_INTERVAL);
+    const maxIntervals = MAX_TIME_MINUTES / SPAWN_INTERVAL;
     
-    while (minutesRemaining >= SPAWN_INTERVAL && newFlowers.length < MAX_FLOWERS) {
-      currentBatch++;
-      
-      const batchStartIndex = (currentBatch - 1) * 2;
-      const flowersInThisBatch = Math.min(2, MAX_FLOWERS - batchStartIndex);
-      
-      for (let i = 0; i < flowersInThisBatch; i++) {
-        const flowerIndex = batchStartIndex + i;
-        if (flowerIndex >= MAX_FLOWERS) break;
-        
-        let scale = BASE_SCALE;
-        
-        const batchesAfterSpawn = Math.floor((totalMinutes - (currentBatch * SPAWN_INTERVAL)) / SPAWN_INTERVAL) + 1;
-        
-        for (let b = 0; b < batchesAfterSpawn && b < 8; b++) {
-          scale += GROWTH_INCREMENT;
-        }
-        
-        scale = Math.min(scale, 1.0);
-        
-        const position = calculatePosition(flowerIndex, MAX_FLOWERS);
-        
-        const colorTheme: 'cyan' | 'pink' = flowerIndex < MAX_FLOWERS / 2 ? 'cyan' : 'pink';
-        
-        newFlowers.push({
-          id: flowerIndex,
-          scale,
-          position,
-          variant: ((flowerIndex % 3) + 1) as 1 | 2 | 3,
-          colorTheme,
-        });
+    const targetFlowerCount = Math.min(
+      MAX_FLOWERS,
+      Math.max(2, Math.floor(2 + (currentInterval / maxIntervals) * 20))
+    );
+    
+    for (let i = 0; i < targetFlowerCount; i++) {
+      let spawnInterval: number;
+      if (i < 2) {
+        spawnInterval = 1;
+      } else {
+        const remainingFlowers = i - 1;
+        spawnInterval = 2 + Math.floor((remainingFlowers / 20) * 70);
       }
       
-      minutesRemaining -= SPAWN_INTERVAL;
+      const intervalsSinceSpawn = Math.max(0, currentInterval - spawnInterval);
+      let scale = BASE_SCALE + (intervalsSinceSpawn * GROWTH_PER_INTERVAL);
+      scale = Math.min(scale, MAX_SCALE);
+      
+      const position = calculatePosition(i);
+      const colorTheme: 'cyan' | 'pink' = i % 2 === 0 ? 'cyan' : 'pink';
+      
+      newFlowers.push({
+        id: i,
+        scale,
+        position,
+        variant: ((i % 3) + 1) as 1 | 2 | 3,
+        colorTheme,
+      });
     }
     
     setFlowers(newFlowers);
   }, [totalMinutes]);
 
-  const calculatePosition = (index: number, total: number): number => {
-    if (total <= 2) {
-      return index === 0 ? 10 : 90;
-    }
+  const calculatePosition = (index: number): number => {
+    const minPosition = 5;
+    const maxPosition = 95;
+    const spacing = (maxPosition - minPosition) / (MAX_FLOWERS - 1);
     
-    const spacing = 80 / (total - 1);
-    return 10 + (index * spacing);
+    return minPosition + (index * spacing);
   };
 
   if (flowers.length === 0) {
