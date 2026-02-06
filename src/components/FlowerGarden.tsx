@@ -10,7 +10,9 @@ interface FlowerData {
   position: number;
   variant: 1 | 2 | 3;
   colorTheme: 'cyan' | 'pink';
-  layer: number;
+  maxScale: number;
+  growthRate: number;
+  spawnDelay: number;
 }
 
 interface FlowerGardenProps {
@@ -19,14 +21,54 @@ interface FlowerGardenProps {
 
 const MAX_FLOWERS = 22;
 const BASE_SCALE = 0.2;
-const MAX_SCALE = 1.0;
 const SPAWN_INTERVAL = 5;
 const MAX_TIME_MINUTES = 360;
 
-const LAYER_SCALES = {
-  front: 0.5,
-  middle: 0.75,
-  back: 1.0
+const MIN_MAX_SCALE = 0.4;
+const MAX_MAX_SCALE = 1.0;
+const MIN_GROWTH_RATE = 0.015;
+const MAX_GROWTH_RATE = 0.035;
+
+const seededRandom = (seed: number): number => {
+  const x = Math.sin(seed * 9999) * 10000;
+  return x - Math.floor(x);
+};
+
+const generateFlowerData = (index: number): { 
+  maxScale: number; 
+  growthRate: number; 
+  spawnDelay: number;
+  position: number;
+  variant: 1 | 2 | 3;
+  colorTheme: 'cyan' | 'pink';
+} => {
+  const rand1 = seededRandom(index * 1.1);
+  const rand2 = seededRandom(index * 2.3);
+  const rand3 = seededRandom(index * 3.7);
+  const rand4 = seededRandom(index * 4.9);
+  const rand5 = seededRandom(index * 5.2);
+  
+  const maxScale = MIN_MAX_SCALE + rand1 * (MAX_MAX_SCALE - MIN_MAX_SCALE);
+  const growthRate = MIN_GROWTH_RATE + rand2 * (MAX_GROWTH_RATE - MIN_GROWTH_RATE);
+  const spawnDelay = Math.floor(rand3 * 60);
+  const variant = (Math.floor(rand4 * 3) + 1) as 1 | 2 | 3;
+  const colorTheme: 'cyan' | 'pink' = rand5 > 0.5 ? 'cyan' : 'pink';
+  
+  let position: number;
+  if (index === 0) {
+    position = 5 + rand1 * 10;
+  } else if (index === MAX_FLOWERS - 1) {
+    position = 85 + rand2 * 10;
+  } else {
+    const section = index / (MAX_FLOWERS - 1);
+    const basePosition = 5 + section * 90;
+    const variance = (rand3 - 0.5) * 8;
+    position = basePosition + variance;
+  }
+  
+  position = Math.max(3, Math.min(97, position));
+  
+  return { maxScale, growthRate, spawnDelay, position, variant, colorTheme };
 };
 
 export default function FlowerGarden({ totalMinutes }: FlowerGardenProps) {
@@ -49,42 +91,36 @@ export default function FlowerGarden({ totalMinutes }: FlowerGardenProps) {
     const newFlowers: FlowerData[] = [];
     
     for (let i = 0; i < targetFlowerCount; i++) {
-      const layerIndex = i % 3;
-      const layerName = layerIndex === 0 ? 'back' : layerIndex === 1 ? 'middle' : 'front';
-      const layerMaxScale = LAYER_SCALES[layerName];
+      const data = generateFlowerData(i);
+      const spawnInterval = 1 + Math.floor(data.spawnDelay / SPAWN_INTERVAL);
       
-      const scale = Math.min(
-        layerMaxScale,
-        BASE_SCALE + (currentInterval * (layerMaxScale - BASE_SCALE) / maxIntervals)
-      );
+      const intervalsSinceSpawn = Math.max(0, currentInterval - spawnInterval);
       
-      const position = calculateEvenPosition(i, targetFlowerCount);
-      const colorTheme: 'cyan' | 'pink' = i % 2 === 0 ? 'cyan' : 'pink';
+      let scale = BASE_SCALE;
+      for (let j = 0; j < intervalsSinceSpawn; j++) {
+        scale += data.growthRate;
+        if (scale >= data.maxScale) {
+          scale = data.maxScale;
+          break;
+        }
+      }
+      
+      scale = Math.min(scale, data.maxScale);
       
       newFlowers.push({
         id: i,
         scale,
-        position,
-        variant: ((i % 3) + 1) as 1 | 2 | 3,
-        colorTheme,
-        layer: layerIndex,
+        position: data.position,
+        variant: data.variant,
+        colorTheme: data.colorTheme,
+        maxScale: data.maxScale,
+        growthRate: data.growthRate,
+        spawnDelay: data.spawnDelay,
       });
     }
     
     setFlowers(newFlowers);
   }, [totalMinutes]);
-
-  const calculateEvenPosition = (index: number, total: number): number => {
-    if (total === 1) return 50;
-    
-    const startPercent = 8;
-    const endPercent = 92;
-    const availableSpace = endPercent - startPercent;
-    
-    const spacing = availableSpace / (MAX_FLOWERS - 1);
-    
-    return startPercent + (index * spacing);
-  };
 
   if (flowers.length === 0) {
     return null;
@@ -98,8 +134,11 @@ export default function FlowerGarden({ totalMinutes }: FlowerGardenProps) {
           scale={flower.scale}
           variant={flower.variant}
           colorTheme={flower.colorTheme}
-          className={`flower-garden__flower flower-garden__flower--layer-${flower.layer}`}
-          style={{ left: `${flower.position}%` }}
+          className="flower-garden__flower"
+          style={{ 
+            left: `${flower.position}%`,
+            zIndex: Math.floor(flower.maxScale * 10)
+          }}
         />
       ))}
     </div>

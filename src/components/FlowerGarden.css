@@ -3,7 +3,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 280px;
+  height: 220px;
   pointer-events: none;
   z-index: -1;
   overflow: visible;
@@ -13,16 +13,4 @@
   position: absolute;
   bottom: 0;
   transform-origin: bottom center;
-}
-
-.flower-garden__flower--layer-0 {
-  z-index: 1;
-}
-
-.flower-garden__flower--layer-1 {
-  z-index: 2;
-}
-
-.flower-garden__flower--layer-2 {
-  z-index: 3;
 }
