@@ -57,12 +57,14 @@ export const StaggeredMenu = ({
   const panelRef = useRef<HTMLElement | null>(null);
   const preLayersRef = useRef<HTMLDivElement | null>(null);
   const preLayerElsRef = useRef<HTMLDivElement[]>([]);
+  const headerLogoRef = useRef<HTMLDivElement | null>(null);
+  const headerToggleWrapRef = useRef<HTMLDivElement | null>(null);
   const plusHRef = useRef<HTMLSpanElement | null>(null);
   const plusVRef = useRef<HTMLSpanElement | null>(null);
   const iconRef = useRef<HTMLSpanElement | null>(null);
   const textInnerRef = useRef<HTMLSpanElement | null>(null);
   const textWrapRef = useRef<HTMLSpanElement | null>(null);
-  const [textLines, setTextLines] = useState(["Menu", "Close"]);
+  const [textLines, setTextLines] = useState(["Menu", "Back"]);
 
   const openTlRef = useRef<gsap.core.Timeline | null>(null);
   const closeTweenRef = useRef<gsap.core.Tween | null>(null);
@@ -95,6 +97,8 @@ export const StaggeredMenu = ({
       gsap.set(icon, { rotate: 0, transformOrigin: "50% 50%" });
       gsap.set(textInner, { yPercent: 0 });
       if (toggleBtnRef.current) gsap.set(toggleBtnRef.current, { color: menuButtonColor });
+      if (headerLogoRef.current) gsap.set(headerLogoRef.current, { xPercent: offscreen });
+      if (headerToggleWrapRef.current) gsap.set(headerToggleWrapRef.current, { x: 0 });
     });
     return () => ctx.revert();
   }, [menuButtonColor, position]);
@@ -148,17 +152,32 @@ export const StaggeredMenu = ({
     const tl = gsap.timeline({ paused: true });
 
     layerStates.forEach((ls, i) => {
-      tl.fromTo(ls.el, { xPercent: ls.start }, { xPercent: 0, duration: 0.5, ease: "power4.out" }, i * 0.07);
+      tl.fromTo(ls.el, { xPercent: ls.start }, { xPercent: 0, duration: 0.4, ease: "power3.out" }, i * 0.06);
     });
-    const lastTime = layerStates.length ? (layerStates.length - 1) * 0.07 : 0;
-    const panelInsertTime = lastTime + (layerStates.length ? 0.08 : 0);
-    const panelDuration = 0.65;
+    const lastTime = layerStates.length ? (layerStates.length - 1) * 0.06 : 0;
+    const panelInsertTime = lastTime + (layerStates.length ? 0.06 : 0);
+    const panelDuration = 0.5;
     tl.fromTo(
       panel,
       { xPercent: panelStart },
-      { xPercent: 0, duration: panelDuration, ease: "power4.out" },
+      { xPercent: 0, duration: panelDuration, ease: "power3.out" },
       panelInsertTime
     );
+
+    if (headerLogoRef.current) {
+      tl.to(
+        headerLogoRef.current,
+        { xPercent: 0, duration: 0.45, ease: "power3.out" },
+        panelInsertTime
+      );
+    }
+    if (headerToggleWrapRef.current) {
+      tl.to(
+        headerToggleWrapRef.current,
+        { x: position === "left" ? 200 : -200, duration: 0.45, ease: "power3.out" },
+        panelInsertTime
+      );
+    }
 
     if (itemEls.length) {
       const itemsStartRatio = 0.15;
@@ -214,13 +233,13 @@ export const StaggeredMenu = ({
     const layers = preLayerElsRef.current;
     if (!panel) return;
 
-    const all = [...layers, panel];
+    const all = [...layers, panel, headerLogoRef.current].filter(Boolean) as Element[];
     closeTweenRef.current?.kill();
     const offscreen = position === "left" ? -100 : 100;
     closeTweenRef.current = gsap.to(all, {
       xPercent: offscreen,
-      duration: 0.32,
-      ease: "power3.in",
+      duration: 0.25,
+      ease: "power2.in",
       overwrite: "auto",
       onComplete: () => {
         const itemEls = Array.from(panel.querySelectorAll(".sm-panel-itemLabel"));
@@ -231,20 +250,19 @@ export const StaggeredMenu = ({
         if (numberEls.length) {
           gsap.set(numberEls, { "--sm-num-opacity": 0 });
         }
+        if (headerToggleWrapRef.current) {
+          gsap.set(headerToggleWrapRef.current, { x: 0 });
+        }
         busyRef.current = false;
       },
     });
   }, [position]);
 
-  const animateIcon = useCallback((opening: boolean) => {
+  const animateIcon = useCallback((_opening: boolean) => {
     const icon = iconRef.current;
     if (!icon) return;
     spinTweenRef.current?.kill();
-    if (opening) {
-      spinTweenRef.current = gsap.to(icon, { rotate: 225, duration: 0.8, ease: "power4.out", overwrite: "auto" });
-    } else {
-      spinTweenRef.current = gsap.to(icon, { rotate: 0, duration: 0.35, ease: "power3.inOut", overwrite: "auto" });
-    }
+    spinTweenRef.current = gsap.to(icon, { rotate: 0, duration: 0.35, ease: "power3.inOut", overwrite: "auto" });
   }, []);
 
   const animateColor = useCallback(
@@ -283,9 +301,9 @@ export const StaggeredMenu = ({
     if (!inner) return;
     textCycleAnimRef.current?.kill();
 
-    const currentLabel = opening ? "Menu" : "Close";
-    const targetLabel = opening ? "Close" : "Menu";
-    const cycles = 3;
+    const currentLabel = opening ? "Menu" : "Back";
+    const targetLabel = opening ? "Back" : "Menu";
+    const cycles = 1;
     const seq = [currentLabel];
     let last = currentLabel;
     for (let i = 0; i < cycles; i++) {
@@ -301,8 +319,11 @@ export const StaggeredMenu = ({
     const finalShift = ((lineCount - 1) / lineCount) * 100;
     textCycleAnimRef.current = gsap.to(inner, {
       yPercent: -finalShift,
-      duration: 0.5 + lineCount * 0.07,
-      ease: "power4.out",
+      duration: 0.35 + lineCount * 0.05,
+      ease: "power2.out",
+      onComplete: () => {
+        gsap.set(inner, { yPercent: -finalShift });
+      },
     });
   }, []);
 
@@ -375,9 +396,17 @@ export const StaggeredMenu = ({
         })()}
       </div>
       <header className="staggered-menu-header" aria-label="Main navigation header">
-        <div className="sm-logo" aria-label="Logo">
+        <div className="sm-logo" aria-label="Logo" ref={headerLogoRef}>
           <div className="flex items-center gap-2">
-            <span className="text-[clamp(1.1rem,1.5vw,1.4rem)] font-bold tracking-[-0.03em] text-black lowercase">
+            <Image
+              src={logoUrl}
+              alt="NYU"
+              className="sm-logo-img"
+              draggable={false}
+              width={110}
+              height={24}
+            />
+            <span className="text-[clamp(1.05rem,1.4vw,1.3rem)] font-bold tracking-[-0.03em] text-black lowercase">
               rally
             </span>
             <svg
@@ -395,29 +424,39 @@ export const StaggeredMenu = ({
             </svg>
           </div>
         </div>
-        <button
-          ref={toggleBtnRef}
-          className="sm-toggle"
-          aria-label={open ? "Close menu" : "Open menu"}
-          aria-expanded={open}
-          aria-controls="staggered-menu-panel"
-          onClick={toggleMenu}
-          type="button"
-        >
-          <span ref={textWrapRef} className="sm-toggle-textWrap" aria-hidden="true">
-            <span ref={textInnerRef} className="sm-toggle-textInner">
-              {textLines.map((l, i) => (
-                <span className="sm-toggle-line" key={i}>
-                  {l}
-                </span>
-              ))}
+        <div ref={headerToggleWrapRef}>
+          <button
+            ref={toggleBtnRef}
+            className="sm-toggle"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            aria-controls="staggered-menu-panel"
+            onClick={toggleMenu}
+            type="button"
+          >
+            <span ref={textWrapRef} className="sm-toggle-textWrap" aria-hidden="true">
+              <span ref={textInnerRef} className="sm-toggle-textInner">
+                {textLines.map((l, i) => (
+                  <span className="sm-toggle-line" key={i}>
+                    {l}
+                  </span>
+                ))}
+              </span>
             </span>
-          </span>
-          <span ref={iconRef} className="sm-icon" aria-hidden="true">
-            <span ref={plusHRef} className="sm-icon-line" />
-            <span ref={plusVRef} className="sm-icon-line sm-icon-line-v" />
-          </span>
-        </button>
+            <span ref={iconRef} className="sm-icon" aria-hidden="true">
+              {open ? (
+                <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M10.5 3.5L6 8l4.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" strokeLinejoin="miter" />
+                </svg>
+              ) : (
+                <>
+                  <span ref={plusHRef} className="sm-icon-line" />
+                  <span ref={plusVRef} className="sm-icon-line sm-icon-line-v" />
+                </>
+              )}
+            </span>
+          </button>
+        </div>
       </header>
 
       <aside id="staggered-menu-panel" ref={panelRef} className="staggered-menu-panel" aria-hidden={!open}>
