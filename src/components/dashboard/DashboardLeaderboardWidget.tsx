@@ -153,9 +153,15 @@ export default function DashboardLeaderboardWidget({
                 <div className="text-sm font-semibold truncate">
                   {entry.displayName || entry.username}
                 </div>
-                <div className="text-xs text-black truncate">
-                  {getStatusText(entry)}
-                </div>
+                {getStatusText(entry) && (
+                  <div
+                    className={`text-xs truncate ${
+                      entry.isActive ? "status-active" : "text-black"
+                    }`}
+                  >
+                    {getStatusText(entry)}
+                  </div>
+                )}
               </div>
               <div className="text-sm font-semibold shrink-0">
                 {formatTime(getTotalLiveSeconds(entry))}

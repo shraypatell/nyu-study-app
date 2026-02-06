@@ -139,7 +139,13 @@ export default function DashboardFriendsWidget({
                     {friend.displayName || friend.username}
                   </div>
                   {getStatusText(friend) && (
-                    <div className="text-xs text-black truncate">
+                    <div
+                      className={`text-xs truncate ${
+                        friend.isTimerPublic && friend.isActive
+                          ? "status-active"
+                          : "text-black"
+                      }`}
+                    >
                       {getStatusText(friend)}
                     </div>
                   )}
