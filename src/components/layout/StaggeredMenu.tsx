@@ -420,7 +420,6 @@ export const StaggeredMenu = ({
           </button>
         </div>
       </header>
-      </header>
 
       <aside id="staggered-menu-panel" ref={panelRef} className="staggered-menu-panel" aria-hidden={!open}>
         <div className="sm-panel-inner">
