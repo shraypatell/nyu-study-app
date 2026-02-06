@@ -275,7 +275,7 @@
   [data-slot="dialog-title"],
   [data-slot="alert-title"],
   [data-slot="dropdown-menu-label"] {
-    text-transform: uppercase;
+    text-transform: capitalize;
   }
 
   h1,

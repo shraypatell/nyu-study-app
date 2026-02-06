@@ -429,9 +429,24 @@ export default async function DashboardPage() {
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-10">
         <div className="flex items-start justify-between gap-4">
-          <h1 className="text-[clamp(1.25rem,2.5vw,2rem)] font-bold tracking-[-0.03em] text-black lowercase">
-            rally
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-[clamp(1.25rem,2.5vw,2rem)] font-bold tracking-[-0.03em] text-black lowercase">
+              rally
+            </h1>
+            <svg
+              width="22"
+              height="16"
+              viewBox="0 0 22 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+              className="text-black"
+            >
+              <rect x="1" y="8" width="6" height="7" fill="currentColor" />
+              <rect x="8" y="4" width="6" height="11" fill="currentColor" />
+              <rect x="15" y="10" width="6" height="5" fill="currentColor" />
+            </svg>
+          </div>
           <StudyContextMenu />
         </div>
 
