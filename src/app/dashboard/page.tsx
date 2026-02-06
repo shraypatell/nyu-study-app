@@ -5,6 +5,7 @@ import { getNyDateStart } from "@/lib/date";
 import DashboardLiveWidgets from "@/components/dashboard/DashboardLiveWidgets";
 import StudyContextMenu from "@/components/dashboard/StudyContextMenu";
 import TimerContainer from "@/components/timer/TimerContainer";
+import DashboardBackground from "@/components/dashboard/DashboardBackground";
 
 async function getDashboardData(userId: string) {
   const today = getNyDateStart();
@@ -402,6 +403,30 @@ async function getDashboardData(userId: string) {
     rank: index + 1,
   }));
 
+  const currentUserDailyStat = await prisma.dailyStat.findUnique({
+    where: {
+      userId_date: {
+        userId,
+        date: today,
+      },
+    },
+    select: { totalSeconds: true },
+  });
+
+  const currentUserSession = await prisma.studySession.findFirst({
+    where: {
+      userId,
+      isActive: true,
+    },
+    select: { startedAt: true },
+  });
+
+  const baseTotalSeconds = currentUserDailyStat?.totalSeconds || 0;
+  const liveSessionSeconds = currentUserSession
+    ? Math.floor((Date.now() - currentUserSession.startedAt.getTime()) / 1000)
+    : 0;
+  const userTotalSeconds = baseTotalSeconds + liveSessionSeconds;
+
   return {
     locationName: userLocation?.location
       ? userLocation.location.parent
@@ -412,6 +437,7 @@ async function getDashboardData(userId: string) {
     locationLeaderboard,
     schoolLeaderboard,
     friends: rankedFriends,
+    userTotalSeconds,
   };
 }
 
@@ -426,25 +452,29 @@ export default async function DashboardPage() {
   const data = await getDashboardData(user.id);
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 relative">
-      <div className="absolute top-10 right-4 sm:right-6 lg:right-8">
-        <StudyContextMenu />
-      </div>
-      <div className="max-w-6xl mx-auto space-y-10">
-
-        <div className="flex justify-center bg-white py-12">
-          <div className="w-full max-w-3xl">
-            <TimerContainer userId={user.id} />
-          </div>
+    <div className="min-h-screen relative">
+      <DashboardBackground initialTotalSeconds={data.userTotalSeconds} />
+      
+      <div className="relative z-10 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+        <div className="absolute top-10 right-4 sm:right-6 lg:right-8 z-20">
+          <StudyContextMenu />
         </div>
+        
+        <div className="max-w-6xl mx-auto space-y-10">
+          <div className="flex justify-center py-12">
+            <div className="w-full max-w-3xl">
+              <TimerContainer userId={user.id} />
+            </div>
+          </div>
 
-        <DashboardLiveWidgets
-          initialLocationName={data.locationName}
-          initialLocationId={data.locationId}
-          initialLocationLeaderboard={data.locationLeaderboard}
-          initialSchoolLeaderboard={data.schoolLeaderboard}
-          initialFriends={data.friends}
-        />
+          <DashboardLiveWidgets
+            initialLocationName={data.locationName}
+            initialLocationId={data.locationId}
+            initialLocationLeaderboard={data.locationLeaderboard}
+            initialSchoolLeaderboard={data.schoolLeaderboard}
+            initialFriends={data.friends}
+          />
+        </div>
       </div>
     </div>
   );
