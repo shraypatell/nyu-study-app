@@ -583,7 +583,7 @@ const X = {
   minSize: 0.3,
   maxSize: 0.6,
   size0: 0.5,
-  gravity: 0.03,
+  gravity: 0.8,
   friction: 1.0,
   wallBounce: 1.0,
   maxVelocity: 0.15,

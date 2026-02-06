@@ -456,7 +456,7 @@ export default async function DashboardPage() {
       <DashboardBackground initialTotalSeconds={data.userTotalSeconds} />
       
       <div className="relative z-10 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
-        <div className="absolute top-10 right-4 sm:right-6 lg:right-8 z-20">
+        <div className="absolute top-4 right-4 sm:right-6 lg:right-8 z-20">
           <StudyContextMenu />
         </div>
         

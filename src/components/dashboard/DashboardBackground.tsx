@@ -28,7 +28,7 @@ export default function DashboardBackground({ initialTotalSeconds }: DashboardBa
     return () => clearInterval(interval);
   }, []);
 
-  const baseBalls = 10;
+  const baseBalls = 20;
   const ballsPerFiveMinutes = 5;
   const fiveMinuteIntervals = Math.floor(totalSeconds / 300);
   const ballCount = Math.min(
@@ -41,13 +41,13 @@ export default function DashboardBackground({ initialTotalSeconds }: DashboardBa
       <div className="absolute inset-0 w-full h-full pointer-events-auto">
         <Ballpit
           count={ballCount}
-          gravity={0.03}
+          gravity={0.8}
           friction={1.0}
           wallBounce={1.0}
           followCursor={true}
           minSize={0.25}
           maxSize={0.5}
-          colors={[0xcccccc, 0xdddddd, 0xeeeeee, 0xffffff]}
+          colors={[0x888888, 0x999999, 0xaaaaaa, 0xbbbbbb, 0xcccccc, 0xdddddd, 0xeeeeee, 0xffffff]}
         />
       </div>
     </div>
