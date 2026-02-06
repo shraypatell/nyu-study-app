@@ -196,27 +196,27 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
 
         <div className="flex justify-center gap-3">
           {!isActive ? (
-            <Button
-              onClick={handleStart}
-              disabled={loading}
-              variant="outline"
-              size="icon"
-              aria-label="Start studying"
-              className="h-14 w-14 bg-[#f4f4f4] border border-[#e5e5e5]"
-            >
-              <Play className="h-5 w-5" />
-            </Button>
+          <Button
+            onClick={handleStart}
+            disabled={loading}
+            variant="outline"
+            size="icon"
+            aria-label="Start studying"
+            className="h-14 w-14 glass-card rounded-full hover:scale-105 transition-transform"
+          >
+            <Play className="h-5 w-5" />
+          </Button>
           ) : (
-            <Button
-              onClick={handlePause}
-              disabled={loading}
-              variant="outline"
-              size="icon"
-              aria-label="Pause studying"
-              className="h-14 w-14 bg-[#f4f4f4] border border-[#e5e5e5]"
-            >
-              <Pause className="h-5 w-5" />
-            </Button>
+          <Button
+            onClick={handlePause}
+            disabled={loading}
+            variant="outline"
+            size="icon"
+            aria-label="Pause studying"
+            className="h-14 w-14 glass-card rounded-full hover:scale-105 transition-transform"
+          >
+            <Pause className="h-5 w-5" />
+          </Button>
           )}
         </div>
 
