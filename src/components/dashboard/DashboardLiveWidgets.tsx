@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import DashboardLeaderboardWidget from "@/components/dashboard/DashboardLeaderboardWidget";
 import DashboardFriendsWidget from "@/components/dashboard/DashboardFriendsWidget";
+import ElectricBorder from "@/components/ui/ElectricBorder";
 
 interface LeaderboardEntry {
   rank?: number;
@@ -206,25 +207,31 @@ export default function DashboardLiveWidgets({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-      <DashboardLeaderboardWidget
-        title={locationTitle ? `${locationTitle} leaderboard` : "location leaderboard"}
-        icon="location"
-        entries={locationLeaderboard}
-        href={locationId ? `/leaderboard/${locationId}` : "/leaderboard"}
-        isClickable={true}
-        className="bg-[#f6c2c2]"
-      />
+      <ElectricBorder color="#000000" speed={2.1} chaos={0.1} borderRadius={0}>
+        <DashboardLeaderboardWidget
+          title={locationTitle ? `${locationTitle} leaderboard` : "location leaderboard"}
+          icon="location"
+          entries={locationLeaderboard}
+          href={locationId ? `/leaderboard/${locationId}` : "/leaderboard"}
+          isClickable={true}
+          className="bg-[#f6c2c2]"
+        />
+      </ElectricBorder>
 
-      <DashboardLeaderboardWidget
-        title="school leaderboard"
-        icon="school"
-        entries={schoolLeaderboard}
-        href="/leaderboard"
-        isClickable={true}
-        className="bg-[#cde6ff]"
-      />
+      <ElectricBorder color="#000000" speed={2.1} chaos={0.1} borderRadius={0}>
+        <DashboardLeaderboardWidget
+          title="school leaderboard"
+          icon="school"
+          entries={schoolLeaderboard}
+          href="/leaderboard"
+          isClickable={true}
+          className="bg-[#cde6ff]"
+        />
+      </ElectricBorder>
 
-      <DashboardFriendsWidget friends={friends} className="bg-[#fff7bf]" />
+      <ElectricBorder color="#000000" speed={2.1} chaos={0.1} borderRadius={0}>
+        <DashboardFriendsWidget friends={friends} className="bg-[#fff7bf]" />
+      </ElectricBorder>
     </div>
   );
 }

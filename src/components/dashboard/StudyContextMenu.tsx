@@ -123,7 +123,7 @@ export default function StudyContextMenu() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className="glass-panel max-w-none justify-between gap-2 text-left font-medium w-auto ml-auto"
+          className="glass-panel max-w-none justify-between gap-2 text-left font-medium w-auto ml-auto px-2 py-1 text-sm"
         >
           <span className="whitespace-nowrap">{getTriggerText()}</span>
           <ChevronDown className="h-4 w-4 shrink-0" />
@@ -132,8 +132,8 @@ export default function StudyContextMenu() {
       <DropdownMenuContent
         align="end"
         side="bottom"
-        sideOffset={8}
-        className="w-[360px] max-h-[70vh] overflow-y-auto p-4 glass-panel data-[state=open]:[animation:widget-enter_180ms_ease] data-[state=closed]:[animation:widget-exit_160ms_ease]"
+        sideOffset={4}
+        className="w-[320px] max-h-[70vh] overflow-y-auto p-3 glass-panel data-[state=open]:[animation:widget-enter_180ms_ease] data-[state=closed]:[animation:widget-exit_160ms_ease]"
       >
         <div className="space-y-4">
           <ClassSelector />
