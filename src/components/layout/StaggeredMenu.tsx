@@ -155,41 +155,41 @@ export const StaggeredMenu = ({
       tl.fromTo(ls.el, { xPercent: ls.start }, { xPercent: 0, duration: 0.4, ease: "power3.out" }, i * 0.06);
     });
     const lastTime = layerStates.length ? (layerStates.length - 1) * 0.06 : 0;
-    const panelInsertTime = lastTime + (layerStates.length ? 0.06 : 0);
-    const panelDuration = 0.5;
+    const panelInsertTime = lastTime;
+    const panelDuration = 0.38;
     tl.fromTo(
       panel,
       { xPercent: panelStart },
-      { xPercent: 0, duration: panelDuration, ease: "power3.out" },
+      { xPercent: 0, duration: panelDuration, ease: "power2.out" },
       panelInsertTime
     );
 
     if (headerLogoRef.current) {
       tl.to(
         headerLogoRef.current,
-        { xPercent: 0, duration: 0.45, ease: "power3.out" },
+        { xPercent: 0, duration: 0.38, ease: "power2.out" },
         panelInsertTime
       );
     }
     if (headerToggleWrapRef.current) {
       tl.to(
         headerToggleWrapRef.current,
-        { x: position === "left" ? 200 : -200, duration: 0.45, ease: "power3.out" },
+        { x: position === "left" ? 200 : -200, duration: 0.38, ease: "power2.out" },
         panelInsertTime
       );
     }
 
     if (itemEls.length) {
-      const itemsStartRatio = 0.15;
+      const itemsStartRatio = 0.08;
       const itemsStart = panelInsertTime + panelDuration * itemsStartRatio;
       tl.to(
         itemEls,
         {
           yPercent: 0,
           rotate: 0,
-          duration: 1,
-          ease: "power4.out",
-          stagger: { each: 0.1, from: "start" },
+          duration: 0.6,
+          ease: "power2.out",
+          stagger: { each: 0.08, from: "start" },
         },
         itemsStart
       );
@@ -197,12 +197,12 @@ export const StaggeredMenu = ({
         tl.to(
           numberEls,
           {
-            duration: 0.6,
+            duration: 0.4,
             ease: "power2.out",
             "--sm-num-opacity": 1,
-            stagger: { each: 0.08, from: "start" },
+            stagger: { each: 0.06, from: "start" },
           },
-          itemsStart + 0.1
+          itemsStart + 0.06
         );
       }
     }
@@ -238,7 +238,7 @@ export const StaggeredMenu = ({
     const offscreen = position === "left" ? -100 : 100;
     closeTweenRef.current = gsap.to(all, {
       xPercent: offscreen,
-      duration: 0.25,
+      duration: 0.22,
       ease: "power2.in",
       overwrite: "auto",
       onComplete: () => {
@@ -396,35 +396,7 @@ export const StaggeredMenu = ({
         })()}
       </div>
       <header className="staggered-menu-header" aria-label="Main navigation header">
-        <div className="sm-logo" aria-label="Logo" ref={headerLogoRef}>
-          <div className="flex items-center gap-2">
-            <Image
-              src={logoUrl}
-              alt="NYU"
-              className="sm-logo-img"
-              draggable={false}
-              width={110}
-              height={24}
-            />
-            <span className="text-[clamp(1.05rem,1.4vw,1.3rem)] font-bold tracking-[-0.03em] text-black lowercase">
-              rally
-            </span>
-            <svg
-              width="20"
-              height="16"
-              viewBox="0 0 22 18"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-              className="text-black"
-            >
-              <rect x="1" y="6" width="6" height="11" fill="currentColor" />
-              <rect x="8" y="2" width="6" height="15" fill="currentColor" />
-              <rect x="15" y="8" width="6" height="9" fill="currentColor" />
-            </svg>
-          </div>
-        </div>
-        <div ref={headerToggleWrapRef}>
+        <div ref={headerToggleWrapRef} className="sm-toggle-wrap">
           <button
             ref={toggleBtnRef}
             className="sm-toggle"
@@ -456,6 +428,36 @@ export const StaggeredMenu = ({
               )}
             </span>
           </button>
+        </div>
+        <div className="sm-logo" aria-label="Logo" ref={headerLogoRef}>
+          <div className="flex flex-col items-start gap-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[clamp(1.05rem,1.4vw,1.3rem)] font-bold tracking-[-0.03em] text-black lowercase">
+                rally
+              </span>
+              <svg
+                width="20"
+                height="16"
+                viewBox="0 0 22 18"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+                className="text-black"
+              >
+                <rect x="1" y="6" width="6" height="11" fill="currentColor" />
+                <rect x="8" y="2" width="6" height="15" fill="currentColor" />
+                <rect x="15" y="8" width="6" height="9" fill="currentColor" />
+              </svg>
+            </div>
+            <Image
+              src={logoUrl}
+              alt="NYU"
+              className="sm-logo-img"
+              draggable={false}
+              width={110}
+              height={24}
+            />
+          </div>
         </div>
       </header>
 

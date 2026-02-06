@@ -23,8 +23,9 @@
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: 1rem 1.5rem;
+  gap: 1rem;
   background: transparent;
   pointer-events: none;
   z-index: 20;
@@ -36,7 +37,7 @@
 
 .sm-logo {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   user-select: none;
 }
 
@@ -243,4 +244,8 @@
     left: 0;
     right: 0;
   }
+}
+.sm-toggle-wrap {
+  position: relative;
+  z-index: 1;
 }
