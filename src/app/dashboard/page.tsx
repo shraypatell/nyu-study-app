@@ -2,8 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { getNyDateStart } from "@/lib/date";
-import DashboardLeaderboardWidget from "@/components/dashboard/DashboardLeaderboardWidget";
-import DashboardFriendsWidget from "@/components/dashboard/DashboardFriendsWidget";
+import DashboardLiveWidgets from "@/components/dashboard/DashboardLiveWidgets";
 import StudyContextMenu from "@/components/dashboard/StudyContextMenu";
 import TimerContainer from "@/components/timer/TimerContainer";
 
@@ -426,15 +425,6 @@ export default async function DashboardPage() {
 
   const data = await getDashboardData(user.id);
 
-  const locationTitle = data.locationName
-    ? data.locationName.includes(" in ")
-      ? (() => {
-          const [child, parent] = data.locationName.split(" in ");
-          return `${parent} - ${child}`;
-        })()
-      : data.locationName
-    : "Location";
-
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-10">
@@ -451,27 +441,13 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          <DashboardLeaderboardWidget
-            title={locationTitle}
-            icon="location"
-            entries={data.locationLeaderboard}
-            href={data.locationId ? `/leaderboard/${data.locationId}` : "/leaderboard"}
-            isClickable={true}
-            className="bg-[#f6c2c2]"
-          />
-
-          <DashboardLeaderboardWidget
-            title="School"
-            icon="school"
-            entries={data.schoolLeaderboard}
-            href="/leaderboard"
-            isClickable={true}
-            className="bg-[#cde6ff]"
-          />
-
-          <DashboardFriendsWidget friends={data.friends} className="bg-[#fff7bf]" />
-        </div>
+        <DashboardLiveWidgets
+          initialLocationName={data.locationName}
+          initialLocationId={data.locationId}
+          initialLocationLeaderboard={data.locationLeaderboard}
+          initialSchoolLeaderboard={data.schoolLeaderboard}
+          initialFriends={data.friends}
+        />
       </div>
     </div>
   );
