@@ -432,7 +432,9 @@ export default async function DashboardPage() {
           <div className="flex items-center">
             <img src="/nyu.edu.png" alt="NYU" className="h-8 w-auto" />
           </div>
-          <StudyContextMenu />
+          <div className="ml-auto">
+            <StudyContextMenu />
+          </div>
         </div>
 
         <div className="flex justify-center bg-white py-12">

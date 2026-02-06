@@ -17,6 +17,10 @@ const baseItems: (MenuItem & { hoverColor?: string })[] = [
   { label: "Chat", ariaLabel: "Go to chat", link: "/chat" },
   { label: "Search", ariaLabel: "Go to search", link: "/search" },
   { label: "Friends", ariaLabel: "Go to friends", link: "/friends", hoverColor: "#fff7bf" },
+];
+
+const footerItems: MenuItem[] = [
+  { label: "Profile", ariaLabel: "Go to profile", link: "/settings/profile" },
   { label: "Settings", ariaLabel: "Go to settings", link: "/settings/profile" },
 ];
 
@@ -424,7 +428,7 @@ export const StaggeredMenu = ({
       <aside id="staggered-menu-panel" ref={panelRef} className="staggered-menu-panel" aria-hidden={!open}>
         <div className="sm-panel-inner">
           <div className="sm-panel-brand">
-            <div className="flex items-center gap-2">
+            <div className="sm-brand-mark">
               <span className="text-[clamp(1.05rem,1.4vw,1.3rem)] font-bold tracking-[-0.03em] text-black lowercase">
                 rally
               </span>
@@ -474,6 +478,13 @@ export const StaggeredMenu = ({
               </li>
             )}
           </ul>
+          <div className="sm-panel-footer">
+            {footerItems.map((item) => (
+              <Link key={item.label} className="sm-panel-item" href={item.link} aria-label={item.ariaLabel}>
+                <span className="sm-panel-itemLabel">{item.label}</span>
+              </Link>
+            ))}
+          </div>
         </div>
       </aside>
     </div>

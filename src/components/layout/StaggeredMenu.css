@@ -45,6 +45,14 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  align-items: flex-start;
+}
+
+.sm-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 120px;
 }
 
 .sm-logo-img {
@@ -201,9 +209,10 @@
   transition: background 0.25s, color 0.25s;
   display: inline-block;
   text-decoration: none;
-  padding: 0.6rem 0.4rem;
+  padding: 0.7rem 0.6rem;
   width: 100%;
-  border-bottom: 1px solid #e5e5e5;
+  border: 1px solid #111111;
+  background: #f4f4f4;
 }
 
 .sm-panel-itemLabel {
@@ -254,4 +263,10 @@
 .sm-toggle-wrap {
   position: relative;
   z-index: 1;
+}
+.sm-panel-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
