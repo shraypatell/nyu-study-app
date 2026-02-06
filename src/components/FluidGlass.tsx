@@ -1,7 +1,7 @@
 "use client";
 
 import * as THREE from 'three';
-import { useRef, useState, useEffect, Suspense } from 'react';
+import { useRef, useMemo, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, MeshTransmissionMaterial, Environment } from '@react-three/drei';
 
@@ -34,6 +34,10 @@ function GlassModel({
   const { viewport, pointer } = useThree();
   const { nodes } = useGLTF('/bar.glb') as any;
   
+  const geometry = useMemo(() => {
+    return nodes?.Cube?.geometry || nodes?.bar?.geometry || nodes?.Scene?.children[0]?.geometry;
+  }, [nodes]);
+  
   useFrame(() => {
     if (!meshRef.current) return;
     const targetX = pointer.x * 0.1;
@@ -42,14 +46,14 @@ function GlassModel({
     meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, targetX, 0.05);
   });
 
-  const viewportWidth = viewport.width;
-  const desiredScale = (viewportWidth * 0.8) * scale;
+  const minViewport = Math.min(viewport.width, viewport.height);
+  const baseScale = minViewport * 0.7;
 
   return (
     <mesh
       ref={meshRef}
-      geometry={nodes?.Cube?.geometry || nodes?.bar?.geometry || nodes?.Scene?.children[0]?.geometry}
-      scale={desiredScale}
+      geometry={geometry}
+      scale={[baseScale * scale, baseScale * scale, baseScale * scale * 0.3]}
       rotation={[0, 0, 0]}
       position={[0, 0, 0]}
     >
@@ -72,11 +76,13 @@ function GlassModel({
 function Scene(props: FluidGlassProps) {
   return (
     <>
-      <Environment preset="city" />
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[5, 5, 5]} intensity={1.5} />
-      <directionalLight position={[-5, -5, -5]} intensity={1} color="#e8e8ff" />
-      <pointLight position={[0, 0, 10]} intensity={0.8} />
+      <Environment preset="studio" />
+      <ambientLight intensity={2} />
+      <directionalLight position={[10, 10, 5]} intensity={3} />
+      <directionalLight position={[-10, -10, 5]} intensity={2} color="#ffffff" />
+      <pointLight position={[0, 5, 10]} intensity={2} />
+      <pointLight position={[0, -5, 10]} intensity={1.5} color="#f0f0ff" />
+      <spotLight position={[0, 10, 0]} intensity={2} angle={Math.PI / 4} />
       
       <Suspense fallback={null}>
         <GlassModel {...props} />
