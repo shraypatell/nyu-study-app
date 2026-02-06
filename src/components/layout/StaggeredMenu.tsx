@@ -57,7 +57,6 @@ export const StaggeredMenu = ({
   const panelRef = useRef<HTMLElement | null>(null);
   const preLayersRef = useRef<HTMLDivElement | null>(null);
   const preLayerElsRef = useRef<HTMLDivElement[]>([]);
-  const headerLogoRef = useRef<HTMLDivElement | null>(null);
   const headerToggleWrapRef = useRef<HTMLDivElement | null>(null);
   const plusHRef = useRef<HTMLSpanElement | null>(null);
   const plusVRef = useRef<HTMLSpanElement | null>(null);
@@ -97,7 +96,6 @@ export const StaggeredMenu = ({
       gsap.set(icon, { rotate: 0, transformOrigin: "50% 50%" });
       gsap.set(textInner, { yPercent: 0 });
       if (toggleBtnRef.current) gsap.set(toggleBtnRef.current, { color: menuButtonColor });
-      if (headerLogoRef.current) gsap.set(headerLogoRef.current, { xPercent: offscreen });
       if (headerToggleWrapRef.current) gsap.set(headerToggleWrapRef.current, { x: 0 });
     });
     return () => ctx.revert();
@@ -152,44 +150,36 @@ export const StaggeredMenu = ({
     const tl = gsap.timeline({ paused: true });
 
     layerStates.forEach((ls, i) => {
-      tl.fromTo(ls.el, { xPercent: ls.start }, { xPercent: 0, duration: 0.4, ease: "power3.out" }, i * 0.06);
+      tl.fromTo(ls.el, { xPercent: ls.start }, { xPercent: 0, duration: 0.36, ease: "power1.out" }, i * 0.05);
     });
-    const lastTime = layerStates.length ? (layerStates.length - 1) * 0.06 : 0;
-    const panelInsertTime = lastTime;
-    const panelDuration = 0.38;
+    const panelInsertTime = 0;
+    const panelDuration = 0.36;
     tl.fromTo(
       panel,
       { xPercent: panelStart },
-      { xPercent: 0, duration: panelDuration, ease: "power2.out" },
+      { xPercent: 0, duration: panelDuration, ease: "power1.out" },
       panelInsertTime
     );
-
-    if (headerLogoRef.current) {
-      tl.to(
-        headerLogoRef.current,
-        { xPercent: 0, duration: 0.38, ease: "power2.out" },
-        panelInsertTime
-      );
-    }
     if (headerToggleWrapRef.current) {
+      const shift = position === "left" ? 260 : -260;
       tl.to(
         headerToggleWrapRef.current,
-        { x: position === "left" ? 200 : -200, duration: 0.38, ease: "power2.out" },
+        { x: shift, duration: panelDuration, ease: "power1.out" },
         panelInsertTime
       );
     }
 
     if (itemEls.length) {
-      const itemsStartRatio = 0.08;
+      const itemsStartRatio = 0.06;
       const itemsStart = panelInsertTime + panelDuration * itemsStartRatio;
       tl.to(
         itemEls,
         {
           yPercent: 0,
           rotate: 0,
-          duration: 0.6,
-          ease: "power2.out",
-          stagger: { each: 0.08, from: "start" },
+          duration: 0.5,
+          ease: "power1.out",
+          stagger: { each: 0.06, from: "start" },
         },
         itemsStart
       );
@@ -197,12 +187,12 @@ export const StaggeredMenu = ({
         tl.to(
           numberEls,
           {
-            duration: 0.4,
-            ease: "power2.out",
+            duration: 0.32,
+            ease: "power1.out",
             "--sm-num-opacity": 1,
-            stagger: { each: 0.06, from: "start" },
+            stagger: { each: 0.05, from: "start" },
           },
-          itemsStart + 0.06
+          itemsStart + 0.04
         );
       }
     }
@@ -233,13 +223,13 @@ export const StaggeredMenu = ({
     const layers = preLayerElsRef.current;
     if (!panel) return;
 
-    const all = [...layers, panel, headerLogoRef.current].filter(Boolean) as Element[];
+    const all = [...layers, panel].filter(Boolean) as Element[];
     closeTweenRef.current?.kill();
     const offscreen = position === "left" ? -100 : 100;
     closeTweenRef.current = gsap.to(all, {
       xPercent: offscreen,
       duration: 0.22,
-      ease: "power2.in",
+      ease: "power1.in",
       overwrite: "auto",
       onComplete: () => {
         const itemEls = Array.from(panel.querySelectorAll(".sm-panel-itemLabel"));
@@ -303,7 +293,7 @@ export const StaggeredMenu = ({
 
     const currentLabel = opening ? "Menu" : "Back";
     const targetLabel = opening ? "Back" : "Menu";
-    const cycles = 1;
+    const cycles = 0;
     const seq = [currentLabel];
     let last = currentLabel;
     for (let i = 0; i < cycles; i++) {
@@ -319,8 +309,8 @@ export const StaggeredMenu = ({
     const finalShift = ((lineCount - 1) / lineCount) * 100;
     textCycleAnimRef.current = gsap.to(inner, {
       yPercent: -finalShift,
-      duration: 0.35 + lineCount * 0.05,
-      ease: "power2.out",
+      duration: 0.25 + lineCount * 0.03,
+      ease: "power1.out",
       onComplete: () => {
         gsap.set(inner, { yPercent: -finalShift });
       },
@@ -429,8 +419,12 @@ export const StaggeredMenu = ({
             </span>
           </button>
         </div>
-        <div className="sm-logo" aria-label="Logo" ref={headerLogoRef}>
-          <div className="flex flex-col items-start gap-1">
+      </header>
+      </header>
+
+      <aside id="staggered-menu-panel" ref={panelRef} className="staggered-menu-panel" aria-hidden={!open}>
+        <div className="sm-panel-inner">
+          <div className="sm-panel-brand">
             <div className="flex items-center gap-2">
               <span className="text-[clamp(1.05rem,1.4vw,1.3rem)] font-bold tracking-[-0.03em] text-black lowercase">
                 rally
@@ -458,11 +452,6 @@ export const StaggeredMenu = ({
               height={24}
             />
           </div>
-        </div>
-      </header>
-
-      <aside id="staggered-menu-panel" ref={panelRef} className="staggered-menu-panel" aria-hidden={!open}>
-        <div className="sm-panel-inner">
           <ul className="sm-panel-list" role="list" data-numbering={displayItemNumbering || undefined}>
             {items && items.length ? (
               items.map((it, idx) => (

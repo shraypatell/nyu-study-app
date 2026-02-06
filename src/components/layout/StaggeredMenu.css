@@ -41,6 +41,12 @@
   user-select: none;
 }
 
+.sm-panel-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
 .sm-logo-img {
   display: block;
   height: 24px;
