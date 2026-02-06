@@ -51,22 +51,19 @@ export default function DashboardFluidGlassCard({
     >
       <div className="absolute inset-0 z-0">
         <FluidGlass
-          width={3.5}
-          height={3.5}
-          scale={1.2}
-          ior={1.15}
-          thickness={5}
-          chromaticAberration={0.1}
-          anisotropy={0.01}
-          transmission={1}
-          roughness={0.05}
-          color="#ffffff"
-          attenuationColor="#ffffff"
-          attenuationDistance={0.5}
-          distortion={0.3}
-          distortionScale={0.5}
-          temporalDistortion={0.05}
-          followPointer={true}
+          mode="bar"
+          barProps={{
+            scale: 0.15,
+            ior: 1.15,
+            thickness: 10,
+            transmission: 1,
+            roughness: 0,
+            chromaticAberration: 0.1,
+            anisotropy: 0.01,
+            color: '#ffffff',
+            attenuationColor: '#ffffff',
+            attenuationDistance: 0.25
+          }}
         />
       </div>
 

@@ -1,154 +1,196 @@
 "use client";
 
 import * as THREE from 'three';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, memo } from 'react';
 import { Canvas, createPortal, useFrame, useThree } from '@react-three/fiber';
-import { MeshTransmissionMaterial, RoundedBox } from '@react-three/drei';
+import { useGLTF, MeshTransmissionMaterial } from '@react-three/drei';
+import { easing } from 'maath';
 
 interface FluidGlassProps {
-  width?: number;
-  height?: number;
-  depth?: number;
-  scale?: number;
-  ior?: number;
-  thickness?: number;
-  chromaticAberration?: number;
-  anisotropy?: number;
-  transmission?: number;
-  roughness?: number;
-  color?: string;
-  attenuationColor?: string;
-  attenuationDistance?: number;
-  distortion?: number;
-  distortionScale?: number;
-  temporalDistortion?: number;
-  followPointer?: boolean;
+  mode?: 'lens' | 'bar' | 'cube';
+  lensProps?: any;
+  barProps?: any;
+  cubeProps?: any;
+  navItems?: Array<{ label: string; link: string }>;
 }
 
-function GlassMesh({
-  width = 3.5,
-  height = 3.5,
-  depth = 0.5,
-  scale = 1,
-  ior = 1.5,
-  thickness = 10,
-  chromaticAberration = 0.2,
-  anisotropy = 0.15,
-  transmission = 1,
-  roughness = 0.05,
-  color = '#ffffff',
-  attenuationColor = '#ffffff',
-  attenuationDistance = 0.5,
-  distortion = 0.3,
-  distortionScale = 0.4,
-  temporalDistortion = 0.1,
-  followPointer = true,
+const defaultNavItems = [
+  { label: 'Home', link: '' },
+  { label: 'About', link: '' },
+  { label: 'Contact', link: '' }
+];
+
+export default function FluidGlass({ 
+  mode = 'bar', 
+  lensProps = {}, 
+  barProps = {}, 
+  cubeProps = {},
+  navItems = defaultNavItems
 }: FluidGlassProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const { gl, viewport, pointer, camera, size } = useThree();
-  
-  const [bufferScene] = useState(() => new THREE.Scene());
-  const [renderTarget, setRenderTarget] = useState<THREE.WebGLRenderTarget | null>(null);
+  const Wrapper = mode === 'bar' ? Bar : mode === 'cube' ? Cube : Lens;
+  const rawOverrides = mode === 'bar' ? barProps : mode === 'cube' ? cubeProps : lensProps;
+
+  const {
+    navItems: overrideNavItems,
+    ...modeProps
+  } = rawOverrides;
+
+  const finalNavItems = overrideNavItems || navItems;
+
+  return (
+    <Canvas camera={{ position: [0, 0, 20], fov: 15 }} gl={{ alpha: true }}>
+      {mode === 'bar' && <NavItems items={finalNavItems} />}
+      <Wrapper modeProps={modeProps} />
+    </Canvas>
+  );
+}
+
+const ModeWrapper = memo(function ModeWrapper({
+  children,
+  glb,
+  geometryKey,
+  lockToBottom = false,
+  followPointer = true,
+  modeProps = {},
+  ...props
+}: any) {
+  const ref = useRef<any>(null);
+  const { nodes } = useGLTF(glb) as any;
+  const [buffer] = useState(() => new THREE.WebGLRenderTarget(1024, 1024));
+  const { viewport: vp, gl, camera } = useThree();
+  const [scene] = useState(() => new THREE.Scene());
+  const geoWidthRef = useRef(1);
 
   useEffect(() => {
-    const target = new THREE.WebGLRenderTarget(
-      Math.max(1, Math.floor(size.width)),
-      Math.max(1, Math.floor(size.height)),
-      {
-        minFilter: THREE.LinearFilter,
-        magFilter: THREE.LinearFilter,
-        format: THREE.RGBAFormat,
-      }
-    );
-    setRenderTarget(target);
-    
-    return () => {
-      target.dispose();
-    };
-  }, [size.width, size.height]);
+    const geo = nodes[geometryKey]?.geometry;
+    if (geo) {
+      geo.computeBoundingBox();
+      geoWidthRef.current = geo.boundingBox.max.x - geo.boundingBox.min.x || 1;
+    }
+  }, [nodes, geometryKey]);
 
-  useFrame(() => {
-    if (!meshRef.current || !renderTarget) return;
+  useFrame((state, delta) => {
+    if (!ref.current) return;
     
-    if (followPointer) {
-      const targetX = pointer.x * 0.2;
-      const targetY = pointer.y * 0.2;
-      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, targetY * 0.5, 0.05);
-      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, targetX * 0.5, 0.05);
+    const { viewport, pointer } = state;
+    const v = viewport.getCurrentViewport(camera, [0, 0, 15]);
+
+    const destX = followPointer ? (pointer.x * v.width) / 2 : 0;
+    const destY = lockToBottom ? -v.height / 2 + 0.2 : followPointer ? (pointer.y * v.height) / 2 : 0;
+    easing.damp3(ref.current.position, [destX, destY, 15], 0.15, delta);
+
+    if (modeProps.scale == null) {
+      const maxWorld = v.width * 0.9;
+      const desired = maxWorld / geoWidthRef.current;
+      ref.current.scale.setScalar(Math.min(0.15, desired));
     }
 
-    const currentClearColor = gl.getClearColor(new THREE.Color());
-    const currentClearAlpha = gl.getClearAlpha();
-    
     const oldXrEnabled = gl.xr.enabled;
     gl.xr.enabled = false;
-    
-    gl.setRenderTarget(renderTarget);
-    gl.setClearColor(0xf0f0f0, 1);
+    gl.setRenderTarget(buffer);
+    gl.setClearColor(0xf5f5f5, 1);
     gl.clear();
-    gl.render(bufferScene, camera);
+    gl.render(scene, camera);
     gl.setRenderTarget(null);
-    
     gl.xr.enabled = oldXrEnabled;
-    gl.setClearColor(currentClearColor, currentClearAlpha);
   });
 
-  if (!renderTarget) return null;
+  const { scale, ior, thickness, anisotropy, chromaticAberration, ...extraMat } = modeProps;
 
   return (
     <>
-      {createPortal(
-        <mesh>
-          <planeGeometry args={[viewport.width * 2, viewport.height * 2]} />
-          <meshBasicMaterial color={0xf0f0f0} />
-        </mesh>,
-        bufferScene
-      )}
-      <RoundedBox
-        ref={meshRef}
-        args={[width, height, depth]}
-        radius={0.2}
-        smoothness={4}
-        scale={scale}
+      {createPortal(children, scene)}
+      <mesh scale={[vp.width, vp.height, 1]}>
+        <planeGeometry />
+        <meshBasicMaterial map={buffer.texture} transparent />
+      </mesh>
+      <mesh 
+        ref={ref} 
+        scale={scale ?? 0.15} 
+        rotation-x={Math.PI / 2} 
+        geometry={nodes[geometryKey]?.geometry} 
+        {...props}
       >
         <MeshTransmissionMaterial
-          buffer={renderTarget.texture}
-          ior={ior}
-          thickness={thickness}
-          chromaticAberration={chromaticAberration}
-          anisotropy={anisotropy}
-          transmission={transmission}
-          roughness={roughness}
-          color={color}
-          attenuationColor={attenuationColor}
-          attenuationDistance={attenuationDistance}
-          distortion={distortion}
-          distortionScale={distortionScale}
-          temporalDistortion={temporalDistortion}
+          buffer={buffer.texture}
+          ior={ior ?? 1.15}
+          thickness={thickness ?? 5}
+          anisotropy={anisotropy ?? 0.01}
+          chromaticAberration={chromaticAberration ?? 0.1}
+          transmission={1}
+          roughness={0}
+          {...extraMat}
         />
-      </RoundedBox>
+      </mesh>
     </>
+  );
+});
+
+function Lens({ modeProps, ...p }: any) {
+  return <ModeWrapper glb="/lens.glb" geometryKey="Cylinder" followPointer modeProps={modeProps} {...p} />;
+}
+
+function Cube({ modeProps, ...p }: any) {
+  return <ModeWrapper glb="/cube.glb" geometryKey="Cube" followPointer modeProps={modeProps} {...p} />;
+}
+
+function Bar({ modeProps = {}, ...p }: any) {
+  const defaultMat = {
+    transmission: 1,
+    roughness: 0,
+    thickness: 10,
+    ior: 1.15,
+    color: '#ffffff',
+    attenuationColor: '#ffffff',
+    attenuationDistance: 0.25
+  };
+
+  return (
+    <ModeWrapper
+      glb="/bar.glb"
+      geometryKey="Cube"
+      lockToBottom
+      followPointer={false}
+      modeProps={{ ...defaultMat, ...modeProps }}
+      {...p}
+    />
   );
 }
 
-export default function FluidGlass(props: FluidGlassProps) {
-  return (
-    <Canvas
-      camera={{ position: [0, 0, 8], fov: 35 }}
-      gl={{ 
-        alpha: true, 
-        antialias: true,
-        powerPreference: "high-performance"
-      }}
-      style={{ width: '100%', height: '100%' }}
-      dpr={[1, 2]}
-    >
-      <ambientLight intensity={0.9} />
-      <directionalLight position={[10, 10, 5]} intensity={1.5} />
-      <directionalLight position={[-10, -10, -5]} intensity={1} color="#e8e8ff" />
-      <pointLight position={[0, 5, 8]} intensity={0.8} />
-      <pointLight position={[0, -5, 8]} intensity={0.4} color="#ffe8e8" />
-      <GlassMesh {...props} />
-    </Canvas>
-  );
+function NavItems({ items }: { items: Array<{ label: string; link: string }> }) {
+  const group = useRef<any>(null);
+  const { viewport, camera } = useThree();
+
+  const DEVICE = {
+    mobile: { max: 639, spacing: 0.2, fontSize: 0.035 },
+    tablet: { max: 1023, spacing: 0.24, fontSize: 0.035 },
+    desktop: { max: Infinity, spacing: 0.3, fontSize: 0.035 }
+  };
+  
+  const getDevice = () => {
+    const w = window.innerWidth;
+    return w <= DEVICE.mobile.max ? 'mobile' : w <= DEVICE.tablet.max ? 'tablet' : 'desktop';
+  };
+
+  const [device, setDevice] = useState(getDevice());
+
+  useEffect(() => {
+    const onResize = () => setDevice(getDevice());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const { spacing, fontSize } = DEVICE[device as keyof typeof DEVICE];
+
+  useFrame(() => {
+    if (!group.current) return;
+    const v = viewport.getCurrentViewport(camera, [0, 0, 15]);
+    group.current.position.set(0, -v.height / 2 + 0.2, 15.1);
+
+    group.current.children.forEach((child: any, i: number) => {
+      child.position.x = (i - (items.length - 1) / 2) * spacing;
+    });
+  });
+
+  return null;
 }
