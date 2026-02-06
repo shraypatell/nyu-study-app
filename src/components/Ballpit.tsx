@@ -54,15 +54,15 @@ class x {
   constructor(config: { canvas?: HTMLCanvasElement; id?: string; size?: string | { width: number; height: number }; rendererOptions?: any }) {
     this.#e = { ...config };
     this.#c = new e();
+    this.render = this.#i.bind(this);
+    this.onBeforeRender = () => {};
+    this.onAfterRender = () => {};
+    this.onAfterResize = () => {};
     this.#m();
     this.#d();
     this.#p();
     this.resize();
     this.#g();
-    this.render = this.#i.bind(this);
-    this.onBeforeRender = () => {};
-    this.onAfterRender = () => {};
-    this.onAfterResize = () => {};
   }
   #m() {
     this.camera = new t();
