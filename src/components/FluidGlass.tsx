@@ -1,14 +1,14 @@
 "use client";
 
 import * as THREE from 'three';
-import { useRef, useMemo } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { useRef, useMemo, useEffect } from 'react';
+import { Canvas, useFrame, useThree, extend } from '@react-three/fiber';
 import { MeshTransmissionMaterial, RoundedBox } from '@react-three/drei';
-import { easing } from 'maath';
 
 interface FluidGlassProps {
   width?: number;
   height?: number;
+  depth?: number;
   scale?: number;
   ior?: number;
   thickness?: number;
@@ -23,50 +23,47 @@ interface FluidGlassProps {
   distortionScale?: number;
   temporalDistortion?: number;
   followPointer?: boolean;
-  children?: React.ReactNode;
 }
 
-function GlassCard({
+function GlassMesh({
   width = 3.5,
   height = 3.5,
+  depth = 0.4,
   scale = 1,
-  ior = 1.15,
-  thickness = 5,
-  chromaticAberration = 0.1,
-  anisotropy = 0.01,
-  transmission = 1,
-  roughness = 0,
+  ior = 1.5,
+  thickness = 8,
+  chromaticAberration = 0.15,
+  anisotropy = 0.1,
+  transmission = 0.98,
+  roughness = 0.05,
   color = '#ffffff',
   attenuationColor = '#ffffff',
-  attenuationDistance = 0.25,
-  distortion = 0.5,
+  attenuationDistance = 1.5,
+  distortion = 0.2,
   distortionScale = 0.5,
   temporalDistortion = 0.1,
   followPointer = true,
-  children,
 }: FluidGlassProps) {
   const meshRef = useRef<THREE.Mesh>(null);
-  const { pointer, viewport } = useThree();
+  const { viewport, pointer } = useThree();
 
-  const geometry = useMemo(() => {
-    return new THREE.BoxGeometry(width, height, 0.5, 32, 32, 1);
-  }, [width, height]);
-
-  useFrame((state, delta) => {
-    if (!meshRef.current) return;
+  useFrame(() => {
+    if (!meshRef.current || !followPointer) return;
     
-    if (followPointer) {
-      const targetX = pointer.x * 0.3;
-      const targetY = pointer.y * 0.3;
-      meshRef.current.rotation.x += (targetY * 0.5 - meshRef.current.rotation.x) * 0.1;
-      meshRef.current.rotation.y += (targetX * 0.5 - meshRef.current.rotation.y) * 0.1;
-      meshRef.current.position.x += (targetX * 0.5 - meshRef.current.position.x) * 0.1;
-      meshRef.current.position.y += (targetY * 0.5 - meshRef.current.position.y) * 0.1;
-    }
+    const targetX = pointer.x * 0.15;
+    const targetY = pointer.y * 0.15;
+    meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, targetY, 0.08);
+    meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, targetX, 0.08);
   });
 
   return (
-    <mesh ref={meshRef} scale={scale} geometry={geometry}>
+    <RoundedBox
+      ref={meshRef}
+      args={[width, height, depth]}
+      radius={0.15}
+      smoothness={4}
+      scale={scale}
+    >
       <MeshTransmissionMaterial
         ior={ior}
         thickness={thickness}
@@ -80,68 +77,39 @@ function GlassCard({
         distortion={distortion}
         distortionScale={distortionScale}
         temporalDistortion={temporalDistortion}
-        background={new THREE.Color(0xffffff)}
       />
-      {children}
+    </RoundedBox>
+  );
+}
+
+function Background() {
+  return (
+    <mesh position={[0, 0, -2]}>
+      <planeGeometry args={[20, 20]} />
+      <meshBasicMaterial color={0xf0f0f0} transparent opacity={0.3} />
     </mesh>
   );
 }
 
-function GlassScene(props: FluidGlassProps) {
-  return (
-    <>
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[10, 10, 5]} intensity={1.5} />
-      <directionalLight position={[-10, -10, -5]} intensity={0.5} color="#a0a0ff" />
-      <GlassCard {...props} />
-    </>
-  );
-}
-
-export default function FluidGlass({
-  width = 3.5,
-  height = 3.5,
-  scale = 1,
-  ior = 1.15,
-  thickness = 5,
-  chromaticAberration = 0.1,
-  anisotropy = 0.01,
-  transmission = 1,
-  roughness = 0,
-  color = '#ffffff',
-  attenuationColor = '#ffffff',
-  attenuationDistance = 0.25,
-  distortion = 0.5,
-  distortionScale = 0.5,
-  temporalDistortion = 0.1,
-  followPointer = true,
-  children,
-}: FluidGlassProps) {
+export default function FluidGlass(props: FluidGlassProps) {
   return (
     <Canvas
-      camera={{ position: [0, 0, 8], fov: 35 }}
-      gl={{ alpha: true, antialias: true }}
+      camera={{ position: [0, 0, 7], fov: 40 }}
+      gl={{ 
+        alpha: true, 
+        antialias: true,
+        powerPreference: "high-performance"
+      }}
       style={{ width: '100%', height: '100%' }}
+      dpr={[1, 2]}
     >
-      <GlassScene
-        width={width}
-        height={height}
-        scale={scale}
-        ior={ior}
-        thickness={thickness}
-        chromaticAberration={chromaticAberration}
-        anisotropy={anisotropy}
-        transmission={transmission}
-        roughness={roughness}
-        color={color}
-        attenuationColor={attenuationColor}
-        attenuationDistance={attenuationDistance}
-        distortion={distortion}
-        distortionScale={distortionScale}
-        temporalDistortion={temporalDistortion}
-        followPointer={followPointer}
-      />
-      {children}
+      <color attach="background" args={['transparent']} />
+      <ambientLight intensity={0.8} />
+      <directionalLight position={[10, 10, 5]} intensity={1.2} />
+      <directionalLight position={[-10, -10, -5]} intensity={0.8} color="#d0d0ff" />
+      <pointLight position={[0, 5, 5]} intensity={0.5} />
+      <Background />
+      <GlassMesh {...props} />
     </Canvas>
   );
 }
