@@ -428,13 +428,8 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-10">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center">
-            <img src="/nyu.edu.png" alt="NYU" className="h-8 w-auto" />
-          </div>
-          <div className="ml-auto">
-            <StudyContextMenu />
-          </div>
+        <div className="flex items-start justify-end">
+          <StudyContextMenu />
         </div>
 
         <div className="flex justify-center bg-white py-12">

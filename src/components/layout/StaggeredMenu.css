@@ -44,8 +44,9 @@
 .sm-panel-brand {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.3rem;
   align-items: flex-start;
+  margin-bottom: 0.25rem;
 }
 
 .sm-brand-mark {
@@ -146,7 +147,7 @@
   border-right: 1px solid #e5e5e5;
   display: flex;
   flex-direction: column;
-  padding: 6em 2em 2em 2em;
+  padding: 1.5rem 1.5rem;
   overflow-y: auto;
   z-index: 10;
   pointer-events: auto;
@@ -185,7 +186,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.75rem;
+  height: 100%;
 }
 
 .sm-panel-list {
@@ -194,7 +196,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .sm-panel-item {
@@ -224,6 +226,75 @@
 .sm-panel-item:hover {
   color: #111111;
   background: var(--sm-hover, #f4f4f4);
+}
+
+.menu__item {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #111111;
+  background: #f4f4f4;
+}
+
+.menu__item-link {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  position: relative;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.7rem 0.6rem;
+  color: #111111;
+}
+
+.menu__item-link:hover,
+.menu__item-link:focus:not(:focus-visible) {
+  color: inherit;
+}
+
+.marquee {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transform: translate3d(0, 101%, 0);
+  background: var(--sm-hover, #f4f4f4);
+}
+
+.marquee__inner-wrap {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.marquee__inner {
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: 100%;
+  width: fit-content;
+  will-change: transform;
+}
+
+.marquee__part {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.marquee span {
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 0.6rem;
+  color: #111111;
 }
 
 .sm-panel-list[data-numbering] {
@@ -268,5 +339,5 @@
   margin-top: auto;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }

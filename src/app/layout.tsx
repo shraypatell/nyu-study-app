@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 import StaggeredMenu from "@/components/layout/StaggeredMenu";
+import TargetCursor from "@/components/layout/TargetCursor";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,6 +37,7 @@ export default function RootLayout({
       >
         <div className="min-h-screen">
           <StaggeredMenu />
+          <TargetCursor />
           <main className="page-transition">{children}</main>
         </div>
       </body>

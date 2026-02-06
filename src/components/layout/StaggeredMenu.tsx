@@ -458,17 +458,14 @@ export const StaggeredMenu = ({
           <ul className="sm-panel-list" role="list" data-numbering={displayItemNumbering || undefined}>
             {items && items.length ? (
               items.map((it, idx) => (
-                <li className="sm-panel-itemWrap" key={it.label + idx}>
-                  <Link
-                    className="sm-panel-item"
-                    href={it.link}
-                    aria-label={it.ariaLabel}
-                    data-index={idx + 1}
-                    style={it.hoverColor ? ({ "--sm-hover": it.hoverColor } as React.CSSProperties) : undefined}
-                  >
-                    <span className="sm-panel-itemLabel">{it.label}</span>
-                  </Link>
-                </li>
+                <FlowingMenuItem
+                  key={it.label + idx}
+                  label={it.label}
+                  ariaLabel={it.ariaLabel}
+                  link={it.link}
+                  hoverColor={it.hoverColor}
+                  speed={15}
+                />
               ))
             ) : (
               <li className="sm-panel-itemWrap" aria-hidden="true">
@@ -480,9 +477,13 @@ export const StaggeredMenu = ({
           </ul>
           <div className="sm-panel-footer">
             {footerItems.map((item) => (
-              <Link key={item.label} className="sm-panel-item" href={item.link} aria-label={item.ariaLabel}>
-                <span className="sm-panel-itemLabel">{item.label}</span>
-              </Link>
+              <FlowingMenuItem
+                key={item.label}
+                label={item.label}
+                ariaLabel={item.ariaLabel}
+                link={item.link}
+                speed={15}
+              />
             ))}
           </div>
         </div>
@@ -490,5 +491,135 @@ export const StaggeredMenu = ({
     </div>
   );
 };
+
+function FlowingMenuItem({
+  label,
+  ariaLabel,
+  link,
+  speed,
+  hoverColor,
+}: {
+  label: string;
+  ariaLabel: string;
+  link: string;
+  speed: number;
+  hoverColor?: string;
+}) {
+  const itemRef = useRef<HTMLDivElement | null>(null);
+  const marqueeRef = useRef<HTMLDivElement | null>(null);
+  const marqueeInnerRef = useRef<HTMLDivElement | null>(null);
+  const animationRef = useRef<gsap.core.Tween | null>(null);
+  const [repetitions, setRepetitions] = useState(4);
+
+  const animationDefaults = { duration: 0.5, ease: "expo.out" } as const;
+
+  const findClosestEdge = (mouseX: number, mouseY: number, width: number, height: number) => {
+    const topEdgeDist = distMetric(mouseX, mouseY, width / 2, 0);
+    const bottomEdgeDist = distMetric(mouseX, mouseY, width / 2, height);
+    return topEdgeDist < bottomEdgeDist ? "top" : "bottom";
+  };
+
+  const distMetric = (x: number, y: number, x2: number, y2: number) => {
+    const xDiff = x - x2;
+    const yDiff = y - y2;
+    return xDiff * xDiff + yDiff * yDiff;
+  };
+
+  useEffect(() => {
+    const calculateRepetitions = () => {
+      if (!marqueeInnerRef.current) return;
+      const marqueeContent = marqueeInnerRef.current.querySelector(".marquee__part");
+      if (!marqueeContent) return;
+      const contentWidth = (marqueeContent as HTMLElement).offsetWidth;
+      const viewportWidth = window.innerWidth;
+      const needed = Math.ceil(viewportWidth / contentWidth) + 2;
+      setRepetitions(Math.max(4, needed));
+    };
+
+    calculateRepetitions();
+    window.addEventListener("resize", calculateRepetitions);
+    return () => window.removeEventListener("resize", calculateRepetitions);
+  }, [label]);
+
+  useEffect(() => {
+    const setupMarquee = () => {
+      if (!marqueeInnerRef.current) return;
+      const marqueeContent = marqueeInnerRef.current.querySelector(".marquee__part");
+      if (!marqueeContent) return;
+      const contentWidth = (marqueeContent as HTMLElement).offsetWidth;
+      if (!contentWidth) return;
+
+      animationRef.current?.kill();
+      animationRef.current = gsap.to(marqueeInnerRef.current, {
+        x: -contentWidth,
+        duration: speed,
+        ease: "none",
+        repeat: -1,
+      });
+    };
+
+    const timer = setTimeout(setupMarquee, 50);
+    return () => {
+      clearTimeout(timer);
+      animationRef.current?.kill();
+    };
+  }, [label, repetitions, speed]);
+
+  const handleMouseEnter = (ev: React.MouseEvent) => {
+    if (!itemRef.current || !marqueeRef.current || !marqueeInnerRef.current) return;
+    const rect = itemRef.current.getBoundingClientRect();
+    const x = ev.clientX - rect.left;
+    const y = ev.clientY - rect.top;
+    const edge = findClosestEdge(x, y, rect.width, rect.height);
+
+    gsap
+      .timeline({ defaults: animationDefaults })
+      .set(marqueeRef.current, { y: edge === "top" ? "-101%" : "101%" }, 0)
+      .set(marqueeInnerRef.current, { y: edge === "top" ? "101%" : "-101%" }, 0)
+      .to([marqueeRef.current, marqueeInnerRef.current], { y: "0%" }, 0);
+  };
+
+  const handleMouseLeave = (ev: React.MouseEvent) => {
+    if (!itemRef.current || !marqueeRef.current || !marqueeInnerRef.current) return;
+    const rect = itemRef.current.getBoundingClientRect();
+    const x = ev.clientX - rect.left;
+    const y = ev.clientY - rect.top;
+    const edge = findClosestEdge(x, y, rect.width, rect.height);
+
+    gsap
+      .timeline({ defaults: animationDefaults })
+      .to(marqueeRef.current, { y: edge === "top" ? "-101%" : "101%" }, 0)
+      .to(marqueeInnerRef.current, { y: edge === "top" ? "101%" : "-101%" }, 0);
+  };
+
+  return (
+    <div
+      className="menu__item"
+      ref={itemRef}
+      style={hoverColor ? ({ "--sm-hover": hoverColor } as React.CSSProperties) : undefined}
+    >
+      <Link
+        className="menu__item-link"
+        href={link}
+        aria-label={ariaLabel}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        {label}
+      </Link>
+      <div className="marquee" ref={marqueeRef}>
+        <div className="marquee__inner-wrap">
+          <div className="marquee__inner" ref={marqueeInnerRef} aria-hidden="true">
+            {[...Array(repetitions)].map((_, idx) => (
+              <div className="marquee__part" key={idx}>
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default StaggeredMenu;
