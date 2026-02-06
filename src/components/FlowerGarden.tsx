@@ -10,6 +10,7 @@ interface FlowerData {
   position: number;
   variant: 1 | 2 | 3;
   colorTheme: 'cyan' | 'pink';
+  layer: number;
 }
 
 interface FlowerGardenProps {
@@ -18,9 +19,15 @@ interface FlowerGardenProps {
 
 const MAX_FLOWERS = 22;
 const BASE_SCALE = 0.2;
-const MAX_SCALE = 2.0;
+const MAX_SCALE = 1.0;
 const SPAWN_INTERVAL = 5;
 const MAX_TIME_MINUTES = 360;
+
+const LAYER_SCALES = {
+  front: 0.5,
+  middle: 0.75,
+  back: 1.0
+};
 
 export default function FlowerGarden({ totalMinutes }: FlowerGardenProps) {
   const [flowers, setFlowers] = useState<FlowerData[]>([]);
@@ -42,9 +49,13 @@ export default function FlowerGarden({ totalMinutes }: FlowerGardenProps) {
     const newFlowers: FlowerData[] = [];
     
     for (let i = 0; i < targetFlowerCount; i++) {
+      const layerIndex = i % 3;
+      const layerName = layerIndex === 0 ? 'back' : layerIndex === 1 ? 'middle' : 'front';
+      const layerMaxScale = LAYER_SCALES[layerName];
+      
       const scale = Math.min(
-        MAX_SCALE,
-        BASE_SCALE + (currentInterval * (MAX_SCALE - BASE_SCALE) / maxIntervals)
+        layerMaxScale,
+        BASE_SCALE + (currentInterval * (layerMaxScale - BASE_SCALE) / maxIntervals)
       );
       
       const position = calculateEvenPosition(i, targetFlowerCount);
@@ -56,6 +67,7 @@ export default function FlowerGarden({ totalMinutes }: FlowerGardenProps) {
         position,
         variant: ((i % 3) + 1) as 1 | 2 | 3,
         colorTheme,
+        layer: layerIndex,
       });
     }
     
@@ -86,7 +98,7 @@ export default function FlowerGarden({ totalMinutes }: FlowerGardenProps) {
           scale={flower.scale}
           variant={flower.variant}
           colorTheme={flower.colorTheme}
-          className="flower-garden__flower"
+          className={`flower-garden__flower flower-garden__flower--layer-${flower.layer}`}
           style={{ left: `${flower.position}%` }}
         />
       ))}
