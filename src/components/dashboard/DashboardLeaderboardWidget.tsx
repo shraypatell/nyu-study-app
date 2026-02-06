@@ -141,41 +141,43 @@ export default function DashboardLeaderboardWidget({
         className
       )}
     >
-      <h3 className="text-sm font-semibold uppercase tracking-[0.2em]">
-        {title}
-      </h3>
-      {sortedEntries.length > 0 ? (
-        <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-          {sortedEntries.map((entry) => (
-            <div key={entry.userId} className="flex items-center gap-3">
-              <div className="text-xs font-semibold w-6">#{entry.rank}</div>
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold truncate">
-                  {entry.displayName || entry.username}
-                </div>
-                {getStatusText(entry) && (
-                  <div
-                    className={`text-xs truncate ${
-                      entry.isActive ? "status-active" : "text-black"
-                    }`}
-                  >
-                    {getStatusText(entry)}
+      <div className="relative z-10 h-full flex flex-col gap-3">
+        <h3 className="text-sm font-semibold uppercase tracking-[0.2em]">
+          {title}
+        </h3>
+        {sortedEntries.length > 0 ? (
+          <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+            {sortedEntries.map((entry) => (
+              <div key={entry.userId} className="flex items-center gap-3">
+                <div className="text-xs font-semibold w-6">#{entry.rank}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-semibold truncate">
+                    {entry.displayName || entry.username}
                   </div>
-                )}
+                  {getStatusText(entry) && (
+                    <div
+                      className={`text-xs truncate ${
+                        entry.isActive ? "status-active" : "text-black"
+                      }`}
+                    >
+                      {getStatusText(entry)}
+                    </div>
+                  )}
+                </div>
+                <div className="text-sm font-semibold shrink-0">
+                  {formatTime(getTotalLiveSeconds(entry))}
+                </div>
               </div>
-              <div className="text-sm font-semibold shrink-0">
-                {formatTime(getTotalLiveSeconds(entry))}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-sm text-black">
-          {icon === "location"
-            ? "No one studying here yet"
-            : "No study data yet today"}
-        </p>
-      )}
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-black">
+            {icon === "location"
+              ? "No one studying here yet"
+              : "No study data yet today"}
+          </p>
+        )}
+      </div>
     </div>
   );
 

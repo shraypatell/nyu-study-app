@@ -121,44 +121,46 @@ export default function DashboardFriendsWidget({
           className
         )}
       >
-        <h3 className="text-sm font-semibold uppercase tracking-[0.2em]">
-          Friends
-        </h3>
-        {friends.length > 0 ? (
-          <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-            {friends.map((friend) => (
-              <div
-                key={friend.id}
-                className="flex items-start gap-3 text-sm"
-              >
-                <span className={`w-6 text-center ${getRankStyle(friend.rank)}`}>
-                  {friend.rank}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold truncate">
-                    {friend.displayName || friend.username}
-                  </div>
-                  {getStatusText(friend) && (
-                    <div
-                      className={`text-xs truncate ${
-                        friend.isTimerPublic && friend.isActive
-                          ? "status-active"
-                          : "text-black"
-                      }`}
-                    >
-                      {getStatusText(friend)}
+        <div className="relative z-10 h-full flex flex-col gap-3">
+          <h3 className="text-sm font-semibold uppercase tracking-[0.2em]">
+            Friends
+          </h3>
+          {friends.length > 0 ? (
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+              {friends.map((friend) => (
+                <div
+                  key={friend.id}
+                  className="flex items-start gap-3 text-sm"
+                >
+                  <span className={`w-6 text-center ${getRankStyle(friend.rank)}`}>
+                    {friend.rank}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold truncate">
+                      {friend.displayName || friend.username}
                     </div>
-                  )}
+                    {getStatusText(friend) && (
+                      <div
+                        className={`text-xs truncate ${
+                          friend.isTimerPublic && friend.isActive
+                            ? "status-active"
+                            : "text-black"
+                        }`}
+                      >
+                        {getStatusText(friend)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-sm font-semibold shrink-0">
+                    {formatTime(getTotalLiveSeconds(friend))}
+                  </div>
                 </div>
-                <div className="text-sm font-semibold shrink-0">
-                  {formatTime(getTotalLiveSeconds(friend))}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-black">No friends yet</p>
-        )}
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-black">No friends yet</p>
+          )}
+        </div>
       </div>
     </Link>
   );
