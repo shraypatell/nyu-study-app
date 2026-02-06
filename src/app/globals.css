@@ -326,6 +326,7 @@
 }
 
 @layer components {
+
   .status-active {
     color: #2ca02c !important;
     animation: status-pulse 1.2s ease-in-out infinite;
