@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PillNav from "@/components/PillNav";
 import { Loader2, MessageCircle, UserX, Search, UserCheck } from "lucide-react";
 import Link from "next/link";
 
@@ -64,6 +64,7 @@ export default function FriendsPage() {
   const [processingRequest, setProcessingRequest] = useState<string | null>(null);
   const [startingChat, setStartingChat] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [activeTab, setActiveTab] = useState("friends");
 
   useEffect(() => {
     fetchData();
@@ -263,28 +264,35 @@ export default function FriendsPage() {
         <p className="text-muted-foreground">Manage requests and stay in sync with your study circle.</p>
       </div>
 
-      <Tabs defaultValue="friends" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="friends">
-            Friends
-            {friends.length > 0 && (
+      <PillNav
+        items={[
+          {
+            label: "Friends",
+            value: "friends",
+            badge: friends.length > 0 ? (
               <Badge variant="secondary" className="ml-2">
                 {friends.length}
               </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="received">
-            Requests
-            {receivedRequests.length > 0 && (
+            ) : undefined
+          },
+          {
+            label: "Requests",
+            value: "received",
+            badge: receivedRequests.length > 0 ? (
               <Badge variant="destructive" className="ml-2">
                 {receivedRequests.length}
               </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="sent">Sent</TabsTrigger>
-        </TabsList>
+            ) : undefined
+          },
+          { label: "Sent", value: "sent" }
+        ]}
+        activeValue={activeTab}
+        onValueChange={setActiveTab}
+        className="mb-6"
+      />
 
-        <TabsContent value="friends" className="mt-6">
+      {activeTab === "friends" && (
+        <>
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
@@ -375,9 +383,11 @@ export default function FriendsPage() {
               ))}
             </div>
           )}
-        </TabsContent>
+        </>
+      )}
 
-        <TabsContent value="received" className="mt-6">
+      {activeTab === "received" && (
+        <>
           {receivedRequests.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <p>No pending friend requests</p>
@@ -427,9 +437,11 @@ export default function FriendsPage() {
               ))}
             </div>
           )}
-        </TabsContent>
+        </>
+      )}
 
-        <TabsContent value="sent" className="mt-6">
+      {activeTab === "sent" && (
+        <>
           {sentRequests.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <p>No sent friend requests</p>
@@ -466,8 +478,8 @@ export default function FriendsPage() {
               ))}
             </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </>
+      )}
     </div>
   );
 }

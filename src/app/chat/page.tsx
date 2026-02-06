@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PillNav from "@/components/PillNav";
 import {
   Dialog,
   DialogContent,
@@ -56,6 +56,7 @@ export default function ChatPage() {
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [searching, setSearching] = useState(false);
   const [startingChat, setStartingChat] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("dms");
 
   useEffect(() => {
     fetchRooms();
@@ -216,26 +217,23 @@ export default function ChatPage() {
         </Dialog>
       </div>
 
-      <Tabs defaultValue="dms" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="dms">
-            <MessageSquare className="h-4 w-4 mr-1" />
-            DMs
-          </TabsTrigger>
-          <TabsTrigger value="classes">
-            <Users className="h-4 w-4 mr-1" />
-            Classes
-          </TabsTrigger>
-        </TabsList>
+      <PillNav
+        items={[
+          { label: "DMs", value: "dms", icon: <MessageSquare className="h-4 w-4" /> },
+          { label: "Classes", value: "classes", icon: <Users className="h-4 w-4" /> }
+        ]}
+        activeValue={activeTab}
+        onValueChange={setActiveTab}
+        className="mb-6"
+      />
 
-        <TabsContent value="dms" className="mt-6">
+      {activeTab === "dms" && (
           <RoomList rooms={dmRooms} emptyMessage="No direct messages yet. Start a new conversation!" />
-        </TabsContent>
+      )}
 
-        <TabsContent value="classes" className="mt-6">
-          <RoomList rooms={classRooms} emptyMessage="No class chats yet. Join a class to start chatting!" />
-        </TabsContent>
-      </Tabs>
+      {activeTab === "classes" && (
+        <RoomList rooms={classRooms} emptyMessage="No class chats yet. Join a class to start chatting!" />
+      )}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PillNav from "@/components/PillNav";
 import { Loader2, Search, BookOpen, Users, Check, MessageCircle } from "lucide-react";
 import Link from "next/link";
 
@@ -30,6 +30,7 @@ export default function ClassesPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [activeTab, setActiveTab] = useState("browse");
   const limit = 32;
 
   useEffect(() => {
@@ -149,20 +150,26 @@ export default function ClassesPage() {
         <p className="text-muted-foreground">Find classes, join chats, and manage your study groups.</p>
       </div>
 
-      <Tabs defaultValue="browse" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="browse">Browse</TabsTrigger>
-          <TabsTrigger value="my-classes">
-            My Classes
-            {myClasses.length > 0 && (
+      <PillNav
+        items={[
+          { label: "Browse", value: "browse" },
+          { 
+            label: "My Classes", 
+            value: "my-classes",
+            badge: myClasses.length > 0 ? (
               <Badge variant="secondary" className="ml-2">
                 {myClasses.length}
               </Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
+            ) : undefined
+          }
+        ]}
+        activeValue={activeTab}
+        onValueChange={setActiveTab}
+        className="mb-6"
+      />
 
-        <TabsContent value="browse" className="mt-6">
+      {activeTab === "browse" && (
+        <>
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
@@ -285,9 +292,11 @@ export default function ClassesPage() {
               </Button>
             </div>
           </div>
-        </TabsContent>
+        </>
+      )}
 
-        <TabsContent value="my-classes" className="mt-6">
+      {activeTab === "my-classes" && (
+        <>
           {myClasses.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -344,8 +353,8 @@ export default function ClassesPage() {
               ))}
             </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </>
+      )}
     </div>
   );
 }
