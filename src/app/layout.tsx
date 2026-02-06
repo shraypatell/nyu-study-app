@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
-import Navigation from "@/components/layout/Navigation";
+import StaggeredMenu from "@/components/layout/StaggeredMenu";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,9 +34,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexSans.variable} antialiased min-h-screen`}
       >
-        <div className="min-h-screen flex flex-col md:flex-row">
-          <Navigation />
-          <main className="flex-1 page-transition">{children}</main>
+        <div className="min-h-screen">
+          <StaggeredMenu />
+          <main className="page-transition">{children}</main>
         </div>
       </body>
     </html>
