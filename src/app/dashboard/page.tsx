@@ -426,11 +426,11 @@ export default async function DashboardPage() {
   const data = await getDashboardData(user.id);
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 relative">
+      <div className="absolute top-10 right-4 sm:right-6 lg:right-8">
+        <StudyContextMenu />
+      </div>
       <div className="max-w-6xl mx-auto space-y-10">
-        <div className="flex items-start justify-end">
-          <StudyContextMenu />
-        </div>
 
         <div className="flex justify-center bg-white py-12">
           <div className="w-full max-w-3xl">

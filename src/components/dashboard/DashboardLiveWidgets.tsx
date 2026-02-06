@@ -207,7 +207,7 @@ export default function DashboardLiveWidgets({
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
       <DashboardLeaderboardWidget
-        title={locationTitle}
+        title={locationTitle ? `${locationTitle} leaderboard` : "location leaderboard"}
         icon="location"
         entries={locationLeaderboard}
         href={locationId ? `/leaderboard/${locationId}` : "/leaderboard"}
@@ -216,7 +216,7 @@ export default function DashboardLiveWidgets({
       />
 
       <DashboardLeaderboardWidget
-        title="school"
+        title="school leaderboard"
         icon="school"
         entries={schoolLeaderboard}
         href="/leaderboard"

@@ -52,13 +52,13 @@
 .sm-brand-mark {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  width: 120px;
+  gap: 0.6rem;
+  width: 220px;
 }
 
 .sm-logo-img {
   display: block;
-  height: 24px;
+  height: 40px;
   width: auto;
   object-fit: contain;
 }

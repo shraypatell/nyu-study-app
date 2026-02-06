@@ -429,12 +429,12 @@ export const StaggeredMenu = ({
         <div className="sm-panel-inner">
           <div className="sm-panel-brand">
             <div className="sm-brand-mark">
-              <span className="text-[clamp(1.05rem,1.4vw,1.3rem)] font-bold tracking-[-0.03em] text-black lowercase">
+              <span className="text-[clamp(2rem,2.6vw,2.8rem)] font-bold tracking-[-0.03em] text-black lowercase">
                 rally
               </span>
               <svg
-                width="20"
-                height="16"
+                width="28"
+                height="22"
                 viewBox="0 0 22 18"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -451,8 +451,8 @@ export const StaggeredMenu = ({
               alt="NYU"
               className="sm-logo-img"
               draggable={false}
-              width={110}
-              height={24}
+              width={220}
+              height={40}
             />
           </div>
           <ul className="sm-panel-list" role="list" data-numbering={displayItemNumbering || undefined}>
@@ -464,7 +464,7 @@ export const StaggeredMenu = ({
                   ariaLabel={it.ariaLabel}
                   link={it.link}
                   hoverColor={it.hoverColor}
-                  speed={15}
+                  speed={6}
                 />
               ))
             ) : (
@@ -482,7 +482,7 @@ export const StaggeredMenu = ({
                 label={item.label}
                 ariaLabel={item.ariaLabel}
                 link={item.link}
-                speed={15}
+                speed={6}
               />
             ))}
           </div>
