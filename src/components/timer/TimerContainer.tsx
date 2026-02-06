@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import NumberFlow from "@number-flow/react";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, Clock } from "lucide-react";
 
@@ -142,6 +143,13 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const getTimeParts = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return { hours, minutes, secs };
+  };
+
   return (
     <div className="w-full">
       <div className="text-center space-y-6">
@@ -154,13 +162,35 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
               isActive ? "text-success" : "text-foreground"
             }`}
           >
-            {formatTime(elapsedTime)}
+            {(() => {
+              const { hours, minutes, secs } = getTimeParts(elapsedTime);
+              return (
+                <span className="inline-flex items-center gap-1">
+                  <NumberFlow value={hours} format={{ minimumIntegerDigits: 2 }} />
+                  <span>:</span>
+                  <NumberFlow value={minutes} format={{ minimumIntegerDigits: 2 }} />
+                  <span>:</span>
+                  <NumberFlow value={secs} format={{ minimumIntegerDigits: 2 }} />
+                </span>
+              );
+            })()}
           </div>
           <div className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground">
             Total Time
           </div>
           <div className="mt-2 text-[clamp(1rem,2vw,1.4rem)] font-sans font-semibold tracking-tight text-foreground">
-            {formatTime(totalTimeToday + elapsedTime)}
+            {(() => {
+              const { hours, minutes, secs } = getTimeParts(totalTimeToday + elapsedTime);
+              return (
+                <span className="inline-flex items-center gap-1">
+                  <NumberFlow value={hours} format={{ minimumIntegerDigits: 2 }} />
+                  <span>:</span>
+                  <NumberFlow value={minutes} format={{ minimumIntegerDigits: 2 }} />
+                  <span>:</span>
+                  <NumberFlow value={secs} format={{ minimumIntegerDigits: 2 }} />
+                </span>
+              );
+            })()}
           </div>
         </div>
 
