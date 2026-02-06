@@ -25,18 +25,6 @@ export default function DashboardGlassCard({
           width="100%"
           height="100%"
           borderRadius={23}
-          borderWidth={0.05}
-          brightness={40}
-          opacity={0.3}
-          blur={8}
-          displace={0}
-          backgroundOpacity={0.03}
-          saturation={0.8}
-          distortionScale={-150}
-          redOffset={0}
-          greenOffset={5}
-          blueOffset={10}
-          mixBlendMode="difference"
           className="rounded-[23px]"
         >
           <div className="w-full h-full flex flex-col p-5 text-black overflow-hidden">

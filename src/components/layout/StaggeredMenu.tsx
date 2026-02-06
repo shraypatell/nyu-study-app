@@ -11,7 +11,7 @@ type MenuItem = { label: string; ariaLabel: string; link: string };
 
 const baseItems: (MenuItem & { hoverColor?: string })[] = [
   { label: "Dashboard", ariaLabel: "Go to dashboard", link: "/dashboard" },
-  { label: "Leaderboards", ariaLabel: "Go to leaderboards", link: "/leaderboard", hoverColor: "#cde6ff" },
+  { label: "school leaderboard", ariaLabel: "Go to school leaderboard", link: "/leaderboard", hoverColor: "#cde6ff" },
   { label: "Location Leaderboard", ariaLabel: "Go to location leaderboard", link: "/leaderboard", hoverColor: "#f6c2c2" },
   { label: "Classes", ariaLabel: "Go to classes", link: "/classes" },
   { label: "Chat", ariaLabel: "Go to chat", link: "/chat" },
