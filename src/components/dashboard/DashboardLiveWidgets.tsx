@@ -215,7 +215,7 @@ export default function DashboardLiveWidgets({
       </DashboardGlassCard>
 
       <DashboardGlassCard
-        title="school leaderboard"
+        title="School leaderboard"
         href="/leaderboard"
       >
         <DashboardLeaderboardContent icon="school" entries={schoolLeaderboard} />
