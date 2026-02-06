@@ -13,4 +13,6 @@
   position: relative;
   transform-style: preserve-3d;
   will-change: transform;
+  border-radius: inherit;
+  overflow: hidden;
 }

@@ -15,13 +15,15 @@ interface TiltedCardProps {
   rotateAmplitude?: number;
   scaleOnHover?: number;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export default function TiltedCard({
   children,
   rotateAmplitude = 9,
   scaleOnHover = 1.02,
-  className = ''
+  className = '',
+  style
 }: TiltedCardProps) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -57,6 +59,7 @@ export default function TiltedCard({
     <div
       ref={ref}
       className={`tilted-card-figure ${className}`}
+      style={style}
       onMouseMove={handleMouse}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

@@ -17,25 +17,26 @@ export default function DashboardGlassCard({
 }: DashboardGlassCardProps) {
   const content = (
     <TiltedCard 
-      rotateAmplitude={13}
-      scaleOnHover={1.15}
+      rotateAmplitude={22}
+      scaleOnHover={1.05}
       className="aspect-square"
+      style={{ borderRadius: '23px', overflow: 'hidden' }}
     >
       <GlassSurface
         width="100%"
         height="100%"
         borderRadius={23}
-        borderWidth={0.08}
-        brightness={92}
-        opacity={0.75}
-        blur={6}
-        displace={0.3}
-        backgroundOpacity={0.08}
-        saturation={1.3}
-        distortionScale={-120}
-        redOffset={2}
-        greenOffset={10}
-        blueOffset={18}
+        borderWidth={0.05}
+        brightness={70}
+        opacity={0.5}
+        blur={8}
+        displace={0}
+        backgroundOpacity={0.05}
+        saturation={1}
+        distortionScale={-150}
+        redOffset={0}
+        greenOffset={5}
+        blueOffset={10}
         mixBlendMode="difference"
       >
         <div className="w-full h-full flex flex-col p-5 text-black overflow-hidden">
