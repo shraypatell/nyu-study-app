@@ -244,7 +244,7 @@ export default function ProfileSettingsPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, displayName: e.target.value })
                 }
-                placeholder="How you want to be called"
+                placeholder="What you want to be called"
                 maxLength={50}
               />
               <p className="text-sm text-muted-foreground">
@@ -270,18 +270,24 @@ export default function ProfileSettingsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="avatarUrl">Avatar URL</Label>
+              <Label htmlFor="avatar">Profile Picture</Label>
               <Input
-                id="avatarUrl"
-                value={formData.avatarUrl}
-                onChange={(e) =>
-                  setFormData({ ...formData, avatarUrl: e.target.value })
-                }
-                placeholder="https://example.com/avatar.jpg"
-                type="url"
+                id="avatar"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      setFormData({ ...formData, avatarUrl: reader.result as string });
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
               />
               <p className="text-sm text-muted-foreground">
-                Link to an image (optional)
+                Choose an image from your device (optional)
               </p>
             </div>
           </CardContent>
