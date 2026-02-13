@@ -1,0 +1,22 @@
+# Root .gitignore - prevent mobile files from being committed to repo root
+# Mobile app files should ONLY be in rally-mobile/
+
+# Expo
+.expo/
+
+# React Native
+android/
+ios/
+
+# Node
+node_modules/
+package.json
+package-lock.json
+
+# Config files that belong in subdirectories
+app.json
+tsconfig.json
+vercel.json
+
+# Keep this at repo root only
+!.gitignore
