@@ -10,25 +10,6 @@ const sendRequestSchema = z.object({
 
 const rateLimits = new Map<string, number>();
 
-type FriendWithStats = {
-  friendshipId: string;
-  user: {
-    id: string;
-    username: string;
-    displayName: string | null;
-    avatarUrl: string | null;
-    isTimerPublic: boolean;
-    totalSeconds: number;
-    location: unknown;
-    session: {
-      startedAt: string;
-      endedAt: string | null;
-      isActive: boolean;
-    } | null;
-  };
-  since: Date;
-};
-
 function checkRateLimit(userId: string): boolean {
   const now = Date.now();
   const lastRequest = rateLimits.get(userId);
@@ -257,8 +238,8 @@ export async function GET(request: Request) {
       orderBy: { updatedAt: "desc" },
     });
 
-    const friendsWithStats: FriendWithStats[] = await Promise.all(
-      friendships.map(async (friendship: (typeof friendships)[number]) => {
+    const friendsWithStats = await Promise.all(
+      friendships.map(async (friendship) => {
         const friend = friendship.requesterId === user.id
           ? friendship.addressee
           : friendship.requester;

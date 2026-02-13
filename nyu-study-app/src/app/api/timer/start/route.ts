@@ -56,15 +56,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const now = new Date();
     const session = await prisma.studySession.create({
       data: {
         userId: user.id,
         classId,
-        startedAt: now,
+        startedAt: new Date(),
         isActive: true,
-        createdDate: now,
-        lastHeartbeatAt: now,
+        createdDate: new Date(),
       },
     });
 
