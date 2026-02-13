@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/midnight-reset",
       "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/timer/cleanup",
+      "schedule": "*/2 * * * *"
     }
   ]
 }
