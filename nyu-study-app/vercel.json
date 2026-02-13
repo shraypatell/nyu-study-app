@@ -1,7 +1,8 @@
 {
-  "buildCommand": "prisma generate && next build",
-  "installCommand": "npm install",
-  "framework": "nextjs"
-}
+  "crons": [
+    {
+      "path": "/api/cron/midnight-reset",
+      "schedule": "0 5 * * *"
+    }
   ]
 }
