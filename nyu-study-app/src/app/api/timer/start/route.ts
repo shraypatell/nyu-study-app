@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getAuthenticatedUser } from "@/lib/supabase/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
@@ -19,8 +19,7 @@ function checkRateLimit(userId: string): boolean {
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthenticatedUser(request);
 
     if (!user) {
       return NextResponse.json(
@@ -57,13 +56,15 @@ export async function POST(request: Request) {
       );
     }
 
+    const now = new Date();
     const session = await prisma.studySession.create({
       data: {
         userId: user.id,
         classId,
-        startedAt: new Date(),
+        startedAt: now,
         isActive: true,
-        createdDate: new Date(),
+        createdDate: now,
+        lastHeartbeatAt: now,
       },
     });
 

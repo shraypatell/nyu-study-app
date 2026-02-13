@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getNyDateStart } from "@/lib/date";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthenticatedUser } from "@/lib/supabase/auth";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -9,6 +9,25 @@ const sendRequestSchema = z.object({
 });
 
 const rateLimits = new Map<string, number>();
+
+type FriendWithStats = {
+  friendshipId: string;
+  user: {
+    id: string;
+    username: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+    isTimerPublic: boolean;
+    totalSeconds: number;
+    location: unknown;
+    session: {
+      startedAt: string;
+      endedAt: string | null;
+      isActive: boolean;
+    } | null;
+  };
+  since: Date;
+};
 
 function checkRateLimit(userId: string): boolean {
   const now = Date.now();
@@ -24,8 +43,7 @@ function checkRateLimit(userId: string): boolean {
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthenticatedUser(request);
 
     if (!user) {
       return NextResponse.json(
@@ -140,8 +158,7 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthenticatedUser(request);
 
     if (!user) {
       return NextResponse.json(
@@ -240,8 +257,8 @@ export async function GET(request: Request) {
       orderBy: { updatedAt: "desc" },
     });
 
-    const friendsWithStats = await Promise.all(
-      friendships.map(async (friendship) => {
+    const friendsWithStats: FriendWithStats[] = await Promise.all(
+      friendships.map(async (friendship: (typeof friendships)[number]) => {
         const friend = friendship.requesterId === user.id
           ? friendship.addressee
           : friendship.requester;
