@@ -171,33 +171,33 @@ export default function PublicProfilePage() {
 
   if (error || !profile) {
     return (
-      <div className="container max-w-2xl mx-auto py-8 px-4 text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">{error || "Error"}</h1>
-        <p className="text-gray-500">This user may not exist or their profile is private.</p>
+      <div className="container max-w-2xl mx-auto py-10 px-4 text-center">
+        <h1 className="text-2xl font-semibold text-foreground mb-4">{error || "Error"}</h1>
+        <p className="text-muted-foreground">This user may not exist or their profile is private.</p>
       </div>
     );
   }
 
   return (
-    <div className="container max-w-2xl mx-auto py-8 px-4">
-      <Card className="mb-6">
+    <div className="container max-w-4xl mx-auto py-10 px-4">
+      <Card className="mb-6 glass-card">
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
             <Avatar className="h-20 w-20">
               <AvatarImage src={profile.avatarUrl || undefined} />
-              <AvatarFallback className="bg-purple-100 text-purple-700 text-2xl">
+              <AvatarFallback className="glass-chip text-foreground text-2xl">
                 {profile.username.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
 
             <div className="flex-1">
-              <h1 className="text-2xl font-bold">
+              <h1 className="text-2xl font-semibold text-foreground">
                 {profile.displayName || profile.username}
               </h1>
-              <p className="text-gray-500">@{profile.username}</p>
+              <p className="text-muted-foreground">@{profile.username}</p>
 
               {profile.bio && (
-                <p className="mt-3 text-gray-700">{profile.bio}</p>
+                <p className="mt-3 text-foreground/80">{profile.bio}</p>
               )}
 
               <div className="flex gap-2 mt-4">
@@ -248,39 +248,39 @@ export default function PublicProfilePage() {
         </TabsList>
 
         <TabsContent value="timer">
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
+                <Clock className="h-5 w-5 text-primary" />
                 Study Timer
               </CardTitle>
             </CardHeader>
             <CardContent>
               {profile.timer ? (
                 <div className="text-center py-8">
-                  <div className="text-5xl font-mono font-bold text-green-600 mb-2">
+                  <div className="text-5xl font-mono font-bold text-success mb-2">
                     {formatTime(profile.timer.currentDuration)}
                   </div>
-                  <Badge variant="secondary" className="bg-green-100 text-green-700">
+                  <Badge variant="secondary" className="text-xs">
                     Currently Studying
                   </Badge>
                   {profile.currentClass && (
-                    <div className="mt-4 flex items-center justify-center gap-2">
-                      <BookOpen className="h-4 w-4 text-gray-600" />
-                      <span className="text-sm text-gray-700">
+                    <div className="mt-4 flex items-center justify-center gap-2 glass-chip rounded-full px-3 py-1">
+                      <BookOpen className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">
                         {profile.currentClass.name} ({profile.currentClass.code})
                       </span>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted-foreground">
                   <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Not studying right now</p>
                 </div>
               )}
               {getStatusText(profile) && (
-                <div className="mt-4 text-center text-sm text-gray-600">
+                <div className="mt-4 text-center text-sm text-muted-foreground">
                   {getStatusText(profile)}
                 </div>
               )}
@@ -289,10 +289,10 @@ export default function PublicProfilePage() {
         </TabsContent>
 
         <TabsContent value="classes">
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
+                <BookOpen className="h-5 w-5 text-primary" />
                 Classes
               </CardTitle>
             </CardHeader>
@@ -302,11 +302,11 @@ export default function PublicProfilePage() {
                   {profile.classes.map((cls) => (
                     <div
                       key={cls.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      className="flex items-center justify-between p-3 glass-panel rounded-2xl"
                     >
                       <div>
                         <p className="font-medium">{cls.name}</p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           {cls.code}
                           {cls.section && ` - Section ${cls.section}`}
                         </p>
@@ -316,7 +316,7 @@ export default function PublicProfilePage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted-foreground">
                   <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No classes to display</p>
                 </div>
@@ -326,24 +326,24 @@ export default function PublicProfilePage() {
         </TabsContent>
 
         <TabsContent value="location">
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
+                <MapPin className="h-5 w-5 text-primary" />
                 Study Location
               </CardTitle>
             </CardHeader>
             <CardContent>
               {profile.location ? (
                 <div className="text-center py-8">
-                  <MapPin className="h-12 w-12 mx-auto mb-4 text-purple-600" />
-                  <p className="text-xl font-medium">{profile.location.name}</p>
+                  <MapPin className="h-12 w-12 mx-auto mb-4 text-primary" />
+                  <p className="text-xl font-medium text-foreground">{profile.location.name}</p>
                   {profile.location.parent && (
-                    <p className="text-gray-500 mt-1">in {profile.location.parent.name}</p>
+                    <p className="text-muted-foreground mt-1">in {profile.location.parent.name}</p>
                   )}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted-foreground">
                   <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No location set</p>
                 </div>

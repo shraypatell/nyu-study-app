@@ -41,7 +41,7 @@ export default function ChatRoomPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
 
-  const { messages, isConnected } = useRealtimeMessages(
+  const { messages, isConnected, refreshMessages } = useRealtimeMessages(
     roomId,
     initialMessages
   );
@@ -104,6 +104,7 @@ export default function ChatRoomPage() {
           setInitialMessages((prev) => [...prev, data.message]);
         }
         setShouldScrollToBottom(true);
+        refreshMessages();
       }
     } catch (error) {
       console.error("Failed to send message:", error);
@@ -129,9 +130,9 @@ export default function ChatRoomPage() {
   }
 
   return (
-    <div className="container max-w-2xl mx-auto py-4 px-4 h-[calc(100vh-2rem)]">
-      <Card className="h-full flex flex-col">
-        <CardHeader className="border-b pb-4">
+    <div className="container max-w-3xl mx-auto py-6 px-4 h-[calc(100vh-2rem)]">
+      <Card className="h-full flex flex-col glass-card">
+        <CardHeader className="border-b border-white/40 pb-4">
           <div className="flex items-center gap-4">
             <Link href="/chat">
               <Button variant="ghost" size="icon">
@@ -139,7 +140,7 @@ export default function ChatRoomPage() {
               </Button>
             </Link>
             <div className="flex-1">
-              <CardTitle>{roomInfo?.name || "Chat"}</CardTitle>
+              <CardTitle className="text-foreground">{roomInfo?.name || "Chat"}</CardTitle>
             </div>
             <div
               className={`w-2 h-2 rounded-full ${
@@ -157,7 +158,7 @@ export default function ChatRoomPage() {
             onScroll={handleScroll}
           >
             {messages.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
+              <div className="text-center py-12 text-muted-foreground">
                 <p>No messages yet</p>
                 <p className="text-sm">Start the conversation!</p>
               </div>
@@ -178,10 +179,10 @@ export default function ChatRoomPage() {
                       {showAvatar ? (
                         <Avatar className="h-8 w-8 flex-shrink-0">
                           <AvatarImage src={message.sender.avatarUrl || undefined} />
-                          <AvatarFallback className="bg-purple-100 text-purple-700 text-xs">
-                            {message.sender.username.slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                        <AvatarFallback className="glass-chip text-foreground text-xs">
+                          {message.sender.username.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                       ) : (
                         <div className="w-8 flex-shrink-0" />
                       )}
@@ -192,20 +193,20 @@ export default function ChatRoomPage() {
                         }`}
                       >
                         {showAvatar && (
-                          <p className="text-xs text-gray-500 mb-1">
+                          <p className="text-xs text-muted-foreground mb-1">
                             {message.sender.displayName || message.sender.username}
                           </p>
                         )}
                         <div
                           className={`px-4 py-2 rounded-2xl ${
                             isCurrentUser
-                              ? "bg-purple-600 text-white rounded-br-none"
-                              : "bg-gray-100 text-gray-900 rounded-bl-none"
+                              ? "bg-primary text-white rounded-br-none"
+                              : "glass-panel text-foreground rounded-bl-none"
                           }`}
                         >
                           <p className="text-sm">{message.content}</p>
                         </div>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {formatDistanceToNow(new Date(message.createdAt), {
                             addSuffix: true,
                           })}
@@ -219,7 +220,7 @@ export default function ChatRoomPage() {
 
           <form
             onSubmit={sendMessage}
-            className="border-t p-4 flex gap-2"
+            className="border-t border-white/40 p-4 flex gap-2"
           >
             <Input
               value={newMessage}

@@ -113,7 +113,7 @@ export default function SearchPage() {
       <div className="space-y-3">
         {users.map((user) => (
           <Link key={user.id} href={`/users/${user.id}`}>
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+         <Card className="cursor-pointer glass-card">
               <CardContent className="p-4 flex items-center gap-4">
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={user.avatarUrl || undefined} />

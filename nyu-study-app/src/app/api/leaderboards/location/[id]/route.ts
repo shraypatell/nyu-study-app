@@ -66,6 +66,14 @@ export async function GET(
                 isActive: true,
               },
             },
+            dailyStats: {
+              where: { date: today },
+              take: 1,
+              select: {
+                totalSeconds: true,
+                isPublic: true,
+              },
+            },
           },
         },
         location: {
@@ -82,83 +90,53 @@ export async function GET(
       },
     });
 
-    const leaderboardWithStats = await Promise.all(
-      userLocations.map(async (userLocation: {
-        userId: string;
-        updatedAt: Date;
-        user: {
-          id: string;
-          username: string;
-          displayName: string | null;
-          avatarUrl: string | null;
-          isTimerPublic: boolean;
-          isLocationPublic: boolean;
-          studySessions: Array<{
-            startedAt: Date;
-            endedAt: Date | null;
-            isActive: boolean;
-          }>;
-        };
-        location: {
-          id: string;
-          name: string;
-          slug: string;
-          parent: {
-            id: string;
-            name: string;
-            slug: string;
-          } | null;
-        };
-      }, index: number) => {
-        const dailyStat = await prisma.dailyStat.findUnique({
-          where: {
-            userId_date: {
-              userId: userLocation.userId,
-              date: today,
-            },
-          },
-          select: { totalSeconds: true, isPublic: true },
-        });
+    const leaderboardWithLiveTime = userLocations.map((userLocation) => {
+      const dailyStat = userLocation.user.dailyStats[0];
+      const baseSeconds = dailyStat?.isPublic ? dailyStat.totalSeconds : 0;
+      const isActive = userLocation.user.studySessions[0]?.isActive ?? false;
+      const sessionStart = userLocation.user.studySessions[0]?.startedAt;
+      const liveSessionSeconds = isActive && sessionStart
+        ? Math.floor((Date.now() - new Date(sessionStart).getTime()) / 1000)
+        : 0;
+      const totalLiveSeconds = baseSeconds + liveSessionSeconds;
 
-        const isActiveNow = userLocation.user.studySessions[0]?.isActive ?? false;
-        const sessionStart = userLocation.user.studySessions[0]?.startedAt;
-        const liveSessionSeconds = isActiveNow && sessionStart
-          ? Math.floor((Date.now() - new Date(sessionStart).getTime()) / 1000)
-          : 0;
-        const baseSeconds = dailyStat?.isPublic ? dailyStat.totalSeconds : 0;
-        const totalLiveSeconds = baseSeconds + liveSessionSeconds;
+      return {
+        userId: userLocation.user.id,
+        username: userLocation.user.username,
+        displayName: userLocation.user.displayName,
+        avatarUrl: userLocation.user.avatarUrl,
+        totalSeconds: baseSeconds,
+        totalLiveSeconds,
+        isTimerPublic: userLocation.user.isTimerPublic,
+        session: userLocation.user.studySessions[0]
+          ? {
+              startedAt: userLocation.user.studySessions[0].startedAt,
+              endedAt: userLocation.user.studySessions[0].endedAt,
+              isActive: userLocation.user.studySessions[0].isActive,
+            }
+          : null,
+        location: userLocation.user.isLocationPublic ? userLocation.location : null,
+        isCurrentUser: userLocation.user.id === user.id,
+      };
+    });
 
-        return {
-          rank: index + 1,
-          userId: userLocation.user.id,
-          username: userLocation.user.username,
-          displayName: userLocation.user.displayName,
-          avatarUrl: userLocation.user.avatarUrl,
-          totalSeconds: baseSeconds,
-          totalLiveSeconds,
-          isTimerPublic: userLocation.user.isTimerPublic,
-          session: userLocation.user.studySessions[0]
-            ? {
-                startedAt: userLocation.user.studySessions[0].startedAt,
-                endedAt: userLocation.user.studySessions[0].endedAt,
-                isActive: userLocation.user.studySessions[0].isActive,
-              }
-            : null,
-          location: userLocation.user.isLocationPublic ? userLocation.location : null,
-          isActiveNow,
-          isCurrentUser: userLocation.user.id === user.id,
-        };
-      })
-    );
-
-    const sortedLeaderboard = leaderboardWithStats.sort((a: { totalLiveSeconds: number }, b: { totalLiveSeconds: number }) => b.totalLiveSeconds - a.totalLiveSeconds);
+    const sortedLeaderboard = leaderboardWithLiveTime.sort((a, b) => b.totalLiveSeconds - a.totalLiveSeconds);
 
     const hasMore = sortedLeaderboard.length > LEADERBOARD_LIMIT;
     const results = hasMore ? sortedLeaderboard.slice(0, LEADERBOARD_LIMIT) : sortedLeaderboard;
 
-    results.forEach((entry: { rank: number }, index: number) => {
-      entry.rank = index + 1;
-    });
+    const rankedLeaderboard = results.map((entry, index) => ({
+      rank: index + 1,
+      ...entry,
+    }));
+
+    const currentUserIndex = sortedLeaderboard.findIndex((entry) => entry.isCurrentUser);
+    const currentUserEntry = currentUserIndex >= 0
+      ? {
+          rank: currentUserIndex + 1,
+          ...sortedLeaderboard[currentUserIndex],
+        }
+      : null;
 
     return NextResponse.json({
       location: {
@@ -167,7 +145,8 @@ export async function GET(
         slug: location.slug,
         parent: location.parent,
       },
-      leaderboard: results,
+      leaderboard: rankedLeaderboard,
+      currentUserEntry,
       date: today.toISOString().split("T")[0],
       hasMore,
       nextCursor: null,

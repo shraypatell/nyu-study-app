@@ -1,4 +1,4 @@
-import { getAuthenticatedUser } from "@/lib/supabase/auth";
+import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { getNyDateStart } from "@/lib/date";
 import { NextResponse } from "next/server";
@@ -20,7 +20,8 @@ function checkRateLimit(userId: string): boolean {
 
 export async function POST(request: Request) {
   try {
-    const user = await getAuthenticatedUser(request);
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json(

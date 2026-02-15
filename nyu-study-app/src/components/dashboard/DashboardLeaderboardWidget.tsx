@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { Trophy, MapPin } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface LeaderboardEntry {
   rank?: number;
@@ -34,6 +34,7 @@ interface DashboardLeaderboardWidgetProps {
   entries: LeaderboardEntry[];
   href: string;
   isClickable?: boolean;
+  className?: string;
 }
 
 export default function DashboardLeaderboardWidget({
@@ -42,6 +43,7 @@ export default function DashboardLeaderboardWidget({
   entries,
   href,
   isClickable = true,
+  className,
 }: DashboardLeaderboardWidgetProps) {
   const [now, setNow] = useState(Date.now());
 
@@ -112,10 +114,10 @@ export default function DashboardLeaderboardWidget({
   };
 
   const getRankStyle = (rank: number) => {
-    if (rank === 1) return "text-yellow-600 font-bold";
-    if (rank === 2) return "text-gray-500 font-bold";
-    if (rank === 3) return "text-orange-600 font-bold";
-    return "text-gray-400";
+    if (rank === 1) return "text-black font-bold";
+    if (rank === 2) return "text-black font-bold";
+    if (rank === 3) return "text-black font-bold";
+    return "text-black";
   };
 
   const sortedEntries = useMemo(() => {
@@ -133,57 +135,49 @@ export default function DashboardLeaderboardWidget({
 
   const content = (
     <div
-      className={`bg-white p-4 rounded-lg shadow-sm ${
-        isClickable ? "hover:shadow-md transition-shadow cursor-pointer" : ""
-      }`}
+      className={cn(
+        "aspect-square p-5 flex flex-col gap-3 text-black",
+        isClickable ? "cursor-pointer" : "",
+        className
+      )}
     >
-      <div className="flex items-center gap-2 mb-3">
-        {icon === "location" ? (
-          <MapPin className="h-5 w-5 text-purple-600" />
-        ) : (
-          <Trophy className="h-5 w-5 text-yellow-500" />
-        )}
-        <h3 className="font-semibold text-gray-700">{title}</h3>
-      </div>
-      {sortedEntries.length > 0 ? (
-        <div className="max-h-[200px] overflow-y-auto space-y-2 pr-1">
-          {sortedEntries.map((entry) => (
-            <div
-              key={entry.userId}
-              className="flex items-start gap-2 text-sm py-1"
-            >
-              <span className={`w-5 text-center ${getRankStyle(entry.rank || 0)}`}>
-                {entry.rank}
-              </span>
-              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs text-gray-700 shrink-0">
-                {entry.displayName?.charAt(0) || entry.username.charAt(0)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1">
-                  <span className="truncate">
+      <div className="relative z-10 h-full flex flex-col gap-3">
+        <h3 className="text-sm font-semibold uppercase tracking-[0.2em]">
+          {title}
+        </h3>
+        {sortedEntries.length > 0 ? (
+          <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+            {sortedEntries.map((entry) => (
+              <div key={entry.userId} className="flex items-center gap-3">
+                <div className="text-xs font-semibold w-6">#{entry.rank}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-semibold truncate">
                     {entry.displayName || entry.username}
-                  </span>
-                  {entry.isActive && (
-                    <span className="w-2 h-2 bg-green-500 rounded-full shrink-0" />
+                  </div>
+                  {getStatusText(entry) && (
+                    <div
+                      className={`text-xs truncate ${
+                        entry.isActive ? "status-active" : "text-black"
+                      }`}
+                    >
+                      {getStatusText(entry)}
+                    </div>
                   )}
                 </div>
-                <div className="text-xs text-gray-500 truncate">
-                  {getStatusText(entry)}
+                <div className="text-sm font-semibold shrink-0">
+                  {formatTime(getTotalLiveSeconds(entry))}
                 </div>
               </div>
-              <div className="font-mono text-gray-700 shrink-0">
-                {formatTime(getTotalLiveSeconds(entry))}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-sm text-gray-500 text-center py-4">
-          {icon === "location"
-            ? "No one studying here yet"
-            : "No study data yet today"}
-        </p>
-      )}
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-black">
+            {icon === "location"
+              ? "No one studying here yet"
+              : "No study data yet today"}
+          </p>
+        )}
+      </div>
     </div>
   );
 

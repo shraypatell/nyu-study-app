@@ -2,11 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { getNyDateStart } from "@/lib/date";
-import LocationSelector from "@/components/location/LocationSelector";
-import TimerContainer from "@/components/timer/TimerContainer";
-import ClassSelector from "@/components/timer/ClassSelector";
-import DashboardLeaderboardWidget from "@/components/dashboard/DashboardLeaderboardWidget";
-import DashboardFriendsWidget from "@/components/dashboard/DashboardFriendsWidget";
+import DashboardClient from "@/components/dashboard/DashboardClient";
 
 async function getDashboardData(userId: string) {
   const today = getNyDateStart();
@@ -52,7 +48,6 @@ async function getDashboardData(userId: string) {
         locationId: userLocation.locationId,
         isPublic: true,
       },
-      take: 20,
       include: {
         user: {
           select: {
@@ -85,19 +80,55 @@ async function getDashboardData(userId: string) {
       },
     });
 
+    const currentUserData = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        avatarUrl: true,
+        studySessions: {
+          take: 1,
+          orderBy: { startedAt: "desc" },
+          select: {
+            isActive: true,
+            startedAt: true,
+            endedAt: true,
+          },
+        },
+      },
+    });
+
+    const currentUserDailyStat = await prisma.dailyStat.findUnique({
+      where: {
+        userId_date: {
+          userId,
+          date: today,
+        },
+      },
+      select: { totalSeconds: true },
+    });
+
     const unsortedLeaderboard = await Promise.all(
       locationUsers.map(async (ul) => {
-        const dailyStat = await prisma.dailyStat.findUnique({
-          where: {
-            userId_date: {
-              userId: ul.userId,
-              date: today,
-            },
-          },
-          select: { totalSeconds: true },
-        });
+        const entryUserId = ul.user.id;
+        
+        const isCurrentUser = entryUserId === userId;
+        const user = isCurrentUser && currentUserData ? currentUserData : ul.user;
+        
+        const dailyStat = isCurrentUser 
+          ? currentUserDailyStat 
+          : await prisma.dailyStat.findUnique({
+              where: {
+                userId_date: {
+                  userId: entryUserId,
+                  date: today,
+                },
+              },
+              select: { totalSeconds: true },
+            });
 
-        const session = ul.user.studySessions[0];
+        const session = user.studySessions[0];
         const baseSeconds = dailyStat?.totalSeconds || 0;
         const isActive = session?.isActive || false;
         const liveSessionSeconds = isActive && session
@@ -107,10 +138,10 @@ async function getDashboardData(userId: string) {
 
         return {
           rank: 0,
-          userId: ul.user.id,
-          username: ul.user.username,
-          displayName: ul.user.displayName,
-          avatarUrl: ul.user.avatarUrl,
+          userId: entryUserId,
+          username: user.username,
+          displayName: user.displayName,
+          avatarUrl: user.avatarUrl,
           totalSeconds: baseSeconds,
           totalLiveSeconds,
           isActive,
@@ -133,7 +164,7 @@ async function getDashboardData(userId: string) {
     );
 
     unsortedLeaderboard.sort((a, b) => b.totalLiveSeconds - a.totalLiveSeconds);
-    locationLeaderboard = unsortedLeaderboard.map((entry, index) => ({
+    locationLeaderboard = unsortedLeaderboard.slice(0, 20).map((entry, index) => ({
       ...entry,
       rank: index + 1,
     }));
@@ -369,6 +400,30 @@ async function getDashboardData(userId: string) {
     rank: index + 1,
   }));
 
+  const currentUserDailyStat = await prisma.dailyStat.findUnique({
+    where: {
+      userId_date: {
+        userId,
+        date: today,
+      },
+    },
+    select: { totalSeconds: true },
+  });
+
+  const currentUserSession = await prisma.studySession.findFirst({
+    where: {
+      userId,
+      isActive: true,
+    },
+    select: { startedAt: true },
+  });
+
+  const baseTotalSeconds = currentUserDailyStat?.totalSeconds || 0;
+  const liveSessionSeconds = currentUserSession
+    ? Math.floor((Date.now() - currentUserSession.startedAt.getTime()) / 1000)
+    : 0;
+  const userTotalSeconds = baseTotalSeconds + liveSessionSeconds;
+
   return {
     locationName: userLocation?.location
       ? userLocation.location.parent
@@ -379,6 +434,7 @@ async function getDashboardData(userId: string) {
     locationLeaderboard,
     schoolLeaderboard,
     friends: rankedFriends,
+    userTotalSeconds,
   };
 }
 
@@ -393,41 +449,16 @@ export default async function DashboardPage() {
   const data = await getDashboardData(user.id);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">Study Timer</h1>
-          <p className="text-gray-600 mt-2">
-            Track your study sessions and compete on leaderboards
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
-          <ClassSelector />
-          <TimerContainer userId={user.id} />
-          <LocationSelector />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-          <DashboardLeaderboardWidget
-            title={data.locationName || "Location Leaderboard"}
-            icon="location"
-            entries={data.locationLeaderboard}
-            href={data.locationId ? `/leaderboard/${data.locationId}` : "/leaderboard"}
-            isClickable={false}
-          />
-
-          <DashboardLeaderboardWidget
-            title="School Leaderboard"
-            icon="school"
-            entries={data.schoolLeaderboard}
-            href="/leaderboard"
-            isClickable={true}
-          />
-
-          <DashboardFriendsWidget friends={data.friends} />
-        </div>
-      </div>
-    </div>
+    <DashboardClient 
+      userId={user.id} 
+      initialData={{
+        locationName: data.locationName,
+        locationId: data.locationId,
+        locationLeaderboard: data.locationLeaderboard,
+        schoolLeaderboard: data.schoolLeaderboard,
+        friends: data.friends,
+        userTotalSeconds: data.userTotalSeconds,
+      }} 
+    />
   );
 }

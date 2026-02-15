@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import NumberFlow from "@number-flow/react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, Clock } from "lucide-react";
 
 interface TimerContainerProps {
   userId: string;
@@ -143,61 +143,89 @@ export default function TimerContainer({ userId }: TimerContainerProps) {
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const getTimeParts = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return { hours, minutes, secs };
+  };
+
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardContent className="p-6">
-        <div className="text-center space-y-6">
-          <div>
-            <p className="text-sm text-gray-500 mb-2">Current Session</p>
-            <div className={`text-6xl font-mono font-bold ${isActive ? "text-green-600" : "text-gray-700"}`}>
-              {formatTime(elapsedTime)}
-            </div>
+    <div className="w-full">
+      <div className="text-center space-y-6">
+        <div className="inline-flex flex-col items-center justify-center px-2">
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-foreground mb-2">
+            Session Timer
           </div>
-
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Total Today</p>
-            <div className="text-2xl font-mono text-gray-600">
-              {formatTime(totalTimeToday + elapsedTime)}
-            </div>
+          <div
+            className={`text-[clamp(3rem,6vw,5rem)] leading-none font-sans font-semibold tracking-tight tabular-nums ${
+              isActive ? "text-success" : "text-foreground"
+            }`}
+          >
+            {(() => {
+              const { hours, minutes, secs } = getTimeParts(elapsedTime);
+              return (
+                <span className="inline-flex items-center gap-1">
+                  <NumberFlow value={hours} format={{ minimumIntegerDigits: 2 }} />
+                  <span>:</span>
+                  <NumberFlow value={minutes} format={{ minimumIntegerDigits: 2 }} />
+                  <span>:</span>
+                  <NumberFlow value={secs} format={{ minimumIntegerDigits: 2 }} />
+                </span>
+              );
+            })()}
           </div>
-
-          <div className="flex justify-center gap-4">
-            {!isActive ? (
-              <Button
-                onClick={handleStart}
-                disabled={loading}
-                className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 text-lg"
-              >
-                <Play className="mr-2 h-5 w-5" />
-                Start
-              </Button>
-            ) : (
-              <Button
-                onClick={handlePause}
-                disabled={loading}
-                variant="outline"
-                className="px-8 py-6 text-lg"
-              >
-                <Pause className="mr-2 h-5 w-5" />
-                Pause
-              </Button>
-            )}
+          <div className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground">
+            Total Time
           </div>
+          <div className="mt-2 text-[clamp(1rem,2vw,1.4rem)] font-sans font-semibold tracking-tight text-foreground">
+            {(() => {
+              const { hours, minutes, secs } = getTimeParts(totalTimeToday + elapsedTime);
+              return (
+                <span className="inline-flex items-center gap-1">
+                  <NumberFlow value={hours} format={{ minimumIntegerDigits: 2 }} />
+                  <span>:</span>
+                  <NumberFlow value={minutes} format={{ minimumIntegerDigits: 2 }} />
+                  <span>:</span>
+                  <NumberFlow value={secs} format={{ minimumIntegerDigits: 2 }} />
+                </span>
+              );
+            })()}
+          </div>
+        </div>
 
-          {isActive && (
-            <div className="space-y-2">
-              <p className="text-sm text-green-600 animate-pulse">
-                Studying...
-              </p>
-              {currentClass && (
-                <p className="text-sm text-gray-600">
-                  {currentClass.name} ({currentClass.code})
-                </p>
-              )}
-            </div>
+        <div className="flex justify-center gap-3">
+          {!isActive ? (
+          <Button
+            onClick={handleStart}
+            disabled={loading}
+            variant="outline"
+            size="icon"
+            aria-label="Start studying"
+            className="h-14 w-14 glass-card rounded-full hover:scale-105 transition-transform"
+          >
+            <Play className="h-5 w-5" />
+          </Button>
+          ) : (
+          <Button
+            onClick={handlePause}
+            disabled={loading}
+            variant="outline"
+            size="icon"
+            aria-label="Pause studying"
+            className="h-14 w-14 glass-card rounded-full hover:scale-105 transition-transform"
+          >
+            <Pause className="h-5 w-5" />
+          </Button>
           )}
         </div>
-      </CardContent>
-    </Card>
+
+        {currentClass && (
+          <div className="text-sm text-muted-foreground">
+            Studying for <span className="font-medium text-foreground">{currentClass.name}</span>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

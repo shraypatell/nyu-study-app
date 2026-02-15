@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PillNav from "@/components/PillNav";
 import {
   Dialog,
   DialogContent,
@@ -56,6 +56,7 @@ export default function ChatPage() {
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [searching, setSearching] = useState(false);
   const [startingChat, setStartingChat] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("dms");
 
   useEffect(() => {
     fetchRooms();
@@ -138,9 +139,9 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="container max-w-2xl mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">Messages</h1>
+    <div className="container max-w-3xl mx-auto py-10 px-4">
+      <div className="glass-panel rounded-3xl px-6 py-6 flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-semibold text-foreground">Messages</h1>
         <Dialog open={isNewMessageOpen} onOpenChange={setIsNewMessageOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -154,7 +155,7 @@ export default function ChatPage() {
             </DialogHeader>
             <div className="space-y-4 mt-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   placeholder="Search for a user..."
                   value={searchQuery}
@@ -177,11 +178,11 @@ export default function ChatPage() {
                     key={user.id}
                     onClick={() => startDM(user.id)}
                     disabled={startingChat === user.id}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors text-left"
+                    className="w-full flex items-center gap-3 p-3 rounded-2xl glass-panel transition-all text-left"
                   >
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={user.avatarUrl || undefined} />
-                      <AvatarFallback className="bg-purple-100 text-purple-700">
+                      <AvatarFallback className="glass-chip text-foreground">
                         {user.username.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -189,7 +190,7 @@ export default function ChatPage() {
                       <p className="font-medium">
                         {user.displayName || user.username}
                       </p>
-                      <p className="text-sm text-gray-500">@{user.username}</p>
+                      <p className="text-sm text-muted-foreground">@{user.username}</p>
                     </div>
                     {startingChat === user.id && (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -200,13 +201,13 @@ export default function ChatPage() {
                 {!searching &&
                   searchQuery.length >= 2 &&
                   searchResults.length === 0 && (
-                    <p className="text-center text-gray-500 py-4">
+                    <p className="text-center text-muted-foreground py-4">
                       No users found
                     </p>
                   )}
 
                 {searchQuery.length < 2 && (
-                  <p className="text-center text-gray-500 py-4">
+                  <p className="text-center text-muted-foreground py-4">
                     Type at least 2 characters to search
                   </p>
                 )}
@@ -216,26 +217,23 @@ export default function ChatPage() {
         </Dialog>
       </div>
 
-      <Tabs defaultValue="dms" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="dms">
-            <MessageSquare className="h-4 w-4 mr-1" />
-            DMs
-          </TabsTrigger>
-          <TabsTrigger value="classes">
-            <Users className="h-4 w-4 mr-1" />
-            Classes
-          </TabsTrigger>
-        </TabsList>
+      <PillNav
+        items={[
+          { label: "DMs", value: "dms", icon: <MessageSquare className="h-4 w-4" /> },
+          { label: "Classes", value: "classes", icon: <Users className="h-4 w-4" /> }
+        ]}
+        activeValue={activeTab}
+        onValueChange={setActiveTab}
+        className="mb-6"
+      />
 
-        <TabsContent value="dms" className="mt-6">
+      {activeTab === "dms" && (
           <RoomList rooms={dmRooms} emptyMessage="No direct messages yet. Start a new conversation!" />
-        </TabsContent>
+      )}
 
-        <TabsContent value="classes" className="mt-6">
-          <RoomList rooms={classRooms} emptyMessage="No class chats yet. Join a class to start chatting!" />
-        </TabsContent>
-      </Tabs>
+      {activeTab === "classes" && (
+        <RoomList rooms={classRooms} emptyMessage="No class chats yet. Join a class to start chatting!" />
+      )}
     </div>
   );
 }
@@ -249,7 +247,7 @@ function RoomList({
 }) {
   if (rooms.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-500">
+      <div className="text-center py-12 text-muted-foreground">
         <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
         <p className="text-lg">{emptyMessage}</p>
       </div>
@@ -260,12 +258,12 @@ function RoomList({
     <div className="space-y-3">
       {rooms.map((room) => (
         <Link key={room.id} href={`/chat/room/${room.id}`}>
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card className="glass-card cursor-pointer">
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={room.avatarUrl || undefined} />
-                  <AvatarFallback className="bg-purple-100 text-purple-700">
+                  <AvatarFallback className="glass-chip text-foreground">
                     {room.name.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -279,7 +277,7 @@ function RoomList({
                   </div>
 
                   {room.lastMessage ? (
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <span className="truncate">
                         <span className="font-medium">
                           {room.lastMessage.sender.displayName ||
@@ -297,7 +295,7 @@ function RoomList({
                       </span>
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-400">No messages yet</p>
+                    <p className="text-sm text-muted-foreground">No messages yet</p>
                   )}
                 </div>
               </div>

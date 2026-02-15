@@ -37,10 +37,16 @@ export default function SignupPage() {
         body: JSON.stringify({ email, password, username }),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        setError("Server returned an invalid response. Please try again.");
+        return;
+      }
 
       if (!response.ok) {
-        setError(data.error || "Signup failed");
+        setError(data.error || `Signup failed (${response.status})`);
         return;
       }
 
@@ -49,7 +55,8 @@ export default function SignupPage() {
         router.push("/login");
       }, 3000);
     } catch (err) {
-      setError("An unexpected error occurred");
+      console.error("Signup request failed:", err);
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -57,7 +64,13 @@ export default function SignupPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
+      <div className="w-full max-w-md space-y-4">
+        <div className="text-center">
+          <p className="text-sm font-medium text-muted-foreground">
+            Only nyu.edu emails are permitted to sign up for Rally
+          </p>
+        </div>
+        <Card className="glass-card">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
           <CardDescription className="text-center">
@@ -126,6 +139,7 @@ export default function SignupPage() {
           </CardFooter>
         </form>
       </Card>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { getAuthenticatedUser } from "@/lib/supabase/auth";
+import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
@@ -19,7 +19,8 @@ function checkRateLimit(userId: string): boolean {
 
 export async function POST(request: Request) {
   try {
-    const user = await getAuthenticatedUser(request);
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json(
@@ -36,10 +37,29 @@ export async function POST(request: Request) {
     }
 
     let classId: string | null = null;
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     try {
       const body = await request.json();
-      classId = body.classId || null;
+      const requestedClassId = body.classId || null;
+      classId = typeof requestedClassId === "string" && uuidPattern.test(requestedClassId)
+        ? requestedClassId
+        : null;
     } catch {
+    }
+
+    if (classId) {
+      const hasClass = await prisma.userClass.findUnique({
+        where: {
+          userId_classId: {
+            userId: user.id,
+            classId,
+          },
+        },
+        select: { id: true },
+      });
+      if (!hasClass) {
+        classId = null;
+      }
     }
 
     const existingSession = await prisma.studySession.findFirst({

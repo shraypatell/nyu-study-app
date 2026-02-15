@@ -1,0 +1,16 @@
+.flower-garden {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 220px;
+  pointer-events: none;
+  z-index: -1;
+  overflow: visible;
+}
+
+.flower-garden__flower {
+  position: absolute;
+  bottom: 0;
+  transform-origin: bottom center;
+}

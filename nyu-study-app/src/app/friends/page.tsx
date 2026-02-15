@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PillNav from "@/components/PillNav";
 import { Loader2, MessageCircle, UserX, Search, UserCheck } from "lucide-react";
 import Link from "next/link";
 
@@ -64,6 +64,7 @@ export default function FriendsPage() {
   const [processingRequest, setProcessingRequest] = useState<string | null>(null);
   const [startingChat, setStartingChat] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [activeTab, setActiveTab] = useState("friends");
 
   useEffect(() => {
     fetchData();
@@ -155,6 +156,15 @@ export default function FriendsPage() {
     }
   };
 
+  const handleCancelRequest = async (requestId: string) => {
+    setProcessingRequest(requestId);
+    try {
+      await cancelRequest(requestId);
+    } finally {
+      setProcessingRequest(null);
+    }
+  };
+
   const startChat = async (userId: string) => {
     setStartingChat(userId);
     try {
@@ -189,6 +199,24 @@ export default function FriendsPage() {
     return `${hours.toString().padStart(2, "0")}:${minutes
       .toString()
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (seconds < 60) return 'just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}d ago`;
+    const months = Math.floor(days / 30);
+    if (months < 12) return `${months}mo ago`;
+    const years = Math.floor(months / 12);
+    return `${years}y ago`;
   };
 
   const getTotalLiveSeconds = (friend: Friend) => {
@@ -257,33 +285,44 @@ export default function FriendsPage() {
   }
 
   return (
-    <div className="container max-w-2xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8">Friends</h1>
+    <div className="container max-w-4xl mx-auto py-10 px-4">
+      <div className="glass-panel rounded-3xl px-6 py-6 mb-8">
+        <h1 className="text-3xl font-semibold text-foreground">Friends</h1>
+        <p className="text-muted-foreground">Manage requests and stay in sync with your study circle.</p>
+      </div>
 
-      <Tabs defaultValue="friends" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="friends">
-            Friends
-            {friends.length > 0 && (
+      <PillNav
+        items={[
+          {
+            label: "Friends",
+            value: "friends",
+            badge: friends.length > 0 ? (
               <Badge variant="secondary" className="ml-2">
                 {friends.length}
               </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="received">
-            Requests
-            {receivedRequests.length > 0 && (
+            ) : undefined
+          },
+          {
+            label: "Requests",
+            value: "received",
+            badge: receivedRequests.length > 0 ? (
               <Badge variant="destructive" className="ml-2">
                 {receivedRequests.length}
               </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="sent">Sent</TabsTrigger>
-        </TabsList>
+            ) : undefined
+          },
+          { label: "Sent", value: "sent" },
+          { label: "Search", value: "search", icon: <Search className="h-4 w-4" /> }
+        ]}
+        activeValue={activeTab}
+        onValueChange={setActiveTab}
+        className="mb-6"
+      />
 
-        <TabsContent value="friends" className="mt-6">
+      {activeTab === "friends" && (
+        <>
           <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               type="text"
               placeholder="Search friends..."
@@ -296,7 +335,7 @@ export default function FriendsPage() {
           </div>
 
           {filteredFriends.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-muted-foreground">
               <UserCheck className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p className="text-lg">
                 {searchQuery ? "No friends match your search" : "No friends yet"}
@@ -310,7 +349,7 @@ export default function FriendsPage() {
           ) : (
             <div className="space-y-3">
               {filteredFriends.map((friend, index) => (
-                <Card key={friend.friendshipId}>
+                <Card key={friend.friendshipId} className="glass-card">
                   <CardContent className="p-4 flex items-center gap-4">
                     <div className={`w-8 text-center text-sm font-medium ${getRankStyle(index + 1)}`}>
                       {index + 1}
@@ -318,9 +357,9 @@ export default function FriendsPage() {
 
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={friend.user.avatarUrl || undefined} />
-                      <AvatarFallback className="bg-purple-100 text-purple-700">
-                        {friend.user.username.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
+                    <AvatarFallback className="glass-chip text-foreground">
+                      {friend.user.username.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
                     </Avatar>
 
                     <div className="flex-1 min-w-0">
@@ -332,17 +371,17 @@ export default function FriendsPage() {
                           <span className="w-2 h-2 bg-green-500 rounded-full" />
                         )}
                       </div>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         @{friend.user.username}
                       </p>
                       {getStatusText(friend) && (
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-muted-foreground">
                           {getStatusText(friend)}
                         </p>
                       )}
                     </div>
 
-                    <div className="font-mono text-gray-700 text-right">
+                    <div className="font-mono text-foreground text-right">
                       {formatTime(getTotalLiveSeconds(friend))}
                     </div>
 
@@ -372,21 +411,23 @@ export default function FriendsPage() {
               ))}
             </div>
           )}
-        </TabsContent>
+        </>
+      )}
 
-        <TabsContent value="received" className="mt-6">
+      {activeTab === "received" && (
+        <>
           {receivedRequests.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-muted-foreground">
               <p>No pending friend requests</p>
             </div>
           ) : (
             <div className="space-y-3">
               {receivedRequests.map((request) => (
-                <Card key={request.id}>
+                <Card key={request.id} className="glass-card">
                   <CardContent className="p-4 flex items-center gap-4">
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={request.requester?.avatarUrl || undefined} />
-                      <AvatarFallback className="bg-purple-100 text-purple-700">
+                      <AvatarFallback className="glass-chip text-foreground">
                         {request.requester?.username.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -394,7 +435,7 @@ export default function FriendsPage() {
                       <h3 className="font-semibold">
                         {request.requester?.displayName || request.requester?.username}
                       </h3>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         @{request.requester?.username}
                       </p>
                     </div>
@@ -424,47 +465,171 @@ export default function FriendsPage() {
               ))}
             </div>
           )}
-        </TabsContent>
+        </>
+      )}
 
-        <TabsContent value="sent" className="mt-6">
+      {activeTab === "sent" && (
+        <>
           {sentRequests.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <p>No sent friend requests</p>
-            </div>
+            <Card className="glass-card">
+              <CardContent className="py-12 text-center text-muted-foreground">
+                <UserCheck className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="text-lg">No sent requests</p>
+                <p className="text-sm mt-2">Friend requests you send will appear here</p>
+              </CardContent>
+            </Card>
           ) : (
             <div className="space-y-3">
               {sentRequests.map((request) => (
-                <Card key={request.id}>
-                  <CardContent className="p-4 flex items-center gap-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={request.addressee?.avatarUrl || undefined} />
-                      <AvatarFallback className="bg-purple-100 text-purple-700">
-                        {request.addressee?.username.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <h3 className="font-semibold">
-                        {request.addressee?.displayName || request.addressee?.username}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        @{request.addressee?.username}
-                      </p>
-                      <p className="text-xs text-gray-400">Pending</p>
+                <Card key={request.id} className="glass-card">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={request.addressee?.avatarUrl || undefined} />
+                        <AvatarFallback className="glass-chip text-foreground">
+                          {request.addressee?.username.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold truncate">
+                          {request.addressee?.displayName || request.addressee?.username}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">@{request.addressee?.username}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Sent {formatTimeAgo(request.createdAt)}
+                        </p>
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={processingRequest === request.id}
+                        onClick={() => handleCancelRequest(request.id)}
+                      >
+                        {processingRequest === request.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          "Cancel"
+                        )}
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => cancelRequest(request.id)}
-                    >
-                      Cancel
-                    </Button>
                   </CardContent>
                 </Card>
               ))}
             </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </>
+      )}
+
+      {activeTab === "search" && <UserSearchTab />}
+    </div>
+  );
+}
+
+function UserSearchTab() {
+  const [query, setQuery] = useState("");
+  const [users, setUsers] = useState<Array<{
+    id: string;
+    username: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+    isTimerPublic: boolean;
+  }>>([]);
+  const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(async () => {
+      if (query.length < 2) {
+        setUsers([]);
+        setHasSearched(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setUsers(data.users || []);
+          setHasSearched(true);
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [query]);
+
+  return (
+    <div className="space-y-4">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <Input
+          type="text"
+          placeholder="Search students by username or name..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="pl-10"
+        />
+        {loading && (
+          <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+        )}
+      </div>
+
+      {!hasSearched && query.length < 2 && (
+        <Card className="glass-card">
+          <CardContent className="py-12 text-center text-muted-foreground">
+            <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p className="text-lg">Type at least 2 characters to search</p>
+            <p className="text-sm mt-2">Find students to add as friends</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {hasSearched && users.length === 0 && (
+        <Card className="glass-card">
+          <CardContent className="py-12 text-center text-muted-foreground">
+            <p className="text-lg">No students found</p>
+            <p className="text-sm mt-2">Try a different search term</p>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="space-y-3">
+        {users.map((user) => (
+          <Link key={user.id} href={`/users/${user.id}`}>
+            <Card className="glass-card cursor-pointer hover:bg-white/40 transition-colors">
+              <CardContent className="p-4 flex items-center gap-4">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={user.avatarUrl || undefined} />
+                  <AvatarFallback className="glass-chip text-foreground">
+                    {user.username.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold truncate">
+                      {user.displayName || user.username}
+                    </h3>
+                    {user.isTimerPublic && (
+                      <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                        Studying
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">@{user.username}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

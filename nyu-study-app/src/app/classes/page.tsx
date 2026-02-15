@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PillNav from "@/components/PillNav";
 import { Loader2, Search, BookOpen, Users, Check, MessageCircle } from "lucide-react";
 import Link from "next/link";
 
@@ -30,6 +30,7 @@ export default function ClassesPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [activeTab, setActiveTab] = useState("browse");
   const limit = 32;
 
   useEffect(() => {
@@ -143,25 +144,34 @@ export default function ClassesPage() {
   }
 
   return (
-    <div className="container max-w-2xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8">Classes</h1>
+    <div className="container max-w-5xl mx-auto py-10 px-4">
+      <div className="glass-panel rounded-3xl px-6 py-6 mb-8">
+        <h1 className="text-3xl font-semibold text-foreground">Classes</h1>
+        <p className="text-muted-foreground">Find classes, join chats, and manage your study groups.</p>
+      </div>
 
-      <Tabs defaultValue="browse" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="browse">Browse</TabsTrigger>
-          <TabsTrigger value="my-classes">
-            My Classes
-            {myClasses.length > 0 && (
+      <PillNav
+        items={[
+          { label: "Browse", value: "browse" },
+          { 
+            label: "My Classes", 
+            value: "my-classes",
+            badge: myClasses.length > 0 ? (
               <Badge variant="secondary" className="ml-2">
                 {myClasses.length}
               </Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
+            ) : undefined
+          }
+        ]}
+        activeValue={activeTab}
+        onValueChange={setActiveTab}
+        className="mb-6"
+      />
 
-        <TabsContent value="browse" className="mt-6">
+      {activeTab === "browse" && (
+        <>
           <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               type="text"
               placeholder="Search classes..."
@@ -173,27 +183,27 @@ export default function ClassesPage() {
             />
           </div>
 
-          <div className="text-sm text-gray-500 mb-4">
+          <div className="text-sm text-muted-foreground mb-4">
             {totalCount} classes total
           </div>
 
           <div className="space-y-3">
             {classes.map((cls) => (
-              <Card key={cls.id}>
+              <Card key={cls.id} className="glass-card">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <BookOpen className="h-4 w-4 text-purple-600" />
+                        <BookOpen className="h-4 w-4 text-primary" />
                         <h3 className="font-semibold">{cls.name}</h3>
                       </div>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         {cls.code}
                         {cls.section && ` - Section ${cls.section}`}
                       </p>
                       <div className="flex items-center gap-2 mt-2">
                         <Badge variant="outline">{cls.semester}</Badge>
-                        <div className="flex items-center gap-1 text-sm text-gray-500">
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
                           <Users className="h-3 w-3" />
                           {cls.memberCount}
                         </div>
@@ -244,7 +254,7 @@ export default function ClassesPage() {
           </div>
 
           <div className="flex items-center justify-between pt-4">
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-muted-foreground">
               Page {page} of {totalPages}
             </div>
             <div className="flex items-center gap-2">
@@ -282,11 +292,13 @@ export default function ClassesPage() {
               </Button>
             </div>
           </div>
-        </TabsContent>
+        </>
+      )}
 
-        <TabsContent value="my-classes" className="mt-6">
+      {activeTab === "my-classes" && (
+        <>
           {myClasses.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-muted-foreground">
               <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p className="text-lg">You haven&apos;t joined any classes yet</p>
               <p className="text-sm mt-2">
@@ -296,12 +308,12 @@ export default function ClassesPage() {
           ) : (
             <div className="space-y-3">
               {myClasses.map((cls) => (
-                <Card key={cls.id}>
+                <Card key={cls.id} className="glass-card">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div>
                         <CardTitle className="text-lg">{cls.name}</CardTitle>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           {cls.code}
                           {cls.section && ` - Section ${cls.section}`}
                         </p>
@@ -311,7 +323,7 @@ export default function ClassesPage() {
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1 text-sm text-gray-500">
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <Users className="h-4 w-4" />
                         {cls.memberCount} members
                       </div>
@@ -341,8 +353,8 @@ export default function ClassesPage() {
               ))}
             </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </>
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Users } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Friend {
   rank: number;
@@ -31,10 +31,12 @@ interface Friend {
 
 interface DashboardFriendsWidgetProps {
   friends: Friend[];
+  className?: string;
 }
 
 export default function DashboardFriendsWidget({
   friends,
+  className,
 }: DashboardFriendsWidgetProps) {
   const [now, setNow] = useState(Date.now());
 
@@ -105,56 +107,60 @@ export default function DashboardFriendsWidget({
   };
 
   const getRankStyle = (rank: number) => {
-    if (rank === 1) return "text-yellow-600 font-bold";
-    if (rank === 2) return "text-gray-500 font-bold";
-    if (rank === 3) return "text-orange-600 font-bold";
-    return "text-gray-400";
+    if (rank === 1) return "text-black font-bold";
+    if (rank === 2) return "text-black font-bold";
+    if (rank === 3) return "text-black font-bold";
+    return "text-black";
   };
 
   return (
     <Link href="/friends">
-      <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-        <div className="flex items-center gap-2 mb-3">
-          <Users className="h-5 w-5 text-blue-600" />
-          <h3 className="font-semibold text-gray-700">Friends</h3>
-        </div>
-        {friends.length > 0 ? (
-          <div className="max-h-[200px] overflow-y-auto space-y-2 pr-1">
-            {friends.map((friend) => (
-              <div
-                key={friend.id}
-                className="flex items-start gap-2 text-sm py-1"
-              >
-                <span className={`w-5 text-center ${getRankStyle(friend.rank)}`}>
-                  {friend.rank}
-                </span>
-                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs text-blue-700 shrink-0">
-                  {friend.displayName?.charAt(0) || friend.username.charAt(0)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1">
-                    <span className="truncate">
+      <div
+        className={cn(
+          "aspect-square p-5 flex flex-col gap-3 text-black cursor-pointer",
+          className
+        )}
+      >
+        <div className="relative z-10 h-full flex flex-col gap-3">
+          <h3 className="text-sm font-semibold uppercase tracking-[0.2em]">
+            Friends
+          </h3>
+          {friends.length > 0 ? (
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+              {friends.map((friend) => (
+                <div
+                  key={friend.id}
+                  className="flex items-start gap-3 text-sm"
+                >
+                  <span className={`w-6 text-center ${getRankStyle(friend.rank)}`}>
+                    {friend.rank}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold truncate">
                       {friend.displayName || friend.username}
-                    </span>
-                    {friend.isTimerPublic && friend.isActive && (
-                      <span className="w-2 h-2 bg-green-500 rounded-full shrink-0" />
+                    </div>
+                    {getStatusText(friend) && (
+                      <div
+                        className={`text-xs truncate ${
+                          friend.isTimerPublic && friend.isActive
+                            ? "status-active"
+                            : "text-black"
+                        }`}
+                      >
+                        {getStatusText(friend)}
+                      </div>
                     )}
                   </div>
-                  {getStatusText(friend) && (
-                    <div className="text-xs text-gray-500 truncate">
-                      {getStatusText(friend)}
-                    </div>
-                  )}
+                  <div className="text-sm font-semibold shrink-0">
+                    {formatTime(getTotalLiveSeconds(friend))}
+                  </div>
                 </div>
-                <div className="font-mono text-gray-700 shrink-0">
-                  {formatTime(getTotalLiveSeconds(friend))}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500 text-center py-4">No friends yet</p>
-        )}
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-black">No friends yet</p>
+          )}
+        </div>
       </div>
     </Link>
   );

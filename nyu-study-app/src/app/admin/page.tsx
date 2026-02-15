@@ -147,7 +147,7 @@ export default function AdminPage() {
 
         <TabsContent value="stats" className="mt-6 space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card>
+            <Card className="glass-card">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-500">
                   Total Users
@@ -161,7 +161,7 @@ export default function AdminPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass-card">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-500">
                   Active Today
@@ -177,7 +177,7 @@ export default function AdminPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass-card">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-500">
                   Active Timers
@@ -193,7 +193,7 @@ export default function AdminPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass-card">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-500">
                   Total Messages
@@ -209,7 +209,7 @@ export default function AdminPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass-card">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-500">
                   Classes
@@ -225,7 +225,7 @@ export default function AdminPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass-card">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-500">
                   Locations
@@ -241,7 +241,7 @@ export default function AdminPage() {
               </CardContent>
             </Card>
 
-            <Card className="col-span-2">
+            <Card className="col-span-2 glass-card">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-500">
                   Today&apos;s Total Study Time
@@ -255,7 +255,7 @@ export default function AdminPage() {
             </Card>
           </div>
 
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Top Studiers Today</CardTitle>
             </CardHeader>
@@ -264,7 +264,7 @@ export default function AdminPage() {
                 {topStudiers.map((studier, index) => (
                   <div
                     key={studier.username}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    className="flex items-center justify-between p-3 glass-panel rounded-2xl"
                   >
                     <div className="flex items-center gap-3">
                       <Badge
@@ -294,7 +294,7 @@ export default function AdminPage() {
         </TabsContent>
 
         <TabsContent value="classes" className="mt-6">
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Upload Classes</CardTitle>
             </CardHeader>
@@ -330,7 +330,7 @@ export default function AdminPage() {
         </TabsContent>
 
         <TabsContent value="locations" className="mt-6">
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Upload Locations</CardTitle>
             </CardHeader>
