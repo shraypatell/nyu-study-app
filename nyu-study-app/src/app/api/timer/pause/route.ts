@@ -1,27 +1,25 @@
-import { createClient } from "@/lib/supabase/server";
+import { getAuthenticatedUser } from "@/lib/supabase/auth";
 import { prisma } from "@/lib/prisma";
 import { getNyDateStart } from "@/lib/date";
 import { NextResponse } from "next/server";
 
-// Simple rate limiting
 const rateLimits = new Map<string, number>();
 
 function checkRateLimit(userId: string): boolean {
   const now = Date.now();
   const lastRequest = rateLimits.get(userId);
-  
+
   if (lastRequest && now - lastRequest < 1000) {
     return false;
   }
-  
+
   rateLimits.set(userId, now);
   return true;
 }
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthenticatedUser(request);
 
     if (!user) {
       return NextResponse.json(

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getNyDateStart } from "@/lib/date";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthenticatedUser } from "@/lib/supabase/auth";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -24,8 +24,7 @@ function checkRateLimit(userId: string): boolean {
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthenticatedUser(request);
 
     if (!user) {
       return NextResponse.json(
@@ -140,8 +139,7 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthenticatedUser(request);
 
     if (!user) {
       return NextResponse.json(
