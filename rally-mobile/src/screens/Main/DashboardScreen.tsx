@@ -6,13 +6,18 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import { useAuthStore } from '../../store/authStore';
 
 export default function DashboardScreen({ navigation }: any) {
+  const { user } = useAuthStore();
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.greeting}>Welcome to Rally</Text>
-        <Text style={styles.subtitle}>Ready to study?</Text>
+        <Text style={styles.greeting}>
+          Welcome{user?.displayName ? `, ${user.displayName}` : ''}
+        </Text>
+        <Text style={styles.subtitle}>@{user?.username || 'user'}</Text>
       </View>
 
       <TouchableOpacity 
@@ -43,6 +48,13 @@ export default function DashboardScreen({ navigation }: any) {
         <Text style={styles.sectionTitle}>Leaderboard Preview</Text>
         <Text style={styles.comingSoon}>Leaderboards coming soon...</Text>
       </View>
+
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={() => useAuthStore.getState().signOut()}
+      >
+        <Text style={styles.logoutText}>Log Out</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -115,5 +127,18 @@ const styles = StyleSheet.create({
   comingSoon: {
     color: '#999',
     fontSize: 14,
+  },
+  logoutButton: {
+    margin: 24,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  logoutText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
