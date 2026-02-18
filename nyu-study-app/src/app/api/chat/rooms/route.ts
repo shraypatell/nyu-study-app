@@ -110,11 +110,6 @@ export async function GET(request: Request) {
         { status: 401 }
       );
     }
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
 
     const chatRooms = await prisma.chatRoomUser.findMany({
       where: { userId: user.id },
