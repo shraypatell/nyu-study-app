@@ -101,7 +101,7 @@ export const friendsApi = {
   async acceptRequest(id: string) {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_URL}/api/friends/${id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers,
       body: JSON.stringify({ status: 'ACCEPTED' }),
     });
@@ -116,12 +116,27 @@ export const friendsApi = {
   async rejectRequest(id: string) {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_URL}/api/friends/${id}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ status: 'REJECTED' }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to reject friend request');
+    }
+
+    return response.json();
+  },
+
+  async removeFriend(id: string) {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_URL}/api/friends/${id}`, {
       method: 'DELETE',
       headers,
     });
 
     if (!response.ok) {
-      throw new Error('Failed to reject friend request');
+      throw new Error('Failed to remove friend');
     }
 
     return response.json();

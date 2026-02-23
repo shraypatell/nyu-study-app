@@ -23,6 +23,19 @@ export const userApi = {
     return response.json();
   },
 
+  async getPublicProfile(userId: string) {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_URL}/api/users/${userId}`, {
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch user profile');
+    }
+
+    return response.json();
+  },
+
   async updateProfile(data: {
     displayName?: string;
     bio?: string;
