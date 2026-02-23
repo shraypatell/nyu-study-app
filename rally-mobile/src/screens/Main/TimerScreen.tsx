@@ -9,12 +9,16 @@ import {
   ActivityIndicator,
   StatusBar,
   Animated,
+  ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTimerStore } from '../../store/timerStore';
 import { useAppStore } from '../../store/appStore';
 import { useAppTheme } from '../../theme/ThemeContext';
+import { StudyContextDisplay } from '../../components/StudyContextDisplay';
+import { LocationLeaderboard } from '../../components/LocationLeaderboard';
+import { AppHeaderSelector } from '../../components/AppHeaderSelector';
 
 export default function TimerScreen() {
   const {
@@ -37,10 +41,11 @@ export default function TimerScreen() {
   const elapsedTime = timers[mode].elapsedTime;
   const sessionDuration = timers[mode].sessionDuration;
 
-  const { selectedClassId, joinedClasses } = useAppStore();
+  const { selectedClassId, joinedClasses, selectedLocation } = useAppStore();
   const { t, animBg, statusBarStyle } = useAppTheme();
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const selectorRef = useRef<any>(null);
   const [syncing, setSyncing] = useState(true);
   const insets = useSafeAreaInsets();
 
@@ -121,68 +126,89 @@ export default function TimerScreen() {
   return (
     <Animated.View style={[styles.container, { paddingTop: insets.top, backgroundColor: animBg }]}>
       <StatusBar barStyle={statusBarStyle} />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: t.text }]}>Focus</Text>
-        <View style={[styles.settingsBtn, { backgroundColor: t.surface, borderColor: t.border }]}>
-          <Ionicons name="settings-outline" size={20} color={t.muted} />
-        </View>
-      </View>
-
-      {/* Segmented Control */}
-      <View style={[styles.segControl, { backgroundColor: t.segControl }]}>
-        <TouchableOpacity
-          style={[styles.segBtn, mode === 'FOCUS' && [styles.segBtnActive, { backgroundColor: t.segActive }]]}
-          onPress={() => setMode('FOCUS')}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.segLabel, { color: mode === 'FOCUS' ? t.segActiveText : t.segInactiveText, fontWeight: mode === 'FOCUS' ? '600' : '500' }]}>
-            Focus
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.segBtn, mode === 'CLASSIC' && [styles.segBtnActive, { backgroundColor: t.segActive }]]}
-          onPress={() => setMode('CLASSIC')}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.segLabel, { color: mode === 'CLASSIC' ? t.segActiveText : t.segInactiveText, fontWeight: mode === 'CLASSIC' ? '600' : '500' }]}>
-            Classic
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Timer Area */}
-      <View style={styles.timerArea}>
-        <Text style={[styles.sessionLabel, { color: t.muted }]}>{sessionLabel}</Text>
-
-        {mode === 'FOCUS' && (
-          <Text style={[styles.warningText, { color: t.dimmed }]}>Leaving the app will stop your timer</Text>
-        )}
-
-        <View style={[styles.timerRing, { backgroundColor: t.surface, borderColor: t.border }]}>
-          <Text style={[styles.timerDisplay, { color: t.text }]}>{formatTime(elapsedTime)}</Text>
-          <Text style={[styles.sessionTimerLabel, { color: t.dimmed }]}>Session: {formatTime(sessionDuration)}</Text>
-          <Text style={[styles.timerSubLabel, { color: t.dimmed }]}>{getSubLabel()}</Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={[styles.headerTitle, { color: t.text }]}>Focus</Text>
+          <View style={[styles.settingsBtn, { backgroundColor: t.surface, borderColor: t.border }]}>
+            <Ionicons name="settings-outline" size={20} color={t.muted} />
+          </View>
         </View>
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-        <View style={styles.controls}>
+        {/* Segmented Control */}
+        <View style={[styles.segControl, { backgroundColor: t.segControl }]}>
           <TouchableOpacity
-            style={styles.startBtn}
-            onPress={handleStartPause}
-            disabled={isLoading}
+            style={[styles.segBtn, mode === 'FOCUS' && [styles.segBtnActive, { backgroundColor: t.segActive }]]}
+            onPress={() => setMode('FOCUS')}
             activeOpacity={0.8}
           >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.startBtnLabel}>{isActive ? 'Pause' : 'Start'}</Text>
-            )}
+            <Text style={[styles.segLabel, { color: mode === 'FOCUS' ? t.segActiveText : t.segInactiveText, fontWeight: mode === 'FOCUS' ? '600' : '500' }]}>
+              Focus
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.segBtn, mode === 'CLASSIC' && [styles.segBtnActive, { backgroundColor: t.segActive }]]}
+            onPress={() => setMode('CLASSIC')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.segLabel, { color: mode === 'CLASSIC' ? t.segActiveText : t.segInactiveText, fontWeight: mode === 'CLASSIC' ? '600' : '500' }]}>
+              Classic
+            </Text>
           </TouchableOpacity>
         </View>
-      </View>
+
+        {/* Study Context Display */}
+        <StudyContextDisplay
+          selectedClassName={currentClass?.code || null}
+          selectedLocationName={selectedLocation?.name || null}
+          onPress={() => selectorRef.current?.open()}
+        />
+
+        {/* Timer Area */}
+        <View style={styles.timerArea}>
+          <Text style={[styles.sessionLabel, { color: t.muted }]}>{sessionLabel}</Text>
+
+          {mode === 'FOCUS' && (
+            <Text style={[styles.warningText, { color: t.dimmed }]}>Leaving the app will stop your timer</Text>
+          )}
+
+          <View style={[styles.timerRing, { backgroundColor: t.surface, borderColor: t.border }]}>
+            <Text style={[styles.timerDisplay, { color: t.text }]}>{formatTime(elapsedTime)}</Text>
+            <Text style={[styles.sessionTimerLabel, { color: t.dimmed }]}>Session: {formatTime(sessionDuration)}</Text>
+            <Text style={[styles.timerSubLabel, { color: t.dimmed }]}>{getSubLabel()}</Text>
+          </View>
+
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+          <View style={styles.controls}>
+            <TouchableOpacity
+              style={styles.startBtn}
+              onPress={handleStartPause}
+              disabled={isLoading}
+              activeOpacity={0.8}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.startBtnLabel}>{isActive ? 'Pause' : 'Start'}</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Location Leaderboard */}
+        <View style={styles.leaderboardContainer}>
+          <LocationLeaderboard
+            locationId={selectedLocation?.id || null}
+            timerActive={isActive}
+          />
+        </View>
+
+      </ScrollView>
+
+      {/* Context Selector Modal */}
+      <AppHeaderSelector ref={selectorRef} showButton={false} />
     </Animated.View>
   );
 }
@@ -241,9 +267,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   timerArea: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: 320,
   },
   sessionLabel: {
     fontSize: 12,
@@ -316,5 +342,9 @@ const styles = StyleSheet.create({
   },
   mutedText: {
     fontSize: 13,
+  },
+  leaderboardContainer: {
+    paddingHorizontal: 0,
+    paddingBottom: 20,
   },
 });

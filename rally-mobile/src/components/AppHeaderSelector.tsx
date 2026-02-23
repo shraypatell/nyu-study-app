@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -12,7 +12,11 @@ import { useAuthStore } from '../store/authStore';
 import { Text } from './Text';
 import { colors, spacing, borderRadius } from '../theme/colors';
 
-export function AppHeaderSelector() {
+interface AppHeaderSelectorProps {
+  showButton?: boolean;
+}
+
+export const AppHeaderSelector = forwardRef<any, AppHeaderSelectorProps>(function AppHeaderSelector({ showButton = true }, ref) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'class' | 'location'>('class');
   const [isInitialized, setIsInitialized] = useState(false);
@@ -47,6 +51,11 @@ export function AppHeaderSelector() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useImperativeHandle(ref, () => ({
+    open: () => setIsOpen(true),
+    close: () => setIsOpen(false),
+  }), []);
 
   const selectedClass = joinedClasses.find(c => c.id === selectedClassId);
 
@@ -104,15 +113,17 @@ export function AppHeaderSelector() {
 
   return (
     <>
-      <TouchableOpacity 
-        style={styles.selectorButton}
-        onPress={() => setIsOpen(true)}
-        activeOpacity={0.8}
-      >
-        <Text variant="bodySmall" style={styles.selectorText} numberOfLines={1}>
-          {getDisplayText()}
-        </Text>
-      </TouchableOpacity>
+      {showButton && (
+        <TouchableOpacity
+          style={styles.selectorButton}
+          onPress={() => setIsOpen(true)}
+          activeOpacity={0.8}
+        >
+          <Text variant="bodySmall" style={styles.selectorText} numberOfLines={1}>
+            {getDisplayText()}
+          </Text>
+        </TouchableOpacity>
+      )}
 
       <Modal
         visible={isOpen}
@@ -221,7 +232,7 @@ export function AppHeaderSelector() {
       </Modal>
     </>
   );
-}
+});
 
 const theme = {
   surface: 'rgba(255, 255, 255, 0.4)',
