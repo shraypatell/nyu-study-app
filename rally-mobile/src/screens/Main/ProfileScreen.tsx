@@ -36,6 +36,16 @@ export default function ProfileScreen() {
       setStats(data);
     } catch (error) {
       console.error('Error loading stats:', error);
+      // Set default stats so the UI doesn't break
+      setStats({
+        totalHours: 0,
+        totalMinutes: 0,
+        totalSeconds: 0,
+        totalSessions: 0,
+        currentStreak: 0,
+        todaySeconds: 0,
+        hasActiveSession: false,
+      });
     } finally {
       setLoading(false);
     }
