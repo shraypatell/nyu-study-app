@@ -3,10 +3,17 @@ import { timerApi } from '../api/timer';
 
 export type TimerMode = 'FOCUS' | 'CLASSIC';
 
-interface TimerState {
+interface ModeTimer {
   isActive: boolean;
   elapsedTime: number;
   totalTimeToday: number;
+}
+
+interface TimerState {
+  timers: {
+    CLASSIC: ModeTimer;
+    FOCUS: ModeTimer;
+  };
   mode: TimerMode;
   currentClass: { id: string; name: string; code: string } | null;
   isLoading: boolean;
@@ -22,16 +29,26 @@ interface TimerState {
 }
 
 export const useTimerStore = create<TimerState>((set, get) => ({
-  isActive: false,
-  elapsedTime: 0,
-  totalTimeToday: 0,
+  timers: {
+    CLASSIC: {
+      isActive: false,
+      elapsedTime: 0,
+      totalTimeToday: 0,
+    },
+    FOCUS: {
+      isActive: false,
+      elapsedTime: 0,
+      totalTimeToday: 0,
+    },
+  },
   mode: 'CLASSIC',
   currentClass: null,
   isLoading: false,
   error: null,
 
   setMode: (mode) => {
-    if (get().isActive) {
+    const state = get();
+    if (state.timers[state.mode].isActive) {
       get().pauseTimer();
     }
     set({ mode });
@@ -39,15 +56,21 @@ export const useTimerStore = create<TimerState>((set, get) => ({
 
   startTimer: async () => {
     try {
+      const state = get();
       set({ isLoading: true, error: null });
-      const response = await timerApi.startTimer(get().currentClass?.id);
-      
+      const response = await timerApi.startTimer(state.currentClass?.id, state.mode);
+
       if (response.success) {
-        set({ 
-          isActive: true, 
+        set((s) => ({
+          timers: {
+            ...s.timers,
+            [s.mode]: {
+              ...s.timers[s.mode],
+              isActive: true,
+            },
+          },
           isLoading: false,
-          elapsedTime: 0,
-        });
+        }));
       }
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
@@ -57,15 +80,21 @@ export const useTimerStore = create<TimerState>((set, get) => ({
 
   pauseTimer: async () => {
     try {
+      const state = get();
       set({ isLoading: true, error: null });
-      const response = await timerApi.pauseTimer();
-      
+      const response = await timerApi.pauseTimer(state.mode);
+
       if (response.success) {
-        set((state) => ({ 
-          isActive: false, 
+        set((s) => ({
+          timers: {
+            ...s.timers,
+            [s.mode]: {
+              ...s.timers[s.mode],
+              isActive: false,
+              totalTimeToday: s.timers[s.mode].totalTimeToday + response.totalDuration,
+            },
+          },
           isLoading: false,
-          totalTimeToday: state.totalTimeToday + response.totalDuration,
-          elapsedTime: 0,
         }));
       }
     } catch (error: any) {
@@ -75,11 +104,28 @@ export const useTimerStore = create<TimerState>((set, get) => ({
   },
 
   resetTimer: () => {
-    set({ isActive: false, elapsedTime: 0 });
+    set((s) => ({
+      timers: {
+        ...s.timers,
+        [s.mode]: {
+          ...s.timers[s.mode],
+          isActive: false,
+          elapsedTime: 0,
+        },
+      },
+    }));
   },
 
   incrementElapsed: (seconds) => {
-    set((state) => ({ elapsedTime: state.elapsedTime + seconds }));
+    set((s) => ({
+      timers: {
+        ...s.timers,
+        [s.mode]: {
+          ...s.timers[s.mode],
+          elapsedTime: s.timers[s.mode].elapsedTime + seconds,
+        },
+      },
+    }));
   },
 
   setCurrentClass: (classInfo) => {
@@ -88,18 +134,22 @@ export const useTimerStore = create<TimerState>((set, get) => ({
 
   syncStatus: async () => {
     try {
-      const status = await timerApi.getStatus();
-      set({
-        isActive: status.isActive,
-        totalTimeToday: status.totalSecondsToday,
-      });
-      
-      if (status.isActive && status.startedAt) {
-        const now = new Date();
-        const startedAt = new Date(status.startedAt);
-        const elapsed = Math.floor((now.getTime() - startedAt.getTime()) / 1000);
-        set({ elapsedTime: elapsed });
-      }
+      const mode = get().mode;
+      const status = await timerApi.getStatus(mode);
+      set((s) => ({
+        timers: {
+          ...s.timers,
+          [mode]: {
+            ...s.timers[mode],
+            isActive: status.isActive,
+            totalTimeToday: status.totalSecondsToday,
+            elapsedTime:
+              status.isActive && status.startedAt
+                ? Math.floor((new Date().getTime() - new Date(status.startedAt).getTime()) / 1000)
+                : status.lastSessionDuration || s.timers[mode].elapsedTime,
+          },
+        },
+      }));
     } catch (error: any) {
       set({ error: error.message });
     }
