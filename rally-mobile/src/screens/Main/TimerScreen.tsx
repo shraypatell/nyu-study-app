@@ -47,6 +47,7 @@ export default function TimerScreen() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const selectorRef = useRef<any>(null);
   const [syncing, setSyncing] = useState(true);
+  const [leaderboardTab, setLeaderboardTab] = useState<'school' | 'location'>('school');
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
@@ -197,12 +198,45 @@ export default function TimerScreen() {
           </View>
         </View>
 
-        {/* Location Leaderboard */}
+        {/* Leaderboard Toggle & Display */}
         <View style={styles.leaderboardContainer}>
-          <LocationLeaderboard
-            locationId={selectedLocation?.id || null}
-            timerActive={isActive}
-          />
+          <View style={[styles.leaderboardTabBar, { backgroundColor: t.segControl }]}>
+            <TouchableOpacity
+              style={[styles.leaderboardTab, leaderboardTab === 'school' && [styles.leaderboardTabActive, { backgroundColor: t.segActive }]]}
+              onPress={() => setLeaderboardTab('school')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.leaderboardTabLabel, { color: leaderboardTab === 'school' ? t.segActiveText : t.segInactiveText, fontWeight: leaderboardTab === 'school' ? '600' : '500' }]}>
+                School
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.leaderboardTab, leaderboardTab === 'location' && [styles.leaderboardTabActive, { backgroundColor: t.segActive }]]}
+              onPress={() => setLeaderboardTab('location')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.leaderboardTabLabel, { color: leaderboardTab === 'location' ? t.segActiveText : t.segInactiveText, fontWeight: leaderboardTab === 'location' ? '600' : '500' }]}>
+                Location
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {leaderboardTab === 'location' && selectedLocation ? (
+            <LocationLeaderboard
+              locationId={selectedLocation.id}
+              timerActive={isActive}
+            />
+          ) : leaderboardTab === 'school' ? (
+            <View style={[styles.schoolLeaderboardPlaceholder, { backgroundColor: t.surface }]}>
+              <Text style={[styles.placeholderText, { color: t.muted }]}>School leaderboard</Text>
+              <Text style={[styles.placeholderSubText, { color: t.dimmed }]}>View from Leaderboards tab</Text>
+            </View>
+          ) : (
+            <View style={[styles.schoolLeaderboardPlaceholder, { backgroundColor: t.surface }]}>
+              <Text style={[styles.placeholderText, { color: t.muted }]}>No location selected</Text>
+              <Text style={[styles.placeholderSubText, { color: t.dimmed }]}>Select a location to view its leaderboard</Text>
+            </View>
+          )}
         </View>
 
       </ScrollView>
@@ -346,5 +380,45 @@ const styles = StyleSheet.create({
   leaderboardContainer: {
     paddingHorizontal: 0,
     paddingBottom: 20,
+    marginTop: 24,
+  },
+  leaderboardTabBar: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    padding: 4,
+    height: 44,
+    marginBottom: 16,
+  },
+  leaderboardTab: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+  },
+  leaderboardTabActive: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  leaderboardTabLabel: {
+    fontSize: 14,
+  },
+  schoolLeaderboardPlaceholder: {
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    minHeight: 120,
+    justifyContent: 'center',
+  },
+  placeholderText: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  placeholderSubText: {
+    fontSize: 12,
+    textAlign: 'center',
   },
 });
