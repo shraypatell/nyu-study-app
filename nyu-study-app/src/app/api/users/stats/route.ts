@@ -8,6 +8,7 @@ export async function GET(request: Request) {
     const user = await getAuthenticatedUser(request);
 
     if (!user) {
+      console.warn("Stats endpoint: No authenticated user found");
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
