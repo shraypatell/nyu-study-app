@@ -49,7 +49,7 @@ export default function LeaderboardsScreen() {
   const [loading, setLoading] = useState(true);
   const insets = useSafeAreaInsets();
   const { selectedLocation } = useAppStore();
-  const { isActive: timerActive } = useTimerStore((state) => ({ isActive: state.timers[state.mode].isActive }));
+  const timerActive = useTimerStore((state) => state.timers[state.mode].isActive);
   const { t, animBg, statusBarStyle } = useAppTheme();
 
   useEffect(() => {
