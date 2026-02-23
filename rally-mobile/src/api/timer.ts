@@ -10,9 +10,9 @@ async function getAuthHeaders() {
 }
 
 export const timerApi = {
-  async getStatus() {
+  async getStatus(mode: 'CLASSIC' | 'FOCUS' = 'CLASSIC') {
     const headers = await getAuthHeaders();
-    const response = await fetch(`${API_URL}/api/timer/status`, {
+    const response = await fetch(`${API_URL}/api/timer/status?mode=${mode}`, {
       headers,
     });
 
@@ -23,12 +23,12 @@ export const timerApi = {
     return response.json();
   },
 
-  async startTimer(classId?: string) {
+  async startTimer(classId?: string, mode: 'CLASSIC' | 'FOCUS' = 'CLASSIC') {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_URL}/api/timer/start`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ classId }),
+      body: JSON.stringify({ classId, mode }),
     });
 
     if (!response.ok) {
@@ -38,11 +38,12 @@ export const timerApi = {
     return response.json();
   },
 
-  async pauseTimer() {
+  async pauseTimer(mode: 'CLASSIC' | 'FOCUS' = 'CLASSIC') {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_URL}/api/timer/pause`, {
       method: 'POST',
       headers,
+      body: JSON.stringify({ mode }),
     });
 
     if (!response.ok) {

@@ -35,6 +35,7 @@ export async function POST(request: Request) {
     }
 
     let classId: string | null = null;
+    let mode: string = "CLASSIC";
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     try {
       const body = await request.json();
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
       classId = typeof requestedClassId === "string" && uuidPattern.test(requestedClassId)
         ? requestedClassId
         : null;
+      mode = (body.mode === "FOCUS" || body.mode === "CLASSIC") ? body.mode : "CLASSIC";
     } catch {
     }
 
@@ -63,7 +65,10 @@ export async function POST(request: Request) {
     const existingSession = await prisma.studySession.findFirst({
       where: {
         userId: user.id,
-        isActive: true,
+        OR: [
+          { mode, isActive: true },
+          { mode: null, isActive: true }, // Handle legacy sessions without mode
+        ],
       },
     });
 
@@ -78,6 +83,7 @@ export async function POST(request: Request) {
       data: {
         userId: user.id,
         classId,
+        mode,
         startedAt: new Date(),
         isActive: true,
         createdDate: new Date(),
@@ -89,6 +95,8 @@ export async function POST(request: Request) {
       sessionId: session.id,
       startedAt: session.startedAt,
       classId: session.classId,
+      mode: session.mode,
+      sessionDuration: 0,
     });
   } catch (error) {
     console.error("Start timer error:", error);

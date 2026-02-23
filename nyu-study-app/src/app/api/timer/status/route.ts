@@ -14,11 +14,17 @@ export async function GET(request: Request) {
       );
     }
 
-    // Get active session
+    const url = new URL(request.url);
+    const mode = url.searchParams.get("mode") === "FOCUS" ? "FOCUS" : "CLASSIC";
+
+    // Get active session (handle both NULL and explicit mode values)
     const activeSession = await prisma.studySession.findFirst({
       where: {
         userId: user.id,
-        isActive: true,
+        OR: [
+          { mode, isActive: true },
+          { mode: null, isActive: true }, // Handle legacy sessions without mode
+        ],
       },
       include: {
         class: {
@@ -47,7 +53,9 @@ export async function GET(request: Request) {
       isActive: boolean;
       startedAt?: Date;
       currentDuration?: number;
+      currentSessionDuration?: number;
       totalSecondsToday: number;
+      lastSessionDuration?: number;
       currentClass?: {
         id: string;
         name: string;
@@ -65,7 +73,27 @@ export async function GET(request: Request) {
       );
       response.startedAt = activeSession.startedAt;
       response.currentDuration = currentDuration;
+      response.currentSessionDuration = currentDuration;
       response.currentClass = activeSession.class;
+    } else {
+      // If no active session, get the last paused session's duration for display
+      const lastSession = await prisma.studySession.findFirst({
+        where: {
+          userId: user.id,
+          OR: [
+            { mode, createdDate: { gte: today } },
+            { mode: null, createdDate: { gte: today } }, // Handle legacy sessions without mode
+          ],
+        },
+        orderBy: { startedAt: 'desc' },
+      });
+
+      if (lastSession && lastSession.durationSeconds > 0) {
+        response.lastSessionDuration = lastSession.durationSeconds;
+        response.currentSessionDuration = lastSession.durationSeconds;
+      } else {
+        response.currentSessionDuration = 0;
+      }
     }
 
     return NextResponse.json(response);

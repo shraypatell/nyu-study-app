@@ -2,15 +2,17 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/authStore';
+import { GlassCard, GlassButton, GlassInput } from '../../components';
+import { AnimatedGradientBackground } from '../../components/AnimatedGradientBackground';
+import { colors, spacing, typography } from '../../theme/colors';
 
 interface SignupScreenProps {
   navigation: any;
@@ -24,6 +26,7 @@ export default function SignupScreen({ navigation }: SignupScreenProps) {
   const [success, setSuccess] = useState(false);
   
   const { signUp, isLoading } = useAuthStore();
+  const insets = useSafeAreaInsets();
 
   const validateEmail = (email: string): boolean => {
     return email.endsWith('@nyu.edu');
@@ -53,7 +56,7 @@ export default function SignupScreen({ navigation }: SignupScreenProps) {
     }
     
     if (!validateUsername(username)) {
-      setError('Username must be 3-20 characters (letters, numbers, underscores)');
+      setError('Username must be 3-20 characters, alphanumeric/underscore only');
       return;
     }
     
@@ -70,102 +73,95 @@ export default function SignupScreen({ navigation }: SignupScreenProps) {
     }
   };
 
-  if (success) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.content}>
-          <Text style={styles.title}>Welcome to Rally!</Text>
-          <Text style={styles.message}>
-            Please check your email to verify your account before logging in.
-          </Text>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => navigation.navigate('Login')}
-          >
-            <Text style={styles.buttonText}>Go to Login</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.content}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join the NYU study community</Text>
-          
-          <View style={styles.form}>
-            {error ? (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            ) : null}
+    <AnimatedGradientBackground>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <ScrollView 
+          contentContainerStyle={[
+            styles.scrollContent, 
+            { paddingTop: insets.top + 40, paddingBottom: insets.bottom + 40 }
+          ]}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.content}>
+            <Text style={styles.title}>Join Rally</Text>
+            <Text style={styles.subtitle}>Study together. Achieve more.</Text>
             
-            <TextInput
-              style={styles.input}
-              placeholder="NYU Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              editable={!isLoading}
-            />
-            
-            <TextInput
-              style={styles.input}
-              placeholder="Username"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-              editable={!isLoading}
-            />
-            
-            <TextInput
-              style={styles.input}
-              placeholder="Password (min 8 characters)"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              editable={!isLoading}
-            />
-            
-            <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
-              onPress={handleSignup}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Sign Up</Text>
-              )}
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.linkButton}
-              onPress={() => navigation.navigate('Login')}
-              disabled={isLoading}
-            >
-              <Text style={styles.linkText}>
-                Already have an account? Log in
-              </Text>
-            </TouchableOpacity>
+            {success ? (
+              <GlassCard style={styles.form}>
+                <Text style={styles.message}>
+                  Check your NYU email to confirm your account!
+                </Text>
+                <GlassButton
+                  title="Back to Login"
+                  onPress={() => navigation.navigate('Login')}
+                  style={styles.button}
+                />
+              </GlassCard>
+            ) : (
+              <GlassCard style={styles.form}>
+                {error ? (
+                  <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>{error}</Text>
+                  </View>
+                ) : null}
+                
+                <GlassInput
+                  placeholder="NYU Email"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  editable={!isLoading}
+                />
+                
+                <GlassInput
+                  placeholder="Username"
+                  value={username}
+                  onChangeText={setUsername}
+                  autoCapitalize="none"
+                  editable={!isLoading}
+                />
+                
+                <GlassInput
+                  placeholder="Password (min 8 characters)"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  editable={!isLoading}
+                />
+                
+                <GlassButton
+                  title={isLoading ? '' : 'Sign Up'}
+                  onPress={handleSignup}
+                  loading={isLoading}
+                  style={styles.button}
+                />
+                
+                <GlassButton
+                  title="Already have an account? Log in"
+                  onPress={() => navigation.navigate('Login')}
+                  variant="ghost"
+                  style={styles.linkButton}
+                />
+              </GlassCard>
+            )}
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </AnimatedGradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+  },
+  keyboardView: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
@@ -173,74 +169,49 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
-    padding: 24,
+    paddingHorizontal: spacing.xl,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: typography.xxxl,
+    fontWeight: '700',
     textAlign: 'center',
-    color: '#111',
-    marginBottom: 8,
+    color: colors.foreground,
+    marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: typography.md,
     textAlign: 'center',
-    color: '#666',
-    marginBottom: 48,
+    color: colors.foreground,
+    opacity: 0.8,
+    marginBottom: spacing.xxl,
   },
   message: {
-    fontSize: 16,
+    fontSize: typography.md,
     textAlign: 'center',
-    color: '#666',
-    marginBottom: 32,
+    color: colors.foreground,
+    marginBottom: spacing.xl,
     lineHeight: 24,
   },
   form: {
     width: '100%',
-    maxWidth: 320,
+    maxWidth: 340,
     alignSelf: 'center',
   },
   errorContainer: {
-    backgroundColor: '#fee2e2',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    padding: spacing.md,
+    borderRadius: 12,
+    marginBottom: spacing.lg,
   },
   errorText: {
-    color: '#dc2626',
-    fontSize: 14,
+    color: colors.error,
+    fontSize: typography.sm,
     textAlign: 'center',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#e5e5e5',
-    borderRadius: 8,
-    padding: 16,
-    fontSize: 16,
-    marginBottom: 12,
-    backgroundColor: '#fafafa',
-  },
   button: {
-    backgroundColor: '#111',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    marginTop: spacing.md,
   },
   linkButton: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  linkText: {
-    color: '#666',
-    fontSize: 14,
+    marginTop: spacing.md,
   },
 });

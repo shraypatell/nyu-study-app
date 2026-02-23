@@ -45,6 +45,7 @@ model StudySession {
   id              String    @id @default(uuid())
   userId          String    @map("user_id")
   classId         String?   @map("class_id")
+  mode            String    @default("CLASSIC") @map("mode")
   startedAt       DateTime  @map("started_at")
   endedAt         DateTime? @map("ended_at")
   durationSeconds Int       @default(0) @map("duration_seconds")
@@ -54,6 +55,7 @@ model StudySession {
   user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   class Class? @relation(fields: [classId], references: [id], onDelete: SetNull)
 
+  @@index([userId, mode, isActive])
   @@index([userId, createdDate])
   @@index([isActive])
   @@index([classId])

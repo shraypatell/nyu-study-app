@@ -1,0 +1,43 @@
+export const FOCUS = {
+  bg: '#0B0B0E',
+  surface: '#16161A',
+  border: '#2A2A2E',
+  text: '#FAFAF9',
+  muted: '#6B6B70',
+  dimmed: '#4A4A50',
+  indigo: '#6366F1',
+  green: '#32D583',
+  red: '#E85A4F',
+  amber: '#FFB547',
+  tabBar: '#1A1A1E',
+  tabBarBorder: '#2A2A2E',
+  tabBarActive: '#FAFAF9',
+  tabBarInactive: '#6B6B6F',
+  segControl: '#16161A',
+  segActive: '#FAFAF9',
+  segActiveText: '#0B0B0E',
+  segInactiveText: '#6B6B70',
+};
+
+export const CLASSIC = {
+  bg: '#F5F0E8',
+  surface: '#F5EFE5',
+  border: '#E8DCD0',
+  text: '#1A1A1A',
+  muted: '#6B6B70',
+  dimmed: '#9A9A9E',
+  indigo: '#6366F1',
+  green: '#32D583',
+  red: '#E85A4F',
+  amber: '#D97706',
+  tabBar: '#F5EFE5',
+  tabBarBorder: '#E8DCD0',
+  tabBarActive: '#1A1A1A',
+  tabBarInactive: '#8A8A8E',
+  segControl: '#EDE7DC',
+  segActive: '#1A1A1A',
+  segActiveText: '#FAFAF9',
+  segInactiveText: '#6B6B70',
+};
+
+export type Theme = typeof FOCUS;

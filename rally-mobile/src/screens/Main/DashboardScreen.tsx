@@ -1,60 +1,141 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/authStore';
+import { timerApi } from '../../api/timer';
+import { GlassCard, GlassButton, Text } from '../../components';
+import { colors, spacing } from '../../theme/colors';
+
+interface TimerStatus {
+  isActive: boolean;
+  totalSecondsToday: number;
+  currentDuration?: number;
+}
 
 export default function DashboardScreen({ navigation }: any) {
   const { user } = useAuthStore();
+  const [timerStatus, setTimerStatus] = useState<TimerStatus | null>(null);
+  const [loading, setLoading] = useState(true);
+  const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    fetchTimerStatus();
+  }, []);
+
+  const fetchTimerStatus = async () => {
+    try {
+      const status = await timerApi.getStatus();
+      setTimerStatus(status);
+    } catch (error) {
+      console.error('Failed to fetch timer status:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
+    >
       <View style={styles.header}>
-        <Text style={styles.greeting}>
+        <Text variant="h1">
           Welcome{user?.displayName ? `, ${user.displayName}` : ''}
         </Text>
-        <Text style={styles.subtitle}>@{user?.username || 'user'}</Text>
+        <Text variant="bodySmall" style={{ marginTop: spacing.xs }}>
+          @{user?.username || 'user'}
+        </Text>
       </View>
 
       <TouchableOpacity 
-        style={styles.timerCard}
         onPress={() => navigation.navigate('Timer')}
+        activeOpacity={0.9}
       >
-        <Text style={styles.timerCardTitle}>Start Studying</Text>
-        <Text style={styles.timerCardSubtitle}>
-          Tap to open timer with FOCUS or CLASSIC mode
-        </Text>
+        <GlassCard style={styles.timerCard}>
+          {timerStatus?.isActive ? (
+            <>
+              <Text variant="h3" style={{ color: colors.accent }}>Timer Running</Text>
+              <Text variant="bodySmall" style={{ marginTop: spacing.xs }}>
+                {formatTime(timerStatus.currentDuration || 0)} - Tap to manage
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text variant="h3">Start Studying</Text>
+              <Text variant="bodySmall" style={{ marginTop: spacing.xs }}>
+                Tap to start a focus session
+              </Text>
+            </>
+          )}
+        </GlassCard>
       </TouchableOpacity>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Stats</Text>
-        <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>0h</Text>
-            <Text style={styles.statLabel}>Today</Text>
+        <Text variant="label" style={styles.sectionLabel}>Today's Stats</Text>
+        {loading ? (
+          <ActivityIndicator style={{ marginTop: spacing.lg }} />
+        ) : (
+          <View style={styles.statsGrid}>
+            <GlassCard style={styles.statCard}>
+              <Text variant="h2" style={{ color: colors.primary }}>
+                {formatTime(timerStatus?.totalSecondsToday || 0)}
+              </Text>
+              <Text variant="caption" style={{ marginTop: spacing.xs }}>Today</Text>
+            </GlassCard>
+            <GlassCard style={styles.statCard}>
+              <Text variant="h2" style={{ color: timerStatus?.isActive ? colors.accent : colors.textSecondary }}>
+                {timerStatus?.isActive ? 'Active' : 'Idle'}
+              </Text>
+              <Text variant="caption" style={{ marginTop: spacing.xs }}>Status</Text>
+            </GlassCard>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>0h</Text>
-            <Text style={styles.statLabel}>This Week</Text>
-          </View>
+        )}
+      </View>
+
+      <View style={styles.section}>
+        <Text variant="label" style={styles.sectionLabel}>Quick Actions</Text>
+        <View style={styles.actionsGrid}>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('Timer')}
+            activeOpacity={0.8}
+          >
+            <GlassCard style={styles.actionCard}>
+              <Text variant="body" style={{ fontWeight: '600' }}>Start Timer</Text>
+            </GlassCard>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('Friends')}
+            activeOpacity={0.8}
+          >
+            <GlassCard style={styles.actionCard}>
+              <Text variant="body" style={{ fontWeight: '600' }}>Add Friends</Text>
+            </GlassCard>
+          </TouchableOpacity>
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Leaderboard Preview</Text>
-        <Text style={styles.comingSoon}>Leaderboards coming soon...</Text>
+        <GlassButton
+          title="Log Out"
+          onPress={() => useAuthStore.getState().signOut()}
+          variant="outline"
+        />
       </View>
-
-      <TouchableOpacity
-        style={styles.logoutButton}
-        onPress={() => useAuthStore.getState().signOut()}
-      >
-        <Text style={styles.logoutText}>Log Out</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -62,83 +143,41 @@ export default function DashboardScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   header: {
-    padding: 24,
-    paddingTop: 48,
-  },
-  greeting: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#111',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 4,
+    padding: spacing.xl,
+    paddingTop: spacing.xl,
   },
   timerCard: {
-    margin: 24,
-    marginTop: 0,
-    padding: 24,
-    backgroundColor: '#111',
-    borderRadius: 16,
-  },
-  timerCardTitle: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  timerCardSubtitle: {
-    color: '#999',
-    fontSize: 14,
-    marginTop: 4,
+    marginHorizontal: spacing.xl,
+    marginBottom: spacing.xl,
+    alignItems: 'center',
+    paddingVertical: spacing.xxl,
   },
   section: {
-    padding: 24,
-    paddingTop: 0,
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.xl,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
+  sectionLabel: {
+    marginBottom: spacing.md,
   },
   statsGrid: {
     flexDirection: 'row',
-    gap: 12,
+    gap: spacing.md,
   },
   statCard: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
     alignItems: 'center',
+    paddingVertical: spacing.lg,
   },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  actionsGrid: {
+    flexDirection: 'row',
+    gap: spacing.md,
   },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  comingSoon: {
-    color: '#999',
-    fontSize: 14,
-  },
-  logoutButton: {
-    margin: 24,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#e5e5e5',
-    borderRadius: 8,
+  actionCard: {
+    flex: 1,
     alignItems: 'center',
-  },
-  logoutText: {
-    color: '#666',
-    fontSize: 16,
-    fontWeight: '600',
+    paddingVertical: spacing.lg,
   },
 });

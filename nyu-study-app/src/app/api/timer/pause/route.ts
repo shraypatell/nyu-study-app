@@ -36,11 +36,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // Find active session
+    let mode: string = "CLASSIC";
+    try {
+      const body = await request.json();
+      mode = (body.mode === "FOCUS" || body.mode === "CLASSIC") ? body.mode : "CLASSIC";
+    } catch {
+    }
+
+    // Find active session (handle both NULL and explicit mode values)
     const activeSession = await prisma.studySession.findFirst({
       where: {
         userId: user.id,
-        isActive: true,
+        OR: [
+          { mode, isActive: true },
+          { mode: null, isActive: true }, // Handle legacy sessions without mode
+        ],
       },
     });
 
@@ -92,6 +102,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       totalDuration: durationSeconds,
+      sessionDuration: durationSeconds,
     });
   } catch (error) {
     console.error("Pause timer error:", error);

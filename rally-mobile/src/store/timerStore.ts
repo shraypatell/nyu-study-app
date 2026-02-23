@@ -7,6 +7,7 @@ interface ModeTimer {
   isActive: boolean;
   elapsedTime: number;
   totalTimeToday: number;
+  sessionDuration: number;
 }
 
 interface TimerState {
@@ -24,6 +25,7 @@ interface TimerState {
   pauseTimer: () => Promise<void>;
   resetTimer: () => void;
   incrementElapsed: (seconds: number) => void;
+  incrementSessionDuration: (seconds: number) => void;
   setCurrentClass: (classInfo: { id: string; name: string; code: string } | null) => void;
   syncStatus: () => Promise<void>;
 }
@@ -34,11 +36,13 @@ export const useTimerStore = create<TimerState>((set, get) => ({
       isActive: false,
       elapsedTime: 0,
       totalTimeToday: 0,
+      sessionDuration: 0,
     },
     FOCUS: {
       isActive: false,
       elapsedTime: 0,
       totalTimeToday: 0,
+      sessionDuration: 0,
     },
   },
   mode: 'CLASSIC',
@@ -67,6 +71,7 @@ export const useTimerStore = create<TimerState>((set, get) => ({
             [s.mode]: {
               ...s.timers[s.mode],
               isActive: true,
+              sessionDuration: 0,
             },
           },
           isLoading: false,
@@ -92,6 +97,7 @@ export const useTimerStore = create<TimerState>((set, get) => ({
               ...s.timers[s.mode],
               isActive: false,
               totalTimeToday: s.timers[s.mode].totalTimeToday + response.totalDuration,
+              sessionDuration: response.sessionDuration || response.totalDuration,
             },
           },
           isLoading: false,
@@ -123,6 +129,19 @@ export const useTimerStore = create<TimerState>((set, get) => ({
         [s.mode]: {
           ...s.timers[s.mode],
           elapsedTime: s.timers[s.mode].elapsedTime + seconds,
+          sessionDuration: s.timers[s.mode].sessionDuration + seconds,
+        },
+      },
+    }));
+  },
+
+  incrementSessionDuration: (seconds) => {
+    set((s) => ({
+      timers: {
+        ...s.timers,
+        [s.mode]: {
+          ...s.timers[s.mode],
+          sessionDuration: s.timers[s.mode].sessionDuration + seconds,
         },
       },
     }));
@@ -147,6 +166,7 @@ export const useTimerStore = create<TimerState>((set, get) => ({
               status.isActive && status.startedAt
                 ? Math.floor((new Date().getTime() - new Date(status.startedAt).getTime()) / 1000)
                 : status.lastSessionDuration || s.timers[mode].elapsedTime,
+            sessionDuration: status.currentSessionDuration || 0,
           },
         },
       }));
