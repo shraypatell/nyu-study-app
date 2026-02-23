@@ -14,6 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { leaderboardsApi } from '../../api/leaderboards';
 import { useAppStore } from '../../store/appStore';
 import { useAppTheme } from '../../theme/ThemeContext';
+import { LocationLeaderboard } from '../../components/LocationLeaderboard';
+import { useTimerStore } from '../../store/timerStore';
 
 const PALETTE: string[] = ['#6366F1', '#E85A4F', '#32D583', '#F59E0B', '#8B5CF6'];
 
@@ -47,9 +49,14 @@ export default function LeaderboardsScreen() {
   const [loading, setLoading] = useState(true);
   const insets = useSafeAreaInsets();
   const { selectedLocation } = useAppStore();
+  const { isActive: timerActive } = useTimerStore((state) => ({ isActive: state.timers[state.mode].isActive }));
   const { t, animBg, statusBarStyle } = useAppTheme();
 
-  useEffect(() => { fetchLeaderboard(); }, [activeTab, selectedLocation]);
+  useEffect(() => {
+    if (activeTab === 'school') {
+      fetchLeaderboard();
+    }
+  }, [activeTab, selectedLocation]);
 
   const fetchLeaderboard = async () => {
     try {
@@ -87,25 +94,38 @@ export default function LeaderboardsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.title, { color: t.text }]}>Leaderboard</Text>
+        </View>
+
+        {/* Leaderboard Tabs */}
+        <View style={[styles.tabBar, { backgroundColor: t.segControl }]}>
           <TouchableOpacity
-            style={[styles.periodBadge, { backgroundColor: t.surface, borderColor: t.border }]}
-            onPress={() => selectedLocation && setActiveTab(activeTab === 'school' ? 'location' : 'school')}
+            style={[styles.tab, activeTab === 'school' && [styles.tabActive, { backgroundColor: t.segActive }]]}
+            onPress={() => setActiveTab('school')}
             activeOpacity={0.8}
           >
-            <Text style={[styles.periodText, { color: t.text }]}>
-              {activeTab === 'location' && selectedLocation ? selectedLocation.name : 'This Week'}
+            <Text style={[styles.tabLabel, { color: activeTab === 'school' ? t.segActiveText : t.segInactiveText, fontWeight: activeTab === 'school' ? '600' : '500' }]}>
+              School
             </Text>
-            <Ionicons name="chevron-down" size={14} color={t.muted} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'location' && [styles.tabActive, { backgroundColor: t.segActive }]]}
+            onPress={() => setActiveTab('location')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.tabLabel, { color: activeTab === 'location' ? t.segActiveText : t.segInactiveText, fontWeight: activeTab === 'location' ? '600' : '500' }]}>
+              Location
+            </Text>
           </TouchableOpacity>
         </View>
 
-        {loading ? (
-          <ActivityIndicator size="large" color={t.indigo} style={{ marginTop: 60 }} />
-        ) : (
-          <>
-            {/* Podium */}
-            {top3.length > 0 && (
-              <View style={styles.podium}>
+        {activeTab === 'school' ? (
+          loading ? (
+            <ActivityIndicator size="large" color={t.indigo} style={{ marginTop: 60 }} />
+          ) : (
+            <>
+              {/* Podium */}
+              {top3.length > 0 && (
+                <View style={styles.podium}>
                 {podiumOrder.map((entry, i) => {
                   if (!entry) return <View key={i} style={{ width: 100 }} />;
                   const name = entry.displayName || entry.username;
@@ -182,13 +202,24 @@ export default function LeaderboardsScreen() {
               </>
             )}
 
-            {entries.length === 0 && (
-              <View style={[styles.emptyCard, { backgroundColor: t.surface }]}>
-                <Text style={[styles.emptyText, { color: t.text }]}>No leaderboard data yet</Text>
-                <Text style={[styles.emptySubText, { color: t.muted }]}>Start studying to appear on the leaderboard!</Text>
-              </View>
-            )}
-          </>
+              {entries.length === 0 && (
+                <View style={[styles.emptyCard, { backgroundColor: t.surface }]}>
+                  <Text style={[styles.emptyText, { color: t.text }]}>No leaderboard data yet</Text>
+                  <Text style={[styles.emptySubText, { color: t.muted }]}>Start studying to appear on the leaderboard!</Text>
+                </View>
+              )}
+            </>
+          )
+        ) : selectedLocation ? (
+          <LocationLeaderboard
+            locationId={selectedLocation.id}
+            timerActive={timerActive}
+          />
+        ) : (
+          <View style={[styles.emptyCard, { backgroundColor: t.surface }]}>
+            <Text style={[styles.emptyText, { color: t.text }]}>No location selected</Text>
+            <Text style={[styles.emptySubText, { color: t.muted }]}>Select a location to view its leaderboard</Text>
+          </View>
         )}
       </ScrollView>
     </Animated.View>
@@ -221,4 +252,8 @@ const styles = StyleSheet.create({
   emptyCard: { borderRadius: 20, padding: 32, alignItems: 'center', marginTop: 20 },
   emptyText: { fontSize: 16, fontWeight: '600', marginBottom: 6 },
   emptySubText: { fontSize: 13, textAlign: 'center' },
+  tabBar: { flexDirection: 'row', borderRadius: 12, padding: 4, height: 44, marginBottom: 20 },
+  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
+  tabActive: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 2 },
+  tabLabel: { fontSize: 14 },
 });
