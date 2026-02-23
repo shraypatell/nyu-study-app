@@ -166,7 +166,8 @@ export const useTimerStore = create<TimerState>((set, get) => ({
               status.isActive && status.startedAt
                 ? Math.floor((new Date().getTime() - new Date(status.startedAt).getTime()) / 1000)
                 : status.lastSessionDuration || s.timers[mode].elapsedTime,
-            sessionDuration: status.currentSessionDuration || 0,
+            // Only sync session duration if timer is paused to avoid jumping during active sessions
+            sessionDuration: !status.isActive ? (status.currentSessionDuration || 0) : s.timers[mode].sessionDuration,
           },
         },
       }));

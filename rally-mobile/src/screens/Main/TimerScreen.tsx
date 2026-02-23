@@ -169,10 +169,6 @@ export default function TimerScreen() {
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <View style={styles.controls}>
-          <TouchableOpacity style={[styles.resetBtn, { backgroundColor: t.surface, borderColor: t.border }]} onPress={resetTimer} activeOpacity={0.7}>
-            <Ionicons name="refresh" size={20} color={t.muted} />
-          </TouchableOpacity>
-
           <TouchableOpacity
             style={styles.startBtn}
             onPress={handleStartPause}
@@ -297,14 +293,6 @@ const styles = StyleSheet.create({
   },
   controls: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  resetBtn: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
