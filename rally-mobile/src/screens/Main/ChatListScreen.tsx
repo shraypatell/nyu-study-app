@@ -17,6 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { chatApi, ChatRoom } from '../../api/chat';
 import { useAppTheme } from '../../theme/ThemeContext';
+import { NewChatModal } from '../../components/NewChatModal';
 
 const PALETTE: string[] = ['#6366F1', '#E85A4F', '#32D583', '#F59E0B', '#8B5CF6'];
 
@@ -43,6 +44,7 @@ export default function ChatListScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showNewChat, setShowNewChat] = useState(false);
 
   const fetchRooms = async () => {
     try {
@@ -71,6 +73,17 @@ export default function ChatListScreen() {
     setRefreshing(false);
   };
 
+  const handleSelectFriend = async (friend: any) => {
+    try {
+      // TODO: Create or get existing chat room with this friend
+      // For now, just navigate to chat (in real app, would call API to create room)
+      console.log('Selected friend:', friend);
+      // navigation.navigate('ChatRoom', { roomId: room.id, roomName: room.name });
+    } catch (error) {
+      console.error('Error starting chat:', error);
+    }
+  };
+
   if (loading) {
     return (
       <Animated.View style={[styles.container, styles.centered, { backgroundColor: animBg, paddingTop: insets.top }]}>
@@ -93,7 +106,11 @@ export default function ChatListScreen() {
       >
         <View style={styles.header}>
           <Text style={[styles.title, { color: t.text }]}>Messages</Text>
-          <TouchableOpacity style={[styles.iconBtn, { backgroundColor: t.surface, borderColor: t.border }]} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={[styles.iconBtn, { backgroundColor: t.surface, borderColor: t.border }]}
+            onPress={() => setShowNewChat(true)}
+            activeOpacity={0.7}
+          >
             <Ionicons name="pencil-outline" size={20} color={t.muted} />
           </TouchableOpacity>
         </View>
@@ -161,6 +178,13 @@ export default function ChatListScreen() {
           </>
         )}
       </ScrollView>
+
+      {/* New Chat Modal */}
+      <NewChatModal
+        isOpen={showNewChat}
+        onClose={() => setShowNewChat(false)}
+        onSelectFriend={handleSelectFriend}
+      />
     </Animated.View>
   );
 }

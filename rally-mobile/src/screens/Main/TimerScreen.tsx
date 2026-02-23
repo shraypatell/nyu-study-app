@@ -18,6 +18,7 @@ import { useAppStore } from '../../store/appStore';
 import { useAppTheme } from '../../theme/ThemeContext';
 import { StudyContextDisplay } from '../../components/StudyContextDisplay';
 import { AppHeaderSelector } from '../../components/AppHeaderSelector';
+import { TimerSettingsModal } from '../../components/TimerSettingsModal';
 
 export default function TimerScreen() {
   const {
@@ -46,6 +47,7 @@ export default function TimerScreen() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const selectorRef = useRef<any>(null);
   const [syncing, setSyncing] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
@@ -130,9 +132,13 @@ export default function TimerScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.headerTitle, { color: t.text }]}>Focus</Text>
-          <View style={[styles.settingsBtn, { backgroundColor: t.surface, borderColor: t.border }]}>
+          <TouchableOpacity
+            style={[styles.settingsBtn, { backgroundColor: t.surface, borderColor: t.border }]}
+            onPress={() => setShowSettings(true)}
+            activeOpacity={0.7}
+          >
             <Ionicons name="settings-outline" size={20} color={t.muted} />
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Segmented Control */}
@@ -201,6 +207,9 @@ export default function TimerScreen() {
 
       {/* Context Selector Modal */}
       <AppHeaderSelector ref={selectorRef} showButton={false} />
+
+      {/* Timer Settings Modal */}
+      <TimerSettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </Animated.View>
   );
 }
