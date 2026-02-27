@@ -62,13 +62,11 @@ export async function POST(request: Request) {
       }
     }
 
+    // Check for any active session
     const existingSession = await prisma.studySession.findFirst({
       where: {
         userId: user.id,
-        OR: [
-          { mode, isActive: true },
-          { mode: null, isActive: true }, // Handle legacy sessions without mode
-        ],
+        isActive: true,
       },
     });
 

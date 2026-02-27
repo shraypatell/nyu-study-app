@@ -14,17 +14,11 @@ export async function GET(request: Request) {
       );
     }
 
-    const url = new URL(request.url);
-    const mode = url.searchParams.get("mode") === "FOCUS" ? "FOCUS" : "CLASSIC";
-
-    // Get active session (handle both NULL and explicit mode values)
+    // Get active session
     const activeSession = await prisma.studySession.findFirst({
       where: {
         userId: user.id,
-        OR: [
-          { mode, isActive: true },
-          { mode: null, isActive: true }, // Handle legacy sessions without mode
-        ],
+        isActive: true,
       },
       include: {
         class: {
@@ -80,10 +74,9 @@ export async function GET(request: Request) {
       const lastSession = await prisma.studySession.findFirst({
         where: {
           userId: user.id,
-          OR: [
-            { mode, createdDate: { gte: today } },
-            { mode: null, createdDate: { gte: today } }, // Handle legacy sessions without mode
-          ],
+          isActive: false,
+          durationSeconds: { gt: 0 },
+          startedAt: { gte: today },
         },
         orderBy: { startedAt: 'desc' },
       });

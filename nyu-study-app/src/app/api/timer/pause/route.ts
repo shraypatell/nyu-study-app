@@ -36,21 +36,11 @@ export async function POST(request: Request) {
       );
     }
 
-    let mode: string = "CLASSIC";
-    try {
-      const body = await request.json();
-      mode = (body.mode === "FOCUS" || body.mode === "CLASSIC") ? body.mode : "CLASSIC";
-    } catch {
-    }
-
-    // Find active session (handle both NULL and explicit mode values)
+    // Find any active session
     const activeSession = await prisma.studySession.findFirst({
       where: {
         userId: user.id,
-        OR: [
-          { mode, isActive: true },
-          { mode: null, isActive: true }, // Handle legacy sessions without mode
-        ],
+        isActive: true,
       },
     });
 
