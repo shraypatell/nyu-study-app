@@ -14,38 +14,33 @@ export async function GET(request: Request) {
       );
     }
 
-    const totalStats = await prisma.dailyStat.aggregate({
+    // Get total seconds from study sessions (more reliable)
+    const sessionStats = await prisma.studySession.aggregate({
       where: {
         userId: user.id,
+        endedAt: { not: null },
+        durationSeconds: { gt: 0 },
       },
       _sum: {
-        totalSeconds: true,
+        durationSeconds: true,
       },
     });
 
     const totalSessions = await prisma.studySession.count({
       where: {
         userId: user.id,
-        endedAt: {
-          not: null,
-        },
+        endedAt: { not: null },
       },
     });
 
+    // Get daily stats for streak calculation
     const dailyStats = await prisma.dailyStat.findMany({
       where: {
         userId: user.id,
-        totalSeconds: {
-          gt: 0,
-        },
+        totalSeconds: { gt: 0 },
       },
-      orderBy: {
-        date: "desc",
-      },
-      select: {
-        date: true,
-        totalSeconds: true,
-      },
+      orderBy: { date: "desc" },
+      select: { date: true, totalSeconds: true },
     });
 
     let currentStreak = 0;
@@ -63,14 +58,11 @@ export async function GET(request: Request) {
 
     if (canStartStreak) {
       currentStreak = 1;
-      
       for (let i = 1; i < dailyStats.length; i++) {
         const currentDate = dailyStats[i - 1].date;
         const previousDate = dailyStats[i].date;
-        
         const expectedPreviousDate = new Date(currentDate);
         expectedPreviousDate.setDate(expectedPreviousDate.getDate() - 1);
-        
         if (previousDate.toISOString().split("T")[0] === expectedPreviousDate.toISOString().split("T")[0]) {
           currentStreak++;
         } else {
@@ -79,22 +71,20 @@ export async function GET(request: Request) {
       }
     }
 
+    // Get today's seconds
     let todaySeconds = 0;
-    const todayStatEntry = dailyStats.find(
+    const todayStat = dailyStats.find(
       (stat) => stat.date.toISOString().split("T")[0] === today.toISOString().split("T")[0]
     );
-    if (todayStatEntry) {
-      todaySeconds = todayStatEntry.totalSeconds;
+    if (todayStat) {
+      todaySeconds = todayStat.totalSeconds;
     }
 
     const activeSession = await prisma.studySession.findFirst({
-      where: {
-        userId: user.id,
-        isActive: true,
-      },
+      where: { userId: user.id, isActive: true },
     });
 
-    const totalSeconds = totalStats._sum.totalSeconds || 0;
+    const totalSeconds = sessionStats._sum.durationSeconds || 0;
 
     return NextResponse.json({
       totalHours: Math.floor(totalSeconds / 3600),

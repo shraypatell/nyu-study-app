@@ -35,8 +35,7 @@ export default function ProfileScreen() {
       const data = await statsApi.getStats();
       setStats(data);
     } catch (error) {
-      console.error('Error loading stats:', error);
-      // Set default stats so the UI doesn't break
+      // Use default stats if API fails
       setStats({
         totalHours: 0,
         totalMinutes: 0,
