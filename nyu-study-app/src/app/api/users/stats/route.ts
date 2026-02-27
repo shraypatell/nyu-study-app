@@ -8,7 +8,6 @@ export async function GET(request: Request) {
     const user = await getAuthenticatedUser(request);
 
     if (!user) {
-      console.warn("Stats endpoint: No authenticated user found");
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -80,14 +79,13 @@ export async function GET(request: Request) {
       }
     }
 
-    const todayStat = await prisma.dailyStat.findUnique({
-      where: {
-        userId_date: {
-          userId: user.id,
-          date: today,
-        },
-      },
-    });
+    let todaySeconds = 0;
+    const todayStatEntry = dailyStats.find(
+      (stat) => stat.date.toISOString().split("T")[0] === today.toISOString().split("T")[0]
+    );
+    if (todayStatEntry) {
+      todaySeconds = todayStatEntry.totalSeconds;
+    }
 
     const activeSession = await prisma.studySession.findFirst({
       where: {
@@ -97,7 +95,6 @@ export async function GET(request: Request) {
     });
 
     const totalSeconds = totalStats._sum.totalSeconds || 0;
-    const todaySeconds = todayStat?.totalSeconds || 0;
 
     return NextResponse.json({
       totalHours: Math.floor(totalSeconds / 3600),
