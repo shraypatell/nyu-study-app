@@ -14,11 +14,16 @@ export async function GET(request: Request) {
       );
     }
 
-    // Get active session
+    const url = new URL(request.url);
+    const requestedMode = url.searchParams.get("mode");
+    const mode = requestedMode === "FOCUS" ? "FOCUS" : "CLASSIC";
+
+    // Get active session for the specified mode
     const activeSession = await prisma.studySession.findFirst({
       where: {
         userId: user.id,
         isActive: true,
+        mode: mode,
       },
       include: {
         class: {
@@ -70,11 +75,12 @@ export async function GET(request: Request) {
       response.currentSessionDuration = currentDuration;
       response.currentClass = activeSession.class;
     } else {
-      // If no active session, get the last paused session's duration for display
+      // Get last session for this mode
       const lastSession = await prisma.studySession.findFirst({
         where: {
           userId: user.id,
           isActive: false,
+          mode: mode,
           durationSeconds: { gt: 0 },
           startedAt: { gte: today },
         },

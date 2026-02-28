@@ -62,17 +62,18 @@ export async function POST(request: Request) {
       }
     }
 
-    // Check for any active session
+    // Check for existing active session for this specific mode
     const existingSession = await prisma.studySession.findFirst({
       where: {
         userId: user.id,
         isActive: true,
+        mode: mode,
       },
     });
 
     if (existingSession) {
       return NextResponse.json(
-        { error: "Timer is already running", sessionId: existingSession.id },
+        { error: "Timer is already running in this mode", sessionId: existingSession.id },
         { status: 400 }
       );
     }
