@@ -47,23 +47,22 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { id: classId } = await params;
     const user = await getAuthenticatedUser(request);
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const location = await prisma.location.findUnique({
-      where: { id, isActive: true },
-      include: {
-        parent: { select: { id: true, name: true, slug: true } },
-      },
+    // Verify class exists
+    const classRecord = await prisma.class.findUnique({
+      where: { id: classId, isActive: true },
+      select: { id: true, name: true, code: true, section: true, semester: true },
     });
 
-    if (!location) {
+    if (!classRecord) {
       return NextResponse.json(
-        { error: "Location not found" },
+        { error: "Class not found" },
         { status: 404 }
       );
     }
@@ -74,21 +73,16 @@ export async function GET(
 
     const periodStart = getPeriodStart(period);
 
-    // Get users at this location
-    const userLocations = await prisma.userLocation.findMany({
-      where: { locationId: id, isPublic: true },
+    // Get users who have joined this class
+    const userClasses = await prisma.userClass.findMany({
+      where: { classId },
       select: { userId: true },
     });
 
-    const locationUserIds = userLocations.map((ul) => ul.userId);
-    if (locationUserIds.length === 0) {
+    const classUserIds = userClasses.map((uc) => uc.userId);
+    if (classUserIds.length === 0) {
       return NextResponse.json({
-        location: {
-          id: location.id,
-          name: location.name,
-          slug: location.slug,
-          parent: location.parent,
-        },
+        class: classRecord,
         leaderboard: [],
         currentUserEntry: null,
         period,
@@ -98,9 +92,10 @@ export async function GET(
       });
     }
 
-    // Aggregate completed session durations per user
+    // Aggregate completed session durations for THIS CLASS specifically
     const sessionWhere: any = {
-      userId: { in: locationUserIds },
+      userId: { in: classUserIds },
+      classId,
       mode,
       isActive: false,
       durationSeconds: { gt: 0 },
@@ -120,9 +115,14 @@ export async function GET(
       sessionMap.set(row.userId, row._sum.durationSeconds || 0);
     }
 
-    // Get active sessions
+    // Get active sessions for this class
     const activeSessions = await prisma.studySession.findMany({
-      where: { userId: { in: locationUserIds }, mode, isActive: true },
+      where: {
+        userId: { in: classUserIds },
+        classId,
+        mode,
+        isActive: true,
+      },
       select: { userId: true, startedAt: true },
     });
 
@@ -133,47 +133,44 @@ export async function GET(
 
     // Fetch user details
     const users = await prisma.user.findMany({
-      where: { id: { in: locationUserIds } },
+      where: { id: { in: classUserIds } },
       select: {
         id: true,
         username: true,
         displayName: true,
         avatarUrl: true,
         isTimerPublic: true,
-        isLocationPublic: true,
       },
     });
 
     const now = Date.now();
 
-    const leaderboard = users
-      .map((u) => {
-        const baseSeconds = sessionMap.get(u.id) || 0;
-        const activeStart = activeMap.get(u.id);
-        const isActive = !!activeStart;
-        const liveSessionSeconds =
-          isActive && activeStart
-            ? Math.floor((now - new Date(activeStart).getTime()) / 1000)
-            : 0;
-        const totalLiveSeconds = baseSeconds + liveSessionSeconds;
+    const leaderboard = users.map((u) => {
+      const baseSeconds = sessionMap.get(u.id) || 0;
+      const activeStart = activeMap.get(u.id);
+      const isActive = !!activeStart;
+      const liveSessionSeconds =
+        isActive && activeStart
+          ? Math.floor((now - new Date(activeStart).getTime()) / 1000)
+          : 0;
+      const totalLiveSeconds = baseSeconds + liveSessionSeconds;
 
-        return {
-          userId: u.id,
-          username: u.username,
-          displayName: u.displayName,
-          avatarUrl: u.avatarUrl,
-          totalSeconds: baseSeconds,
-          totalLiveSeconds,
-          isTimerPublic: u.isTimerPublic,
-          isActive,
-          session:
-            isActive && activeStart
-              ? { startedAt: activeStart, endedAt: null, isActive: true }
-              : null,
-          isCurrentUser: u.id === user.id,
-        };
-      })
-      .filter((e) => e.totalLiveSeconds > 0 || e.isCurrentUser);
+      return {
+        userId: u.id,
+        username: u.username,
+        displayName: u.displayName,
+        avatarUrl: u.avatarUrl,
+        totalSeconds: baseSeconds,
+        totalLiveSeconds,
+        isTimerPublic: u.isTimerPublic,
+        isActive,
+        session:
+          isActive && activeStart
+            ? { startedAt: activeStart, endedAt: null, isActive: true }
+            : null,
+        isCurrentUser: u.id === user.id,
+      };
+    });
 
     leaderboard.sort((a, b) => b.totalLiveSeconds - a.totalLiveSeconds);
 
@@ -194,12 +191,7 @@ export async function GET(
         : null;
 
     return NextResponse.json({
-      location: {
-        id: location.id,
-        name: location.name,
-        slug: location.slug,
-        parent: location.parent,
-      },
+      class: classRecord,
       leaderboard: rankedLeaderboard,
       currentUserEntry,
       period,
@@ -208,7 +200,7 @@ export async function GET(
       nextCursor: null,
     });
   } catch (error) {
-    console.error("Location leaderboard error:", error);
+    console.error("Class leaderboard error:", error);
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 }

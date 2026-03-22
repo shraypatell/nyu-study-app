@@ -36,17 +36,22 @@ export async function GET(request: Request) {
       },
     });
 
-    // Get today's stats
+    // Compute today's total from completed sessions for this specific mode
+    // This matches the leaderboard computation exactly
     const today = getNyDateStart();
 
-    const dailyStat = await prisma.dailyStat.findUnique({
+    const todayAgg = await prisma.studySession.aggregate({
       where: {
-        userId_date: {
-          userId: user.id,
-          date: today,
-        },
+        userId: user.id,
+        mode: mode,
+        isActive: false,
+        durationSeconds: { gt: 0 },
+        startedAt: { gte: today },
       },
+      _sum: { durationSeconds: true },
     });
+
+    const totalSecondsToday = todayAgg._sum.durationSeconds || 0;
 
     const response: {
       isActive: boolean;
@@ -62,7 +67,7 @@ export async function GET(request: Request) {
       } | null;
     } = {
       isActive: !!activeSession,
-      totalSecondsToday: dailyStat?.totalSeconds || 0,
+      totalSecondsToday,
     };
 
     if (activeSession) {

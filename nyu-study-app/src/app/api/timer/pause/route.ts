@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // Update daily stats
+    // Update daily stats (legacy, keep for web app compatibility)
     const today = getNyDateStart();
 
     await prisma.dailyStat.upsert({
@@ -97,10 +97,23 @@ export async function POST(request: Request) {
       },
     });
 
+    // Compute accurate totalSecondsToday from sessions for this mode
+    const todayAgg = await prisma.studySession.aggregate({
+      where: {
+        userId: user.id,
+        mode: mode,
+        isActive: false,
+        durationSeconds: { gt: 0 },
+        startedAt: { gte: today },
+      },
+      _sum: { durationSeconds: true },
+    });
+
     return NextResponse.json({
       success: true,
       totalDuration: durationSeconds,
       sessionDuration: durationSeconds,
+      totalSecondsToday: todayAgg._sum.durationSeconds || 0,
     });
   } catch (error) {
     console.error("Pause timer error:", error);
