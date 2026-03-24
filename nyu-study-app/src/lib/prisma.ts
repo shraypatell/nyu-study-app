@@ -12,7 +12,14 @@ const prismaClientSingleton = () => {
   // Node's built-in URL parser drops the project ref from Supabase
   // usernames like "postgres.projectref"
   const config = parse(process.env.DATABASE_URL || '')
-  const pool = new Pool({ ...config, ssl: { rejectUnauthorized: false } })
+  const pool = new Pool({
+    host: config.host || undefined,
+    port: config.port ? parseInt(config.port, 10) : undefined,
+    database: config.database || undefined,
+    user: config.user,
+    password: config.password,
+    ssl: { rejectUnauthorized: false },
+  })
   const adapter = new PrismaPg(pool)
   return new PrismaClient({ adapter })
 }
