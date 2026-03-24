@@ -38,6 +38,7 @@ model User {
   sentFriendRequests     Friendship[] @relation("SentFriendRequests")
   receivedFriendRequests Friendship[] @relation("ReceivedFriendRequests")
 
+  @@index([displayName])
   @@map("users")
 }
 

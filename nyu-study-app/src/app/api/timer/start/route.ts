@@ -62,39 +62,47 @@ export async function POST(request: Request) {
       }
     }
 
-    // Check for existing active session for this specific mode
-    const existingSession = await prisma.studySession.findFirst({
-      where: {
-        userId: user.id,
-        isActive: true,
-        mode: mode,
-      },
+    // Use a transaction to prevent race conditions (double-tap / multi-device)
+    const result = await prisma.$transaction(async (tx) => {
+      const existingSession = await tx.studySession.findFirst({
+        where: {
+          userId: user.id,
+          isActive: true,
+          mode: mode,
+        },
+      });
+
+      if (existingSession) {
+        return { error: true as const, sessionId: existingSession.id };
+      }
+
+      const session = await tx.studySession.create({
+        data: {
+          userId: user.id,
+          classId,
+          mode,
+          startedAt: new Date(),
+          isActive: true,
+          createdDate: new Date(),
+        },
+      });
+
+      return { error: false as const, session };
     });
 
-    if (existingSession) {
+    if (result.error) {
       return NextResponse.json(
-        { error: "Timer is already running in this mode", sessionId: existingSession.id },
+        { error: "Timer is already running in this mode", sessionId: result.sessionId },
         { status: 400 }
       );
     }
 
-    const session = await prisma.studySession.create({
-      data: {
-        userId: user.id,
-        classId,
-        mode,
-        startedAt: new Date(),
-        isActive: true,
-        createdDate: new Date(),
-      },
-    });
-
     return NextResponse.json({
       success: true,
-      sessionId: session.id,
-      startedAt: session.startedAt,
-      classId: session.classId,
-      mode: session.mode,
+      sessionId: result.session.id,
+      startedAt: result.session.startedAt,
+      classId: result.session.classId,
+      mode: result.session.mode,
       sessionDuration: 0,
     });
   } catch (error) {

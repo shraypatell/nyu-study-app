@@ -12,13 +12,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+    const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
 
     const staleSessions = await prisma.studySession.findMany({
       where: {
         isActive: true,
         startedAt: {
-          lt: twoMinutesAgo,
+          lt: twelveHoursAgo,
         },
       },
     });

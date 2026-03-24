@@ -238,44 +238,50 @@ export async function GET(request: Request) {
       orderBy: { updatedAt: "desc" },
     });
 
-    const friendsWithStats = await Promise.all(
-      friendships.map(async (friendship) => {
-        const friend = friendship.requesterId === user.id
-          ? friendship.addressee
-          : friendship.requester;
-
-        const dailyStat = await prisma.dailyStat.findUnique({
-          where: {
-            userId_date: {
-              userId: friend.id,
-              date: today,
-            },
-          },
-          select: { totalSeconds: true, isPublic: true },
-        });
-
-        return {
-          friendshipId: friendship.id,
-          user: {
-            id: friend.id,
-            username: friend.username,
-            displayName: friend.displayName,
-            avatarUrl: friend.avatarUrl,
-            isTimerPublic: friend.isTimerPublic,
-            totalSeconds: dailyStat?.isPublic ? dailyStat.totalSeconds : 0,
-            location: friend.isLocationPublic ? friend.userLocations[0]?.location || null : null,
-            session: friend.studySessions[0]
-              ? {
-                  startedAt: friend.studySessions[0].startedAt.toISOString(),
-                  endedAt: friend.studySessions[0].endedAt?.toISOString() || null,
-                  isActive: friend.studySessions[0].isActive,
-                }
-              : null,
-          },
-          since: friendship.updatedAt,
-        };
-      })
+    // Batch-fetch daily stats for all friends (avoids N+1)
+    const friendUsers = friendships.map((f) =>
+      f.requesterId === user.id ? f.addressee : f.requester
     );
+    const friendIds = friendUsers.map((f) => f.id);
+
+    const dailyStats = await prisma.dailyStat.findMany({
+      where: {
+        userId: { in: friendIds },
+        date: today,
+      },
+      select: { userId: true, totalSeconds: true, isPublic: true },
+    });
+
+    const statsMap = new Map(dailyStats.map((s) => [s.userId, s]));
+
+    const friendsWithStats = friendships.map((friendship) => {
+      const friend = friendship.requesterId === user.id
+        ? friendship.addressee
+        : friendship.requester;
+
+      const dailyStat = statsMap.get(friend.id);
+
+      return {
+        friendshipId: friendship.id,
+        user: {
+          id: friend.id,
+          username: friend.username,
+          displayName: friend.displayName,
+          avatarUrl: friend.avatarUrl,
+          isTimerPublic: friend.isTimerPublic,
+          totalSeconds: dailyStat?.isPublic ? dailyStat.totalSeconds : 0,
+          location: friend.isLocationPublic ? friend.userLocations[0]?.location || null : null,
+          session: friend.studySessions[0]
+            ? {
+                startedAt: friend.studySessions[0].startedAt.toISOString(),
+                endedAt: friend.studySessions[0].endedAt?.toISOString() || null,
+                isActive: friend.studySessions[0].isActive,
+              }
+            : null,
+        },
+        since: friendship.updatedAt,
+      };
+    });
 
     friendsWithStats.sort((a, b) => b.user.totalSeconds - a.user.totalSeconds);
 

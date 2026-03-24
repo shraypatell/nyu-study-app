@@ -85,6 +85,31 @@ export async function POST(request: Request) {
   }
 }
 
+export async function DELETE(request: Request) {
+  try {
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    await prisma.userLocation.deleteMany({
+      where: { userId: user.id },
+    });
+
+    return NextResponse.json({ success: true, location: null });
+  } catch (error) {
+    console.error("Delete location error:", error);
+    return NextResponse.json(
+      { error: "An unexpected error occurred" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const user = await getAuthenticatedUser(request);
