@@ -79,10 +79,10 @@ export async function GET(request: Request) {
       limit: joinedOnly ? totalCount : limit,
       totalPages,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Get classes error:", error);
     return NextResponse.json(
-      { error: "An unexpected error occurred" },
+      { error: "An unexpected error occurred", debug: error?.message, stack: error?.stack?.split("\n").slice(0, 5) },
       { status: 500 }
     );
   }
